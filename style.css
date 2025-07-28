@@ -1,0 +1,126 @@
+/* Paleta: bege suave (#f5f1ea), branco (#fff), preto (#000) */
+
+body {
+  background-color: #f5f1ea;
+  color: #000;
+  font-family: 'Georgia', serif;
+  font-size: 18px;
+  margin: 0;
+  padding: 20px;
+  line-height: 1.6;
+}
+
+h1, h2, h3 {
+  color: #000;
+  text-align: center;
+  margin-top: 0;
+  font-family: 'Playfair Display', serif;
+  letter-spacing: 1px;
+}
+
+.container {
+  max-width: 800px;
+  margin: auto;
+  background: #fff;
+  padding: 30px;
+  border: 2px dashed #bba68a; /* efeito de costura */
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+label {
+  display: block;
+  margin-top: 20px;
+  font-weight: bold;
+}
+
+input, select {
+  width: 100%;
+  padding: 10px;
+  font-size: 17px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fdfdfd;
+  box-sizing: border-box;
+}
+
+button {
+  margin-top: 15px;
+  padding: 12px 20px;
+  background-color: #000;
+  color: #fff;
+  border: none;
+  font-size: 17px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #bba68a;
+  color: #000;
+}
+
+.item {
+  margin-bottom: 15px;
+  padding: 10px;
+  border-left: 4px solid #bba68a;
+  background: #fafafa;
+  border-radius: 6px;
+}
+
+hr {
+  border: none;
+  border-top: 1px dotted #bba68a;
+  margin: 20px 0;
+}
+
+nav {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  background: #fff;
+  padding: 15px 0;
+  border-bottom: 2px dashed #bba68a;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+nav a {
+  color: #000;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 18px;
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+
+nav a:hover {
+  background-color: #bba68a;
+  color: #fff;
+}
+
+footer {
+  text-align: center;
+  padding: 20px;
+  font-size: 14px;
+  color: #666;
+}
+
+.logo-container {
+  background-color: #fff;
+  padding: 10px 0;
+  text-align: center;
+  border-bottom: 2px dashed #bba68a;
+  position: sticky;
+  top: 0;
+  z-index: 1100;
+}
+
+.logo {
+  height: 100px;
+  object-fit: contain;
+}
+

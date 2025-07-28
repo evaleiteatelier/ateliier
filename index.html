@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <header class="logo-container">
+  <img src="img/logo.png" alt="Logo do Ateliê" class="logo">
+</header>
+  <meta charset="UTF-8">
+  <title>Adicionar Pedido - Atelier</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Adicionar Pedido</h1>
+  <form id="form-pedido">
+    <label>Nome da Cliente: <input type="text" id="nome" required></label><br>
+    <label>Data do Pedido: <input type="date" id="data" required></label><br>
+
+    <div id="itens"></div>
+    <button type="button" onclick="adicionarItem()">Adicionar Item</button><br>
+    <button type="submit">Enviar Pedido</button>
+  </form>
+
+  <!-- Primeiro carrega a biblioteca do Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<!-- Depois carrega o script principal -->
+<script src="script.js"></script>
+<script src="navbar.js"></script>
+
+
+</body>
+</html>
