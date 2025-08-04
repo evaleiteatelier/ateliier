@@ -112,11 +112,13 @@ async function semanaTemEspaco(segunda, novosItens) {
 
 function coletarItens() {
   const itens = [];
-  document.querySelectorAll('#itens select').forEach(sel => {
+  document.querySelectorAll('#itens .item').forEach(div => {
+    const sel = div.querySelector('select');
+    const desc = div.querySelector('textarea').value.trim();
     const dias = parseInt(sel.selectedOptions[0].dataset.dias);
     const subtipo = sel.value;
-    const tipo = ['diminuição de bainha', 'ajuste de calças'].includes(subtipo) ? 'concerto' : 'criacao';
-    itens.push({ tipo, subtipo, dias });
+    const tipo = ['concerto'].includes(subtipo) ? 'concerto' : 'criacao';
+    itens.push({ tipo, subtipo, dias, descricao: desc });
   });
   return itens;
 }
@@ -127,8 +129,6 @@ function adicionarItem() {
   div.className = 'item';
   div.innerHTML = `
     <select>
-      <option value="diminuição de bainha" data-dias="2">Diminuição de Bainha</option>
-      <option value="ajuste de calças" data-dias="2">Ajuste de Calças</option>
       <option value="macacão" data-dias="3">Macacão</option>
       <option value="vestido normal" data-dias="3">Vestido Normal</option>
       <option value="vestido de festa" data-dias="7">Vestido de Festa</option>
@@ -136,7 +136,9 @@ function adicionarItem() {
       <option value="saia" data-dias="3">Saia</option>
       <option value="kimono" data-dias="3">Kimono</option>
       <option value="fato" data-dias="3">Fato</option>
+      <option value="concerto" data-dias="3">Concerto</option>
     </select>
+    <textarea placeholder="Descrição do item..." class="descricao-item"></textarea>
   `;
   container.appendChild(div);
 }
@@ -149,7 +151,15 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
     const itensList = typeof p.itens === 'string' ? JSON.parse(p.itens) : p.itens;
     const div = document.createElement('div');
     div.innerHTML = `
-      <strong>${p.nome}</strong> - Pedido: ${itensList.map(i => i.subtipo).join(', ')}
+      <strong>${p.nome}</strong> - Pedido:
+      <ul>
+        ${itensList.map(i => `
+          <li>
+            <strong>${i.subtipo}</strong>
+            ${i.descricao ? `<br><em>${i.descricao}</em>` : ''}
+          </li>
+        `).join('')}
+      </ul>
       <br>Data Pedido: ${p.data_real || p.data_pedido} | Entrega: ${p.data_entrega}
       ${botaoAcao ? `<button onclick="mudarStatus('${p.id}', '${novoStatus}')">${botaoAcao}</button>` : ''}
       ${filtro === 'pendente' ? `<button onclick="excluirPedido('${p.id}')">Excluir</button>` : ''}
