@@ -4,13 +4,17 @@
   <meta charset="UTF-8">
   <title>Pedidos Entregues</title>
   <link rel="stylesheet" href="style.css">
+  <script>
+    if (localStorage.getItem("tipoUsuario") === "cliente") {
+        window.location.href = "lista-espera.html";
+    }
+</script>
+
 </head>
 <body>
   <h1>Pedidos Entregues</h1>
   <nav>
-    <a href="index.html">Adicionar Pedido</a> |
-    <a href="lista-espera.html">Lista de Espera</a> |
-    <a href="concluidos.html">Pedidos Concluídos</a>
+    <a href="index.html">Fazer o login</a> 
   </nav>
   <div id="lista-entregues"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>

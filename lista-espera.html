@@ -8,14 +8,29 @@
 <body>
   <h1>Lista de Espera</h1>
   <nav>
-    <a href="index.html">Adicionar Pedido</a> |
-    <a href="concluidos.html">Pedidos Concluídos</a> |
-    <a href="entregues.html">Pedidos Entregues</a>
+    <a href="index.html">Fazer o login</a> 
   </nav>
+
+  <label for="pesquisa">Pesquisar Cliente:</label>
+  <input type="text" id="pesquisa" placeholder="Digite o nome da cliente...">
+
+
   <div id="lista-espera"></div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="script.js"></script>
   <script src="navbar.js"></script>
+  <script>
+    // Filtro de pesquisa em tempo real
+    document.getElementById('pesquisa').addEventListener('input', function () {
+      const termo = this.value.toLowerCase();
+      const pedidos = document.querySelectorAll('#lista-espera .pedido');
+pedidos.forEach(pedido => {
+  const nome = pedido.querySelector('strong').textContent.toLowerCase();
+  pedido.style.display = nome.includes(termo) ? 'block' : 'none';
+});
 
+    });
+  </script>
 </body>
 </html>

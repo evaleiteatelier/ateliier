@@ -1,31 +1,100 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-  <header class="logo-container">
-  <img src="img/logo.png" alt="Logo do Ateliê" class="logo">
-</header>
   <meta charset="UTF-8">
-  <title>Adicionar Pedido - Atelier</title>
+  <title>Eva Leite Atelier - Acesso</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 3rem;
+      background: #fdfdfd;
+    }
+    .access-container {
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    h1 {
+      margin-bottom: 2rem;
+    }
+    button {
+      display: block;
+      width: 100%;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+    #login-form {
+      display: none;
+      margin-top: 2rem;
+    }
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 0.8rem;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+    .logo-container {
+      margin-bottom: 2rem;
+    }
+    .logo {
+      max-width: 200px;
+      height: auto;
+    }
+  </style>
 </head>
 <body>
-  <h1>Adicionar Pedido</h1>
-  <form id="form-pedido">
-    <label>Nome da Cliente: <input type="text" id="nome" required></label><br>
-    <label>Data do Pedido: <input type="date" id="data" required></label><br>
+  <header class="logo-container">
+    <img src="img/logo.png" alt="Logo do Ateliê" class="logo">
+  </header>
 
-    <div id="itens"></div>
-    <button type="button" onclick="adicionarItem()">Adicionar Item</button><br>
-    <button type="submit">Enviar Pedido</button>
-  </form>
+  <div class="access-container">
+    <h1>Bem-vindo(a) ao Eva Leite Atelier</h1>
+    <button onclick="entrarComoCliente()">Sou Cliente</button>
+    <button onclick="mostrarLogin()">Sou Utilizador</button>
 
-  <!-- Primeiro carrega a biblioteca do Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <form id="login-form" onsubmit="return autenticarUtilizador(event)">
+      <input type="text" id="username" placeholder="Usuário" required />
+      <input type="password" id="password" placeholder="Senha" required />
+      <button type="submit">Entrar</button>
+    </form>
+  </div>
 
-<!-- Depois carrega o script principal -->
-<script src="script.js"></script>
-<script src="navbar.js"></script>
+  <script>
+    function entrarComoCliente() {
+  localStorage.setItem("tipoUsuario", "cliente");
+  window.location.href = "lista-espera.html";
+}
 
+    function mostrarLogin() {
+      document.getElementById("login-form").style.display = "block";
+    }
 
+    function autenticarUtilizador(event) {
+      event.preventDefault();
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+
+      // Login e senha padrão
+      const USER = "admin";
+      const PASS = "atelier123";
+
+      if (user === USER && pass === PASS) {
+  localStorage.setItem("tipoUsuario", "admin"); // ou "utilizador", como preferir
+  window.location.href = "entregues.html";
+} else {
+  alert("Usuário ou senha incorretos.");
+}
+
+    }
+  </script>
+
+  <!-- Scripts necessários do seu projeto -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <script src="script.js"></script>
 </body>
 </html>

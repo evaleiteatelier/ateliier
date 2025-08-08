@@ -147,9 +147,12 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
   const { data } = await supabase.from('pedidos').select('*').eq('status', filtro).order('data_pedido');
   const container = document.getElementById(destino);
   container.innerHTML = '';
+
   data.forEach(p => {
     const itensList = typeof p.itens === 'string' ? JSON.parse(p.itens) : p.itens;
     const div = document.createElement('div');
+    div.className = 'pedido';  // adiciona a classe
+
     div.innerHTML = `
       <strong>${p.nome}</strong> - Pedido:
       <ul>
@@ -161,13 +164,18 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
         `).join('')}
       </ul>
       <br>Data Pedido: ${p.data_real || p.data_pedido} | Entrega: ${p.data_entrega}
-      ${botaoAcao ? `<button onclick="mudarStatus('${p.id}', '${novoStatus}')">${botaoAcao}</button>` : ''}
-      ${filtro === 'pendente' ? `<button onclick="excluirPedido('${p.id}')">Excluir</button>` : ''}
+      ${botaoAcao ? `<button class="admin-only" onclick="mudarStatus('${p.id}', '${novoStatus}')">${botaoAcao}</button>` : ''}
+      ${filtro === 'pendente' ? `<button class="admin-only" onclick="excluirPedido('${p.id}')">Excluir</button>` : ''}
       <hr>
     `;
+
     container.appendChild(div);
   });
+
+  // Chama a função para esconder botões para clientes
+  esconderBotoesSeCliente();
 }
+
 
 async function mudarStatus(id, novoStatus) {
   await supabase.from('pedidos').update({ status: novoStatus }).eq('id', id);
@@ -190,3 +198,27 @@ if (window.location.pathname.includes('concluidos')) {
 if (window.location.pathname.includes('entregues')) {
   carregarPedidos('entregue', 'lista-entregues');
 }
+function entrarComoCliente() {
+    window.location.href = "lista-espera.html";
+}
+
+function entrarComoCliente() {
+    localStorage.setItem("tipoUsuario", "cliente");
+    window.location.href = "lista-espera.html";
+}
+
+function sair() {
+    localStorage.removeItem("tipoUsuario");
+    window.location.href = "index.html";
+}
+
+function esconderBotoesSeCliente() {
+  if (localStorage.getItem("tipoUsuario") === "cliente") {
+    const adminElements = document.querySelectorAll(".admin-only");
+    adminElements.forEach(el => el.style.display = "none");
+  }
+}
+
+
+
+
