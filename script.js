@@ -63,16 +63,38 @@ function ajustarParaSegunda(data) {
 }
 
 function calcularDataEntrega(inicio, dias) {
+  // Começa na data inicial escolhida
   let entrega = new Date(inicio);
   let adicionados = 0;
+
   while (adicionados < dias) {
     entrega.setDate(entrega.getDate() + 1);
     const diaSemana = entrega.getDay();
-    if (diaSemana !== 0) adicionados++; // pula domingos
+
+    // Pula apenas domingos (0)
+    if (diaSemana !== 0) {
+      adicionados++;
+    }
   }
-  if (entrega.getDay() === 0) entrega.setDate(entrega.getDate() + 1);
+
+  // Se a data calculada cair no passado, move para hoje + dias úteis (domingo excluído)
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0); // zera horas
+  if (entrega < hoje) {
+    entrega = new Date(hoje);
+    adicionados = 0;
+    while (adicionados < dias) {
+      entrega.setDate(entrega.getDate() + 1);
+      const diaSemana = entrega.getDay();
+      if (diaSemana !== 0) {
+        adicionados++;
+      }
+    }
+  }
+
   return entrega;
 }
+
 
 async function semanaTemEspaco(segunda, novosItens) {
   const domingo = new Date(segunda);
