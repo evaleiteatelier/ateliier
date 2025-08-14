@@ -56,11 +56,16 @@ if (document.getElementById('form-pedido')) {
 
 function ajustarParaSegunda(data) {
   const dia = data.getDay();
-  const diff = (dia === 0 ? -6 : 1) - dia;
-  const segunda = new Date(data);
-  segunda.setDate(segunda.getDate() + diff);
-  return new Date(segunda.getFullYear(), segunda.getMonth(), segunda.getDate());
+  
+  // Se cair no domingo, joga para segunda
+  if (dia === 0) {
+    data.setDate(data.getDate() + 1);
+  }
+  
+  // Sábado e dias da semana mantêm a data original
+  return new Date(data.getFullYear(), data.getMonth(), data.getDate());
 }
+
 
 function calcularDataEntrega(inicio, dias) {
   // Começa na data inicial escolhida
@@ -106,31 +111,42 @@ async function semanaTemEspaco(segunda, novosItens) {
     .gte('data_pedido', segunda.toISOString().split('T')[0])
     .lte('data_pedido', domingo.toISOString().split('T')[0]);
 
-  let pecas = 0, concertos = 0, temVestidoFesta = false;
+  let pecasNormais = 0;       // peças de criação normais (máx 3/semana)
+  let concertos = 0;          // consertos (máx 15/semana)
+  let temVestidoFesta = false; // só pode 1 por semana e sem outras peças normais
 
+  // Contar pedidos já existentes nessa semana
   for (const pedido of pedidos) {
     const itensSalvos = typeof pedido.itens === 'string' ? JSON.parse(pedido.itens) : pedido.itens;
     for (const item of itensSalvos) {
       if (item.subtipo === 'vestido de festa') temVestidoFesta = true;
-      if (item.tipo === 'criacao') pecas++;
-      if (item.tipo === 'concerto') concertos++;
+      else if (item.tipo === 'criacao') pecasNormais++;
+      else if (item.tipo === 'concerto') concertos++;
     }
   }
 
+  // Validar novos itens
   for (const item of novosItens) {
     if (item.subtipo === 'vestido de festa') {
-      if (pecas > 0 || temVestidoFesta) return false;
+      // Vestido de festa só entra se não houver outro e não houver peças normais
+      if (temVestidoFesta || pecasNormais > 0) return false;
       temVestidoFesta = true;
-    } else if (item.tipo === 'criacao') {
-      if (temVestidoFesta) return false;
-      pecas++;
-    } else if (item.tipo === 'concerto') {
+    } 
+    else if (item.tipo === 'criacao') {
+      // Peças normais só se não houver vestido de festa e limite < 3
+      if (temVestidoFesta || pecasNormais >= 3) return false;
+      pecasNormais++;
+    } 
+    else if (item.tipo === 'concerto') {
+      // Consertos só se limite < 15
+      if (concertos >= 15) return false;
       concertos++;
     }
   }
 
-  return pecas <= 3 && concertos <= 10 && (!temVestidoFesta || (pecas === 0 && concertos <= 10));
+  return true;
 }
+
 
 function coletarItens() {
   const itens = [];
