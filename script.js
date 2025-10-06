@@ -156,37 +156,43 @@ async function semanaTemEspaco(segunda, novosItens) {
 
 
 function coletarItens() {
-  const itens = [];
-  document.querySelectorAll('#itens .item').forEach(div => {
-    const sel = div.querySelector('select');
-    const desc = div.querySelector('textarea').value.trim();
-    const dias = parseInt(sel.selectedOptions[0].dataset.dias);
-    const subtipo = sel.value;
-    const tipo = ['concerto'].includes(subtipo) ? 'concerto' : 'criacao';
-    itens.push({ tipo, subtipo, dias, descricao: desc });
-  });
-  return itens;
+    const itens = [];
+    document.querySelectorAll('#itens .item').forEach(div => {
+        const sel = div.querySelector('select');
+        const desc = div.querySelector('textarea').value.trim();
+        const dias = parseInt(sel.selectedOptions[0].dataset.dias);
+        const subtipo = sel.value;
+        let tipo;
+        if (subtipo === 'concerto') tipo = 'concerto';
+        else if (subtipo === 'modificacao') tipo = 'modificacao';
+        else tipo = 'criacao';
+        itens.push({ tipo, subtipo, dias, descricao: desc });
+    });
+    return itens;
 }
 
+
 function adicionarItem() {
-  const container = document.getElementById('itens');
-  const div = document.createElement('div');
-  div.className = 'item';
-  div.innerHTML = `
-    <select>
-      <option value="macacão" data-dias="3">Macacão</option>
-      <option value="vestido normal" data-dias="3">Vestido Normal</option>
-      <option value="vestido de festa" data-dias="7">Vestido de Festa</option>
-      <option value="pantalona" data-dias="3">Pantalona</option>
-      <option value="saia" data-dias="3">Saia</option>
-      <option value="kimono" data-dias="3">Kimono</option>
-      <option value="fato" data-dias="3">Fato</option>
-      <option value="concerto" data-dias="3">Concerto</option>
-    </select>
-    <textarea placeholder="Descrição do item..." class="descricao-item"></textarea>
-  `;
-  container.appendChild(div);
+    const container = document.getElementById('itens');
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `
+        <select>
+            <option value="macacão" data-dias="3">Macacão</option>
+            <option value="vestido normal" data-dias="3">Vestido Normal</option>
+            <option value="vestido de festa" data-dias="7">Vestido de Festa</option>
+            <option value="pantalona" data-dias="3">Pantalona</option>
+            <option value="saia" data-dias="3">Saia</option>
+            <option value="kimono" data-dias="3">Kimono</option>
+            <option value="fato" data-dias="3">Fato</option>
+            <option value="concerto" data-dias="3">Concerto</option>
+            <option value="modificacao" data-dias="3">Modificação</option>
+        </select>
+        <textarea placeholder="Descrição do item..." class="descricao-item"></textarea>
+    `;
+    container.appendChild(div);
 }
+
 
 async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
   const { data } = await supabase.from('pedidos').select('*').eq('status', filtro).order('data_pedido');
