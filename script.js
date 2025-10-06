@@ -21,12 +21,19 @@ if (document.getElementById('form-pedido')) {
     }
 
     let semanaData = ajustarParaSegunda(dataEscolhida);
-    while (!(await semanaTemEspaco(semanaData, itens))) {
-      semanaData.setDate(semanaData.getDate() + 7);
-    }
+let diasTotais = 0;
 
-    const diasTotais = itens.reduce((soma, i) => soma + i.dias, 0);
-    const dataEntrega = calcularDataEntrega(semanaData, diasTotais);
+// verifica e acumula as semanas necessárias conforme os itens
+for (const item of itens) {
+  while (!(await semanaTemEspaco(semanaData, [item]))) {
+    semanaData.setDate(semanaData.getDate() + 7);
+  }
+  diasTotais += item.dias;
+}
+
+// Agora sim calcula a data final com base em todos os dias acumulados
+const dataEntrega = calcularDataEntrega(semanaData, diasTotais);
+
 
     const pedidoObj = {
       nome,
