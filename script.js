@@ -219,7 +219,11 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
       </ul>
       <br>Pedido feito: ${p.data_pedido} | Adicionado: ${p.data_real} | Entrega: ${p.data_entrega}
       ${botaoAcao ? `<button class="admin-only" onclick="mudarStatus('${p.id}', '${novoStatus}')">${botaoAcao}</button>` : ''}
-      ${filtro === 'pendente' ? `<button class="admin-only" onclick="excluirPedido('${p.id}')">Excluir</button>` : ''}
+      ${filtro === 'pendente' ? `
+  <button class="admin-only" onclick="editarPedido('${p.id}')">Editar</button>
+  <button class="admin-only" onclick="excluirPedido('${p.id}')">Excluir</button>
+` : ''}
+
       <hr>
     `;
 
@@ -241,6 +245,12 @@ async function excluirPedido(id) {
     await supabase.from('pedidos').delete().eq('id', id);
     location.reload();
   }
+}
+
+function editarPedido(id) {
+  // guarda o ID no localStorage para usar na página de edição
+  localStorage.setItem("pedidoEditar", id);
+  window.location.href = "editar-pedido.html";
 }
 
 if (window.location.pathname.includes('lista-espera')) {
