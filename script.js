@@ -36,13 +36,16 @@ const dataEntrega = calcularDataEntrega(semanaData, diasTotais);
 
 
     const pedidoObj = {
-      nome,
-      data_pedido: semanaData.toISOString().split('T')[0],
-      data_real: hoje.toISOString().split('T')[0],
-      itens: JSON.stringify(itens),
-      data_entrega: dataEntrega.toISOString().split('T')[0],
-      status: 'pendente'
-    };
+  nome,
+  // usa a data que o utilizador colocou no campo, não a ajustada
+  data_pedido: dataEscolhida.toISOString().split('T')[0],
+  // data_real é apenas a data em que foi adicionado ao sistema (mantém como referência interna)
+  data_real: hoje.toISOString().split('T')[0],
+  itens: JSON.stringify(itens),
+  data_entrega: dataEntrega.toISOString().split('T')[0],
+  status: 'pendente'
+};
+
 
     try {
       const { error, data } = await supabase.from('pedidos').insert(pedidoObj);
@@ -214,7 +217,7 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
           </li>
         `).join('')}
       </ul>
-      <br>Data Pedido: ${p.data_real || p.data_pedido} | Entrega: ${p.data_entrega}
+      <br>Pedido feito: ${p.data_pedido} | Adicionado: ${p.data_real} | Entrega: ${p.data_entrega}
       ${botaoAcao ? `<button class="admin-only" onclick="mudarStatus('${p.id}', '${novoStatus}')">${botaoAcao}</button>` : ''}
       ${filtro === 'pendente' ? `<button class="admin-only" onclick="excluirPedido('${p.id}')">Excluir</button>` : ''}
       <hr>
