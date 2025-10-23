@@ -14,6 +14,7 @@ if (document.getElementById('form-pedido')) {
     const dataInput = document.getElementById('data').value;
     const dataEscolhida = new Date(dataInput);
     const itens = coletarItens();
+    const preco_total = itens.reduce((acc, i) => acc + i.preco_total_item, 0);
 
     if (itens.length === 0) {
       alert("Adicione ao menos um item ao pedido.");
@@ -37,14 +38,15 @@ const dataEntrega = calcularDataEntrega(semanaData, diasTotais);
 
     const pedidoObj = {
   nome,
-  // usa a data que o utilizador colocou no campo, não a ajustada
   data_pedido: dataEscolhida.toISOString().split('T')[0],
-  // data_real é apenas a data em que foi adicionado ao sistema (mantém como referência interna)
   data_real: hoje.toISOString().split('T')[0],
   itens: JSON.stringify(itens),
   data_entrega: dataEntrega.toISOString().split('T')[0],
-  status: 'pendente'
+  status: 'pendente',
+  preco_total: preco_total
 };
+
+
 
 
     try {
@@ -165,14 +167,40 @@ function coletarItens() {
         const desc = div.querySelector('textarea').value.trim();
         const dias = parseInt(sel.selectedOptions[0].dataset.dias);
         const subtipo = sel.value;
+        const preco = parseFloat(div.querySelector('.preco-item').value) || 0;
+        const quantidade = parseInt(div.querySelector('.quantidade-item').value) || 1;
+        const preco_total_item = preco * quantidade;
+
         let tipo;
         if (subtipo === 'concerto') tipo = 'concerto';
         else if (subtipo === 'modificacao') tipo = 'modificacao';
         else tipo = 'criacao';
-        itens.push({ tipo, subtipo, dias, descricao: desc });
+
+        itens.push({
+            tipo,
+            subtipo,
+            dias,
+            descricao: desc,
+            preco,
+            quantidade,
+            preco_total_item
+        });
     });
     return itens;
 }
+
+
+function atualizarPrecoTotal() {
+    let total = 0;
+    document.querySelectorAll('#itens .item').forEach(div => {
+        const preco = parseFloat(div.querySelector('.preco-item').value) || 0;
+        const quantidade = parseInt(div.querySelector('.quantidade-item').value) || 1;
+        total += preco * quantidade;
+    });
+    const inputTotal = document.getElementById('preco_total');
+    if (inputTotal) inputTotal.value = total.toFixed(2);
+}
+
 
 
 function adicionarItem() {
@@ -180,7 +208,7 @@ function adicionarItem() {
     const div = document.createElement('div');
     div.className = 'item';
     div.innerHTML = `
-        <select>
+        <select class="tipo-item">
             <option value="macacão" data-dias="3">Macacão</option>
             <option value="vestido normal" data-dias="3">Vestido Normal</option>
             <option value="vestido de festa" data-dias="7">Vestido de Festa</option>
@@ -191,10 +219,31 @@ function adicionarItem() {
             <option value="concerto" data-dias="3">Concerto</option>
             <option value="modificacao" data-dias="3">Modificação</option>
         </select>
+
         <textarea placeholder="Descrição do item..." class="descricao-item"></textarea>
+
+        <label>Preço (€):</label>
+        <input type="number" class="preco-item" step="0.01" min="0" placeholder="Ex: 25.00">
+
+        <label>Quantidade:</label>
+        <input type="number" class="quantidade-item" min="1" value="1">
+
     `;
     container.appendChild(div);
+
+    // Atualiza subtotal e total geral
+    const atualizarTotal = () => atualizarPrecoTotal();
+div.querySelector('.preco-item').addEventListener('input', atualizarTotal);
+div.querySelector('.quantidade-item').addEventListener('input', atualizarTotal);
+div.querySelector('.tipo-item').addEventListener('change', atualizarTotal);
+
+
+    div.querySelector('.preco-item').addEventListener('input', atualizarSubtotal);
+    div.querySelector('.quantidade-item').addEventListener('input', atualizarSubtotal);
+    div.querySelector('.tipo-item').addEventListener('change', atualizarSubtotal);
 }
+
+
 
 
 async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
@@ -218,13 +267,14 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
         `).join('')}
       </ul>
       <br>Pedido feito: ${p.data_pedido} | Adicionado: ${p.data_real} | Entrega: ${p.data_entrega}
-      ${botaoAcao ? `<button class="admin-only" onclick="mudarStatus('${p.id}', '${novoStatus}')">${botaoAcao}</button>` : ''}
-      ${filtro === 'pendente' ? `
+<br><strong>Preço total:</strong> €${p.preco_total?.toFixed(2) || '0.00'}
+${botaoAcao ? `<button class="admin-only" onclick="mudarStatus('${p.id}', '${novoStatus}')">${botaoAcao}</button>` : ''}
+${filtro === 'pendente' ? `
   <button class="admin-only" onclick="editarPedido('${p.id}')">Editar</button>
   <button class="admin-only" onclick="excluirPedido('${p.id}')">Excluir</button>
 ` : ''}
+<hr>
 
-      <hr>
     `;
 
     container.appendChild(div);
