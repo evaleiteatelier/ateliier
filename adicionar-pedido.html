@@ -56,11 +56,16 @@
     <label for="data">Data desejada para início:</label>
     <input type="date" id="data" required>
 
-    <h3>Itens do Pedido</h3>
-    <div id="itens"></div>
-    <button type="button" onclick="adicionarItem()">+ Adicionar Item</button>
+<h3>Itens do Pedido</h3>
+<div id="itens"></div>
+<button type="button" onclick="adicionarItem()">+ Adicionar Item</button>
 
-    <button type="submit">Salvar Pedido</button>
+<!-- total geral -->
+<label for="preco_total">Preço total (€):</label>
+<input type="number" id="preco_total" step="0.01" readonly>
+
+<button type="submit">Salvar Pedido</button>
+
   </form>
 
   <!-- Scripts -->
