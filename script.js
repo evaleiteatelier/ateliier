@@ -270,7 +270,7 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
 <br><strong>Preço total:</strong> €${p.preco_total?.toFixed(2) || '0.00'}
 ${botaoAcao ? `<button class="admin-only" onclick="mudarStatus('${p.id}', '${novoStatus}')">${botaoAcao}</button>` : ''}
 ${filtro === 'pendente' ? `
-  <button class="admin-only" onclick="editarPedido('${p.id}')">Editar</button>
+  <button class="admin-only" onclick="abrirEditorPedido('${p.id}')">Editar</button>
   <button class="admin-only" onclick="excluirPedido('${p.id}')">Excluir</button>
 ` : ''}
 <hr>
@@ -332,6 +332,152 @@ function esconderBotoesSeCliente() {
     adminElements.forEach(el => el.style.display = "none");
   }
 }
+
+// === Função para abrir o modal de edição ===
+async function abrirEditorPedido(id) {
+  const { data: pedido, error } = await supabase.from("pedidos").select("*").eq("id", id).single();
+  if (error || !pedido) {
+    alert("Erro ao carregar pedido!");
+    return;
+  }
+
+  const modal = document.getElementById("modal-editar");
+  modal.style.display = "flex";
+  document.body.style.overflow = "hidden"; // impede scroll no fundo
+
+
+  const itens = typeof pedido.itens === "string" ? JSON.parse(pedido.itens) : pedido.itens;
+  let itensEditados = [...itens];
+  let precoOriginal = pedido.preco_total || 0;
+
+  const container = document.getElementById("itens-editar");
+  const precoAntigo = document.getElementById("preco-antigo");
+  const precoNovo = document.getElementById("preco-novo");
+  const diferenca = document.getElementById("diferenca");
+
+  precoAntigo.textContent = precoOriginal.toFixed(2);
+  precoNovo.textContent = precoOriginal.toFixed(2);
+  diferenca.textContent = "0.00";
+
+  // Renderizar itens
+  // Renderizar itens (com opção de adicionar)
+const renderItens = () => {
+  container.innerHTML = "";
+
+  itensEditados.forEach((item, index) => {
+    const div = document.createElement("div");
+    div.style.marginBottom = "8px";
+    div.innerHTML = `
+      <p>
+        <strong>${item.subtipo}</strong> - €${item.preco_total_item.toFixed(2)}
+        <button data-index="${index}" class="remover-item">Remover</button>
+      </p>
+    `;
+    container.appendChild(div);
+  });
+
+  // --- Adicionar item novo ---
+  const divAdd = document.createElement("div");
+  divAdd.style.marginTop = "10px";
+  divAdd.innerHTML = `
+    <hr>
+    <h4>Adicionar Novo Item</h4>
+    <select id="novo-subtipo">
+      <option value="macacão" data-dias="3">Macacão</option>
+      <option value="vestido normal" data-dias="3">Vestido Normal</option>
+      <option value="vestido de festa" data-dias="7">Vestido de Festa</option>
+      <option value="pantalona" data-dias="3">Pantalona</option>
+      <option value="saia" data-dias="3">Saia</option>
+      <option value="kimono" data-dias="3">Kimono</option>
+      <option value="fato" data-dias="3">Fato</option>
+      <option value="concerto" data-dias="3">Concerto</option>
+      <option value="modificacao" data-dias="3">Modificação</option>
+    </select>
+    <input type="number" id="novo-preco" placeholder="Preço (€)" step="0.01" min="0">
+    <input type="number" id="novo-quantidade" placeholder="Qtd" min="1" value="1">
+    <button id="btn-add-item">Adicionar Item</button>
+  `;
+  container.appendChild(divAdd);
+
+  // --- Atualiza preços ---
+  const novoTotal = itensEditados.reduce((acc, i) => acc + i.preco_total_item, 0);
+  precoNovo.textContent = novoTotal.toFixed(2);
+  const dif = (novoTotal - precoOriginal).toFixed(2);
+  diferenca.textContent = (dif >= 0 ? "+" : "") + dif;
+
+  // --- Adicionar novo item ---
+  document.getElementById("btn-add-item").onclick = () => {
+    const subtipo = document.getElementById("novo-subtipo").value;
+    const preco = parseFloat(document.getElementById("novo-preco").value) || 0;
+    const quantidade = parseInt(document.getElementById("novo-quantidade").value) || 1;
+    const dias = parseInt(document.getElementById("novo-subtipo").selectedOptions[0].dataset.dias);
+
+    if (preco <= 0) {
+      alert("Insira um preço válido.");
+      return;
+    }
+
+    const tipo =
+      subtipo === "concerto" ? "concerto" :
+      subtipo === "modificacao" ? "modificacao" :
+      "criacao";
+
+    itensEditados.push({
+      tipo,
+      subtipo,
+      dias,
+      descricao: "",
+      preco,
+      quantidade,
+      preco_total_item: preco * quantidade
+    });
+
+    renderItens();
+  };
+};
+
+
+  renderItens();
+
+  // Delegar evento de remoção
+  container.onclick = (e) => {
+    if (e.target.classList.contains("remover-item")) {
+      const index = parseInt(e.target.dataset.index);
+      itensEditados.splice(index, 1);
+      renderItens();
+    }
+  };
+
+  // Salvar alterações no Supabase
+  document.getElementById("salvar-edicao").onclick = async () => {
+    const novoTotal = parseFloat(precoNovo.textContent);
+
+    const { error: updateError } = await supabase
+      .from("pedidos")
+      .update({
+        itens: JSON.stringify(itensEditados),
+        preco_total: novoTotal
+      })
+      .eq("id", id);
+
+    if (updateError) {
+      alert("Erro ao salvar alterações.");
+    } else {
+      alert("Pedido atualizado com sucesso!");
+      modal.style.display = "none";
+      location.reload();
+    }
+  };
+
+  // Cancelar
+  document.getElementById("fechar-edicao").onclick = () => {
+  modal.style.display = "none";
+  // Restaura a barra de rolagem do corpo ao fechar o modal
+  document.body.style.overflow = "auto";
+};
+
+}
+
 
 
 
