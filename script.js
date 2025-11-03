@@ -6,64 +6,68 @@ const supabase = _supabase.createClient(
 
 // Adicionar pedido
 if (document.getElementById('form-pedido')) {
-  document.getElementById('form-pedido').addEventListener('submit', async (e) => {
-    e.preventDefault();
+  document.getElementById('form-pedido').addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-    const nome = document.getElementById('nome').value;
-    const hoje = new Date();
-    const dataInput = document.getElementById('data').value;
-    const dataEscolhida = new Date(dataInput);
-    const itens = coletarItens();
-    const preco_total = itens.reduce((acc, i) => acc + i.preco_total_item, 0);
+    const nome = document.getElementById('nome').value;
+    const hoje = new Date();
+    const dataInput = document.getElementById('data').value;
+    const dataEscolhida = new Date(dataInput);
+    const itens = coletarItens();
+    const preco_total = itens.reduce((acc, i) => acc + i.preco_total_item, 0);
 
-    if (itens.length === 0) {
-      alert("Adicione ao menos um item ao pedido.");
-      return;
-    }
+    // 👇 LINHA ADICIONADA 👇
+    const email_cliente = document.getElementById('email_cliente').value;
 
-    let semanaData = ajustarParaSegunda(dataEscolhida);
+    if (itens.length === 0) {
+      alert("Adicione ao menos um item ao pedido.");
+      return;
+    }
+
+    let semanaData = ajustarParaSegunda(dataEscolhida);
 let diasTotais = 0;
 
 // verifica e acumula as semanas necessárias conforme os itens
 for (const item of itens) {
-  while (!(await semanaTemEspaco(semanaData, [item]))) {
-    semanaData.setDate(semanaData.getDate() + 7);
-  }
-  diasTotais += item.dias;
+  while (!(await semanaTemEspaco(semanaData, [item]))) {
+    semanaData.setDate(semanaData.getDate() + 7);
+  }
+  diasTotais += item.dias;
 }
 
 // Agora sim calcula a data final com base em todos os dias acumulados
 const dataEntrega = calcularDataEntrega(semanaData, diasTotais);
 
 
-    const pedidoObj = {
-  nome,
-  data_pedido: dataEscolhida.toISOString().split('T')[0],
-  data_real: hoje.toISOString().split('T')[0],
-  itens: JSON.stringify(itens),
-  data_entrega: dataEntrega.toISOString().split('T')[0],
-  status: 'pendente',
-  preco_total: preco_total
+    const pedidoObj = {
+  nome,
+  data_pedido: dataEscolhida.toISOString().split('T')[0],
+  data_real: hoje.toISOString().split('T')[0],
+  itens: JSON.stringify(itens),
+  data_entrega: dataEntrega.toISOString().split('T')[0],
+  status: 'pendente',
+  preco_total: preco_total,
+  email_cliente: email_cliente //  <- LINHA ADICIONADA
 };
 
 
 
 
-    try {
-      const { error, data } = await supabase.from('pedidos').insert(pedidoObj);
-      console.log("Resposta do Supabase:", { error, data });
-      if (error) {
-        console.error("Erro ao salvar pedido:", error);
-        alert("Erro ao salvar pedido: " + error.message);
-      } else {
-        alert("Pedido salvo com sucesso!");
-        location.reload();
-      }
-    } catch (err) {
-      console.error("Erro inesperado:", err);
-      alert("Erro inesperado: " + err.message);
-    }
-  });
+    try {
+      const { error, data } = await supabase.from('pedidos').insert(pedidoObj);
+      console.log("Resposta do Supabase:", { error, data });
+      if (error) {
+        console.error("Erro ao salvar pedido:", error);
+        alert("Erro ao salvar pedido: " + error.message);
+      } else {
+        alert("Pedido salvo com sucesso!");
+        location.reload();
+      }
+    } catch (err) {
+      console.error("Erro inesperado:", err);
+      alert("Erro inesperado: " + err.message);
+    }
+  });
 }
 
 function ajustarParaSegunda(data) {
@@ -237,10 +241,6 @@ div.querySelector('.preco-item').addEventListener('input', atualizarTotal);
 div.querySelector('.quantidade-item').addEventListener('input', atualizarTotal);
 div.querySelector('.tipo-item').addEventListener('change', atualizarTotal);
 
-
-    div.querySelector('.preco-item').addEventListener('input', atualizarSubtotal);
-    div.querySelector('.quantidade-item').addEventListener('input', atualizarSubtotal);
-    div.querySelector('.tipo-item').addEventListener('change', atualizarSubtotal);
 }
 
 
@@ -268,7 +268,7 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
       </ul>
       <br>Pedido feito: ${p.data_pedido} | Adicionado: ${p.data_real} | Entrega: ${p.data_entrega}
 <br><strong>Preço total:</strong> €${p.preco_total?.toFixed(2) || '0.00'}
-${botaoAcao ? `<button class="admin-only" onclick="mudarStatus('${p.id}', '${novoStatus}')">${botaoAcao}</button>` : ''}
+${botaoAcao ? `<button class="admin-only" data-pedido-id="${p.id}" onclick="mudarStatus('${p.id}', '${novoStatus}')">${botaoAcao}</button>` : ''}
 ${filtro === 'pendente' ? `
   <button class="admin-only" onclick="abrirEditorPedido('${p.id}')">Editar</button>
   <button class="admin-only" onclick="excluirPedido('${p.id}')">Excluir</button>
@@ -286,21 +286,26 @@ ${filtro === 'pendente' ? `
 
 
 async function mudarStatus(id, novoStatus) {
+  
+  // A variável 'supabase' deve estar definida algures acima neste ficheiro
+  
+  if (novoStatus === 'concluido') {
+    try {
+      // 1. Chamamos a função com 's' (enviarEmailConclusao)
+      // 2. Passamos a nossa variável 'supabase' para ela
+      await enviarEmailConclusao(id, supabase); 
+      
+    } catch (err) {
+      // Se o envio do email falhar, vemos o erro na consola
+      console.error("❌ ERRO AO TENTAR ENVIAR EMAIL:", err);
+      // Opcional: Podes alertar o utilizador
+      alert("O pedido foi marcado como concluído, mas falhou o envio do email de notificação. Verifique a consola.");
+    }
+  }
+  
+  // Esta parte agora é executada mesmo que o email falhe
   await supabase.from('pedidos').update({ status: novoStatus }).eq('id', id);
   location.reload();
-}
-
-async function excluirPedido(id) {
-  if (confirm("Tem certeza que deseja excluir este pedido?")) {
-    await supabase.from('pedidos').delete().eq('id', id);
-    location.reload();
-  }
-}
-
-function editarPedido(id) {
-  // guarda o ID no localStorage para usar na página de edição
-  localStorage.setItem("pedidoEditar", id);
-  window.location.href = "editar-pedido.html";
 }
 
 if (window.location.pathname.includes('lista-espera')) {
@@ -477,8 +482,3 @@ const renderItens = () => {
 };
 
 }
-
-
-
-
-
