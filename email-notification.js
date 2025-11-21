@@ -1,11 +1,7 @@
 // A linha de inicialização fica igual
 emailjs.init("qyaKeJYFg3T07XDv3");
 
-/**
- * Envia um email de conclusão de pedido.
- * @param {string} pedidoId - O ID do pedido
- * @param {object} supabase - O cliente Supabase inicializado (passado do script.js)
- */
+// --- FUNÇÃO 1 (A ANTIGA, DE PEDIDO CONCLUÍDO) ---
 async function enviarEmailConclusao(pedidoId, supabase) {
   // Pega dados do pedido no Supabase
   const { data: pedido, error } = await supabase
@@ -22,29 +18,23 @@ async function enviarEmailConclusao(pedidoId, supabase) {
   // Só envia email se tiver email do cliente
   if (pedido.email_cliente && pedido.email_cliente.length > 0) {
     
-    // --- [NOVO CÓDIGO AQUI] ---
-    
-    // 1. Formatar a data do pedido (de "AAAA-MM-DD" para "DD/MM/AAAA")
+    // 1. Formatar a data do pedido
     const dataFormatada = new Date(pedido.data_pedido).toLocaleDateString('pt-PT');
     
-    // 2. Formatar a lista de itens (de JSON para uma lista HTML)
+    // 2. Formatar a lista de itens
     const itensArray = JSON.parse(pedido.itens);
     const listaItensHtml = `
-      <ul>
-        ${itensArray.map(item => `<li>${item.quantidade}x ${item.subtipo}</li>`).join('')}
+      <ul style="padding-left: 0; list-style-position: inside; text-align: center;">
+        ${itensArray.map(item => `<li style="margin-bottom: 5px; text-align: center;">${item.quantidade}x ${item.subtipo}</li>`).join('')}
       </ul>
     `;
-    // --- [FIM DO NOVO CÓDIGO] ---
 
     const templateParams = {
-      // Os que já tinhas
       cliente_nome: pedido.nome,
       pedido_id: pedido.id,
       mensagem: "O seu pedido está concluído e pronto para levantamento!",
       data_real: new Date().toLocaleDateString(),
       email_cliente: pedido.email_cliente,
-      
-      // 👇👇 [AS 2 NOVAS LINHAS] 👇👇
       data_pedido: dataFormatada,
       lista_itens: listaItensHtml
     };
@@ -52,13 +42,73 @@ async function enviarEmailConclusao(pedidoId, supabase) {
     // Faz o envio
     await emailjs.send(
       "service_h149o17", 
-      "template_9tj6dch", 
+      "template_9tj6dch", // ID do template de CONCLUSÃO
       templateParams
     );
     
-    console.log("✅ Email enviado com sucesso!");
+    console.log("✅ Email de CONCLUSÃO enviado com sucesso!");
 
   } else {
-    console.log("Pedido não tem email de cliente. Email não enviado.");
+    console.log("Pedido não tem email de cliente. Email de conclusão não enviado.");
+  }
+}
+
+
+// --- FUNÇÃO 2 (A NOVA, DE CONFIRMAÇÃO DE PEDIDO) ---
+/**
+ * Envia um email de CONFIRMAÇÃO de novo pedido.
+
+/**
+ * Envia um email de CONFIRMAÇÃO de novo pedido.
+ * @param {object} pedido - O objeto 'novoPedido' completo do Supabase
+ * @param {string} templateId - O ID do novo template de confirmação
+ */
+async function enviarEmailConfirmacao(pedido, templateId) {
+  
+  if (!pedido.email_cliente || pedido.email_cliente.length === 0) {
+    console.log("Pedido sem email de cliente. Email de confirmação não enviado.");
+    return; 
+  }
+
+  try {
+    const dataPedidoF = new Date(pedido.data_pedido).toLocaleDateString('pt-PT');
+    const dataEntregaF = new Date(pedido.data_entrega).toLocaleDateString('pt-PT');
+    const itensArray = JSON.parse(pedido.itens);
+    
+    // [A CORREÇÃO ESTÁ AQUI]
+    // Adicionei o "item.descricao"
+    const listaItensHtml = `
+      <ul style="padding-left: 20px; text-align: left; margin: 10px 0;">
+        ${itensArray.map(item => `
+          <li style="margin-bottom: 8px; text-align: left;">
+            <strong>${item.quantidade}x ${item.subtipo}</strong>
+            
+            ${item.descricao ? `<br><em style="font-size: 13px; color: #555;">(${item.descricao})</em>` : ''}
+            
+          </li>
+        `).join('')}
+      </ul>
+    `;
+    
+    const templateParams = {
+      cliente_nome: pedido.nome,
+      email_cliente: pedido.email_cliente,
+      pedido_id: pedido.id,
+      data_pedido: dataPedidoF,
+      data_entrega: dataEntregaF,
+      lista_itens: listaItensHtml,
+      preco_total: pedido.preco_total.toFixed(2)
+    };
+
+    await emailjs.send(
+      "service_h149o17", 
+      templateId,
+      templateParams
+    );
+    
+    console.log("✅ Email de CONFIRMAÇÃO enviado com sucesso!");
+
+  } catch (err) {
+    console.error("❌ Erro ao enviar email de CONFIRMAÇÃO:", err);
   }
 }
