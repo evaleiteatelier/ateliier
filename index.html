@@ -53,48 +53,23 @@
 
   <div class="access-container">
     <h1>Bem-vindo(a) ao Eva Leite Atelier</h1>
+    <button onclick="entrarComoAdmin()">Sou Admin</button>
     <button onclick="entrarComoCliente()">Sou Cliente</button>
-    <button onclick="mostrarLogin()">Sou Utilizador</button>
-
-    <form id="login-form" onsubmit="return autenticarUtilizador(event)">
-      <input type="text" id="username" placeholder="Usuário" required />
-      <input type="password" id="password" placeholder="Senha" required />
-      <button type="submit">Entrar</button>
-    </form>
   </div>
 
   <script>
     function entrarComoCliente() {
-  localStorage.setItem("tipoUsuario", "cliente");
-  window.location.href = "lista-espera.html";
-}
-
-    function mostrarLogin() {
-      document.getElementById("login-form").style.display = "block";
+      localStorage.setItem("tipoUsuario", "cliente");
+      window.location.href = "lista-espera.html";
     }
 
-    function autenticarUtilizador(event) {
-      event.preventDefault();
-      const user = document.getElementById("username").value;
-      const pass = document.getElementById("password").value;
-
-      // Login e senha padrão
-      const USER = "admin";
-      const PASS = "atelier123";
-
-      if (user === USER && pass === PASS) {
-  localStorage.setItem("tipoUsuario", "admin"); // ou "utilizador", como preferir
-  window.location.href = "entregues.html";
-} else {
-  alert("Usuário ou senha incorretos.");
-}
-
+    function entrarComoAdmin() {
+      localStorage.setItem("tipoUsuario", "admin");
+      window.location.href = "adicionar-pedido.html"; 
     }
   </script>
 
-  <!-- Scripts necessários do seu projeto -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-
   <script src="script.js"></script>
 </body>
 </html>
