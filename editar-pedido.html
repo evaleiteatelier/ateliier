@@ -2,63 +2,88 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
-  <title>Editar Pedido</title>
+  <title>Editar Pedido - Eva Leite Atelier</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* Pequeno ajuste para o textarea não ficar feio */
+    textarea {
+        font-family: monospace; /* Fonte de código para facilitar a leitura do JSON */
+        background: #f0f0f0;
+    }
+  </style>
 </head>
 <body>
-  <h1>Editar Pedido</h1>
+  
+  <nav>
+    <a href="lista-espera.html">Voltar para Lista</a>
+    <a href="concluidos.html">Concluídos</a>
+  </nav>
 
+  <h1>Editar Pedido</h1>
+  
   <form id="form-editar">
     <label>Nome da Cliente:</label>
-    <input type="text" id="nome">
-
+    <input type="text" id="nome" required>
+    
     <label>Data do Pedido:</label>
-    <input type="date" id="data_pedido">
-
-    <h3>Itens</h3>
-    <textarea id="itens" rows="5" placeholder="(Os itens serão mostrados em JSON, pode editar se souber ou deixar como está)"></textarea>
-
+    <input type="date" id="data_pedido" required>
+    
+    <h3>Itens (Cuidado ao editar)</h3>
+    <p style="font-size: 0.8rem; color: red;">* Mantenha o formato exato das aspas e vírgulas.</p>
+    <textarea id="itens" rows="8" placeholder="Carregando itens..."></textarea>
+    
     <label>Data de Entrega:</label>
     <input type="date" id="data_entrega">
-
+    
     <button type="submit">Salvar Alterações</button>
   </form>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  
   <script>
-    const supabase = window.supabase.createClient(
-      "https://cixjmwfkfmeedajpmzmp.supabase.co",
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeGptd2ZrZm1lZWRhanBtem1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MzM5ODIsImV4cCI6MjA2OTEwOTk4Mn0.vFvgRMK_oabG19FNauNaBu_CoQTL8QRSXcptyfY6rbM"
-    );
+    // IMPORTANTE: O ideal é que esta inicialização vá para o script.js
+    const supabaseUrl = "https://cixjmwfkfmeedajpmzmp.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeGptd2ZrZm1lZWRhanBtem1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MzM5ODIsImV4cCI6MjA2OTEwOTk4Mn0.vFvgRMK_oabG19FNauNaBu_CoQTL8QRSXcptyfY6rbM";
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
     const id = localStorage.getItem("pedidoEditar");
 
+    // Se não tiver ID selecionado, volta para a lista
+    if (!id) {
+        alert("Nenhum pedido selecionado.");
+        window.location.href = "lista-espera.html";
+    }
+
     async function carregarPedido() {
       const { data, error } = await supabase.from('pedidos').select('*').eq('id', id).single();
+      
       if (error) {
-        alert("Erro ao carregar pedido: " + error.message);
+        alert("Erro ao carregar: " + error.message);
         return;
       }
-
+      
       document.getElementById('nome').value = data.nome;
       document.getElementById('data_pedido').value = data.data_pedido;
       document.getElementById('data_entrega').value = data.data_entrega;
+      
+      // Formata o JSON bonito (identação de 2 espaços)
       document.getElementById('itens').value = JSON.stringify(JSON.parse(data.itens), null, 2);
     }
 
     document.getElementById('form-editar').addEventListener('submit', async (e) => {
       e.preventDefault();
-
+      
       const nome = document.getElementById('nome').value;
       const data_pedido = document.getElementById('data_pedido').value;
       const data_entrega = document.getElementById('data_entrega').value;
       let itens;
 
+      // Validação do JSON antes de enviar
       try {
         itens = JSON.stringify(JSON.parse(document.getElementById('itens').value));
-      } catch {
-        alert("Erro no formato dos itens. Verifique o texto.");
-        return;
+      } catch (err) {
+        alert("ERRO DE FORMATAÇÃO: Verifique os itens. Falta uma vírgula ou aspas.");
+        return; // Para tudo e não deixa salvar errado
       }
 
       const { error } = await supabase
@@ -66,10 +91,11 @@
         .update({ nome, data_pedido, data_entrega, itens })
         .eq('id', id);
 
-      if (error) alert("Erro ao salvar: " + error.message);
-      else {
+      if (error) {
+          alert("Erro ao salvar: " + error.message);
+      } else {
         alert("Pedido atualizado com sucesso!");
-        localStorage.removeItem("pedidoEditar");
+        localStorage.removeItem("pedidoEditar"); // Limpa a memória
         window.location.href = "lista-espera.html";
       }
     });
