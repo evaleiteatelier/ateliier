@@ -1,7 +1,8 @@
 // A linha de inicialização fica igual
 emailjs.init("qyaKeJYFg3T07XDv3");
 
-// --- FUNÇÃO 1 (A ANTIGA, DE PEDIDO CONCLUÍDO) ---
+// --- FUNÇÃO 1: EMAIL DE CONCLUSÃO ---
+// Chamada quando você marca o pedido como "Concluído"
 async function enviarEmailConclusao(pedidoId, supabase) {
   // Pega dados do pedido no Supabase
   const { data: pedido, error } = await supabase
@@ -54,14 +55,12 @@ async function enviarEmailConclusao(pedidoId, supabase) {
 }
 
 
-// --- FUNÇÃO 2 (A NOVA, DE CONFIRMAÇÃO DE PEDIDO) ---
-/**
- * Envia um email de CONFIRMAÇÃO de novo pedido.
-
+// --- FUNÇÃO 2: EMAIL DE CONFIRMAÇÃO ---
+// Chamada logo após criar um pedido novo em "adicionar-pedido.html"
 /**
  * Envia um email de CONFIRMAÇÃO de novo pedido.
  * @param {object} pedido - O objeto 'novoPedido' completo do Supabase
- * @param {string} templateId - O ID do novo template de confirmação
+ * @param {string} templateId - O ID do template de confirmação (ex: template_confirmacao)
  */
 async function enviarEmailConfirmacao(pedido, templateId) {
   
@@ -72,19 +71,21 @@ async function enviarEmailConfirmacao(pedido, templateId) {
 
   try {
     const dataPedidoF = new Date(pedido.data_pedido).toLocaleDateString('pt-PT');
-    const dataEntregaF = new Date(pedido.data_entrega).toLocaleDateString('pt-PT');
+    
+    // Verifica se data_entrega existe antes de formatar, para evitar erro se estiver vazio
+    const dataEntregaF = pedido.data_entrega 
+        ? new Date(pedido.data_entrega).toLocaleDateString('pt-PT') 
+        : "A definir";
+
     const itensArray = JSON.parse(pedido.itens);
     
-    // [A CORREÇÃO ESTÁ AQUI]
-    // Adicionei o "item.descricao"
+    // Cria a lista HTML com descrição opcional
     const listaItensHtml = `
       <ul style="padding-left: 20px; text-align: left; margin: 10px 0;">
         ${itensArray.map(item => `
           <li style="margin-bottom: 8px; text-align: left;">
             <strong>${item.quantidade}x ${item.subtipo}</strong>
-            
             ${item.descricao ? `<br><em style="font-size: 13px; color: #555;">(${item.descricao})</em>` : ''}
-            
           </li>
         `).join('')}
       </ul>
@@ -97,7 +98,7 @@ async function enviarEmailConfirmacao(pedido, templateId) {
       data_pedido: dataPedidoF,
       data_entrega: dataEntregaF,
       lista_itens: listaItensHtml,
-      preco_total: pedido.preco_total.toFixed(2)
+      preco_total: parseFloat(pedido.preco_total).toFixed(2) // Garante que é número
     };
 
     await emailjs.send(
