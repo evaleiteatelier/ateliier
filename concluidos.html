@@ -2,17 +2,30 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
-  <title>Pedidos Concluídos</title>
+  <title>Pedidos Concluídos - Eva Leite Atelier</title>
   <link rel="stylesheet" href="style.css">
+  
+  <script>
+    const tipoUsuario = localStorage.getItem("tipoUsuario");
+    // Se não tiver login ou for cliente, redireciona (ajuste conforme sua regra)
+    if (!tipoUsuario || tipoUsuario === "cliente") {
+        // Opcional: window.location.href = "index.html"; 
+    }
+  </script>
 </head>
 <body>
+  
+  <header id="menu-container"></header>
+
   <h1>Pedidos Concluídos</h1>
-  <nav>
-    <a href="index.html">Fazer o login</a> 
-  </nav>
-  <div id="lista-concluidos"></div>
+  
+  <div id="lista-concluidos">
+      <p>Carregando pedidos...</p>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script src="script.js"></script>
+  
   <script src="navbar.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
