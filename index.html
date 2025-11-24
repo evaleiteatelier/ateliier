@@ -15,61 +15,66 @@
       max-width: 400px;
       margin: 0 auto;
     }
-    h1 {
-      margin-bottom: 2rem;
-    }
-    button {
+    h1 { margin-bottom: 2rem; }
+    
+    /* Estilo dos botões */
+    .btn-principal {
       display: block;
       width: 100%;
       padding: 1rem;
       margin-bottom: 1rem;
       font-size: 1.1rem;
       cursor: pointer;
+      background-color: #d4af37; /* Dourado do logo */
+      color: white;
+      border: none;
+      border-radius: 5px;
+      transition: background-color 0.3s;
     }
-    #login-form {
-      display: none;
-      margin-top: 2rem;
+    .btn-principal:hover {
+      background-color: #bfa030;
     }
-    input[type="text"],
-    input[type="password"] {
-      width: 100%;
-      padding: 0.8rem;
-      margin-bottom: 1rem;
-      font-size: 1rem;
+    .btn-secundario {
+      background-color: #eee;
+      color: #333;
     }
-    .logo-container {
-      margin-bottom: 2rem;
+    .btn-secundario:hover {
+      background-color: #ddd;
     }
-    .logo {
-      max-width: 200px;
-      height: auto;
-    }
+    
+    .logo-container { margin-bottom: 2rem; }
+    .logo { max-width: 200px; height: auto; }
   </style>
 </head>
 <body>
+  
   <header class="logo-container">
     <img src="img/logo.png" alt="Logo do Ateliê" class="logo">
   </header>
-
+  
   <div class="access-container">
     <h1>Bem-vindo(a) ao Eva Leite Atelier</h1>
-    <button onclick="entrarComoAdmin()">Sou Admin</button>
-    <button onclick="entrarComoCliente()">Sou Cliente</button>
+    
+    <button class="btn-principal" onclick="entrarComoAdmin()">Sou Admin</button>
+    
+    <button class="btn-principal btn-secundario" onclick="entrarComoCliente()">Sou Cliente (Consultar)</button>
   </div>
 
   <script>
-    function entrarComoCliente() {
-      localStorage.setItem("tipoUsuario", "cliente");
-      window.location.href = "lista-espera.html";
-    }
+    // Limpa qualquer sessão antiga ao abrir a página inicial para evitar erros
+    localStorage.removeItem("tipoUsuario");
 
     function entrarComoAdmin() {
+      // Define como admin e vai direto para adicionar pedidos
       localStorage.setItem("tipoUsuario", "admin");
       window.location.href = "adicionar-pedido.html"; 
     }
-  </script>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script src="script.js"></script>
+    function entrarComoCliente() {
+      // Define como cliente e vai para a lista de espera
+      localStorage.setItem("tipoUsuario", "cliente");
+      window.location.href = "lista-espera.html";
+    }
+  </script>
 </body>
 </html>
