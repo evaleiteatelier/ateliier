@@ -1,17 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-
-      <nav>
-    <a href="concluidos.html">Pedidos concluidos</a>
-    <a href="entregues.html">Pedidos entregues</a>
-    <a href="lista-espera.html">Lista de espera</a>
-    <a href="index.html">Fazer o Login</a>
-  </nav>
-    
   <meta charset="UTF-8">
   <title>Adicionar Pedido - Eva Leite Atelier</title>
   <link rel="stylesheet" href="style.css">
+  
   <style>
     body {
       font-family: sans-serif;
@@ -40,46 +33,49 @@
       margin-top: 1rem;
     }
   </style>
+
   <script>
     if (localStorage.getItem("tipoUsuario") === "cliente") {
         window.location.href = "lista-espera.html";
     }
-</script>
-
+  </script>
 </head>
+
 <body>
+  <nav>
+    <a href="concluidos.html">Pedidos concluídos</a>
+    <a href="entregues.html">Pedidos entregues</a>
+    <a href="lista-espera.html">Lista de espera</a>
+    <a href="index.html">Fazer o Login</a>
+  </nav>
 
   <h1>Adicionar Novo Pedido</h1>
-
+  
   <form id="form-pedido">
     <input type="text" id="nome" placeholder="Nome da Cliente" required>
+    
     <label for="data">Data desejada para início:</label>
     <input type="date" id="data" required>
 
-<h3>Itens do Pedido</h3>
-<div id="itens"></div>
-<button type="button" onclick="adicionarItem()">+ Adicionar Item</button>
-
-<!-- total geral -->
-<label for="preco_total">Preço total (€):</label>
-<input type="number" id="preco_total" step="0.01" readonly>
-
-<label for="email_cliente">Email (para notificação opcional):</label>
-<input type="email" id="email_cliente" name="email_cliente" placeholder="exemplo@email.com" />
-
-
-<button type="submit">Salvar Pedido</button>
-
+    <h3>Itens do Pedido</h3>
+    <div id="itens"></div>
+    
+    <button type="button" onclick="adicionarItem()">+ Adicionar Item</button>
+    
+    <label for="preco_total">Preço total (€):</label>
+    <input type="number" id="preco_total" step="0.01" readonly>
+    
+    <label for="email_cliente">Email (para notificação opcional):</label>
+    <input type="email" id="email_cliente" name="email_cliente" placeholder="exemplo@email.com" />
+    
+    <button type="submit">Salvar Pedido</button>
   </form>
 
-  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-
-  <script src="email-notification.js"></script> 
   
+  <script src="email-notification.js"></script> 
   <script src="script.js"></script>
 
-</body>
+  </body>
 </html>
