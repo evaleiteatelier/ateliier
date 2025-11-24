@@ -124,3 +124,115 @@ footer {
   object-fit: contain;
 }
 
+/* =========================================
+   ESTILO DE CARDS (CAIXAS) PARA OS PEDIDOS
+   ========================================= */
+
+/* =========================================
+   ESTILO "PINTEREST" (MASONRY / IRREGULAR)
+   ========================================= */
+
+/* O Container das Listas */
+* {
+    box-sizing: border-box;
+}
+
+/* O Container das Listas (Masonry / Pinterest) */
+#lista-espera, 
+#lista-concluidos, 
+#lista-entregues {
+    column-count: 4;           /* Define 4 colunas em telas grandes */
+    column-gap: 20px;          /* Espaço lateral entre colunas */
+    padding: 10px;
+}
+
+/* O Cartão Individual (.pedido) */
+.pedido {
+    /* --- O SEGREDO DO ESPAÇAMENTO --- */
+    display: inline-block;     /* Faz o bloco comportar-se bem dentro da coluna */
+    width: 100%;               /* Garante que ocupa a largura da coluna */
+    margin-bottom: 20px;       /* O ESPAÇO VERTICAL QUE FALTAVA */
+    break-inside: avoid;       /* Impede que o cartão seja cortado ao meio */
+    
+    /* Estilo Visual */
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    transition: transform 0.2s;
+}
+
+/* Ajuste para telas menores (Responsividade) */
+@media (max-width: 1200px) {
+    #lista-espera, #lista-concluidos, #lista-entregues {
+        column-count: 3;
+    }
+}
+
+@media (max-width: 900px) {
+    #lista-espera, #lista-concluidos, #lista-entregues {
+        column-count: 2;
+    }
+}
+
+@media (max-width: 600px) {
+    #lista-espera, #lista-concluidos, #lista-entregues {
+        column-count: 1;
+    }
+}
+
+/* =========================================
+   ESTILO DO MODAL (POP-UP) PROFISSIONAL
+   ========================================= */
+
+/* O Fundo Escuro */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6); /* Um pouco mais escuro para foco */
+    z-index: 2000;
+    
+    /* Centralização perfeita (Flexbox) */
+    display: flex; 
+    align-items: center;     /* Centraliza Verticalmente */
+    justify-content: center; /* Centraliza Horizontalmente */
+    backdrop-filter: blur(3px); /* Efeito de desfoque no fundo (chique!) */
+}
+
+/* A Caixa Branca */
+.modal-conteudo {
+    background: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    
+    /* --- LARGURA AUMENTADA --- */
+    width: 600px;  /* Antes era 400px, agora cabe o email e botão folgado */
+    max-width: 95%; /* No celular ocupa a tela quase toda */
+    
+    /* --- EVITAR CORTES NA VERTICAL --- */
+    max-height: 90vh; /* Ocupa no máximo 90% da altura da tela */
+    overflow-y: auto; /* Cria barra de rolagem interna SE precisar */
+    
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3); /* Sombra 3D */
+    position: relative;
+    animation: aparecerModal 0.3s ease-out; /* Pequena animação de entrada */
+}
+
+/* Animação suave ao abrir */
+@keyframes aparecerModal {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* Ajuste no título do modal */
+.modal-conteudo h2 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 2px solid #d4af37; /* Detalhe dourado */
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
