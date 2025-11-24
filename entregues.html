@@ -2,24 +2,27 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
-  <title>Pedidos Entregues</title>
+  <title>Pedidos Entregues - Eva Leite Atelier</title>
   <link rel="stylesheet" href="style.css">
+  
   <script>
     if (localStorage.getItem("tipoUsuario") === "cliente") {
         window.location.href = "lista-espera.html";
     }
-</script>
-
+  </script>
 </head>
 <body>
-  <h1>Pedidos Entregues</h1>
-  <nav>
-    <a href="index.html">Fazer o login</a> 
-  </nav>
-  <div id="lista-entregues"></div>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script src="script.js"></script>
-  <script src="navbar.js"></script>
+  
+  <h1>Pedidos Entregues (Histórico)</h1>
+  
+  <div id="lista-entregues">
+      <p>A carregar histórico...</p>
+  </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  
+  <script src="navbar.js"></script>
+  
+  <script src="script.js"></script>
 </body>
 </html>
