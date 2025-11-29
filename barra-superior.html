@@ -1,0 +1,138 @@
+<style>
+    /* --- CORREÇÃO DO CONTEÚDO ESCONDIDO --- */
+    /* Como a barra é fixa, precisamos empurrar o site para baixo */
+    body {
+        padding-top: 100px !important; /* Altura da barra + espaço extra */
+        margin: 0;
+    }
+
+    /* --- ESTILOS DA BARRA --- */
+    /* DENTRO DE BARRA-SUPERIOR.HTML */
+    .top-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 80px;
+        background-color: #ffffff;
+        border-bottom: 3px solid #d4af37;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        
+        /* MUDE AQUI 👇 */
+        z-index: 1000; /* Antes estava 9999. Vamos baixar para 1000 */
+        
+        display: flex;
+        justify-content: center;
+        font-family: sans-serif;
+    }
+
+    .header-content {
+        width: 100%;
+        max-width: 1200px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+    }
+
+    /* Logo e Marca */
+    .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+    }
+
+    .nav-logo {
+        height: 55px;
+        width: auto;
+    }
+
+    .nav-title {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #222;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* Links de Navegação */
+    .nav-links {
+        display: flex;
+        gap: 30px;
+    }
+
+    .nav-links a {
+        text-decoration: none;
+        color: #666;
+        font-weight: 500;
+        font-size: 1rem;
+        transition: all 0.3s;
+        padding: 5px 0;
+        position: relative;
+    }
+
+    .nav-links a:hover {
+        color: #d4af37;
+    }
+
+    /* Efeito de link ativo (sublinhado dourado) */
+    .active-link {
+        color: #d4af37 !important;
+        font-weight: bold;
+    }
+    .active-link::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 2px;
+        bottom: 0;
+        left: 0;
+        background-color: #d4af37;
+    }
+
+    /* Botão Sair */
+    .btn-logout {
+        background-color: #f44336;
+        color: white;
+        border: none;
+        padding: 8px 18px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 0.9rem;
+        transition: background 0.3s;
+        margin-top: 0 !important; /* Remove margem padrão de botões do css global */
+    }
+
+    .btn-logout:hover {
+        background-color: #d32f2f;
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+        .nav-title { display: none; }
+        .nav-links { gap: 15px; font-size: 0.9rem; }
+        .header-content { padding: 0 10px; }
+        body { padding-top: 90px !important; }
+    }
+</style>
+
+<header class="top-bar">
+    <div class="header-content">
+        <a href="lista-espera.html" class="brand">
+            <img src="img/logo.png" alt="Logo" class="nav-logo">
+            <span class="nav-title">Eva Leite Atelier</span>
+        </a>
+
+        <nav class="nav-links">
+            <a href="lista-espera.html" data-page="lista-espera.html">Lista de Espera</a>
+            <a href="concluidos.html" data-page="concluidos.html">Concluídos</a>
+            
+            <span class="admin-only-group" style="display:contents">
+                <a href="adicionar-pedido.html" data-page="adicionar-pedido.html">+ Novo Pedido</a>
+                <a href="entregues.html" data-page="entregues.html">Histórico</a>
+            </span>
+        </nav>
+    </div>
+</header>
