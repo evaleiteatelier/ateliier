@@ -1,14 +1,20 @@
 // ==========================================
-// 1. CONFIGURAÇÃO E INICIALIZAÇÃO
+// 1. CONFIGURAÇÃO E INICIALIZAÇÃO (BLINDADA)
 // ==========================================
 
-// Inicializa o cliente Supabase
-const _supabase = window.supabase;
-const supabase = _supabase.createClient(
-  "https://cixjmwfkfmeedajpmzmp.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeGptd2ZrZm1lZWRhanBtem1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MzM5ODIsImV4cCI6MjA2OTEwOTk4Mn0.vFvgRMK_oabG19FNauNaBu_CoQTL8QRSXcptyfY6rbM"
-);
+// 1. Verifica se o cliente já foi criado anteriormente (para evitar o erro "already declared")
+if (!window.supabaseClient) {
+    const _supabase = window.supabase;
+    // Cria e guarda no "window" (memória global do navegador)
+    window.supabaseClient = _supabase.createClient(
+      "https://cixjmwfkfmeedajpmzmp.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeGptd2ZrZm1lZWRhanBtem1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MzM5ODIsImV4cCI6MjA2OTEwOTk4Mn0.vFvgRMK_oabG19FNauNaBu_CoQTL8QRSXcptyfY6rbM"
+    );
+}
 
+// 2. Define a variável 'supabase' para ser usada no resto deste arquivo.
+// Usamos 'var' em vez de 'const' porque 'var' não dá erro se o arquivo carregar 2 vezes.
+var supabase = window.supabaseClient;
 // ==========================================
 // 2. LÓGICA DE ADICIONAR PEDIDO (NOVA LÓGICA DE AGENDAMENTO)
 // ==========================================
