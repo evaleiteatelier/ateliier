@@ -533,14 +533,15 @@ async function abrirEditorPedido(id) {
     // Lista itens existentes
     itensEditados.forEach((item, index) => {
       const div = document.createElement("div");
-      div.style.marginBottom = "8px";
+      div.style.marginBottom = "10px";
       div.style.borderBottom = "1px solid #eee";
-      div.style.paddingBottom = "5px";
+      div.style.paddingBottom = "10px";
       div.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
             <span><strong>${item.quantidade}x ${item.subtipo}</strong> - €${item.preco_total_item.toFixed(2)}</span>
             <button data-index="${index}" class="remover-item" style="background:red; color:white; border:none; padding:2px 5px; cursor:pointer; border-radius:3px;">X</button>
         </div>
+        <textarea data-index="${index}" class="editar-descricao" placeholder="Descrição do item..." style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; box-sizing:border-box; min-height:60px; font-family:inherit; resize:vertical;">${item.descricao || ''}</textarea>
       `;
       container.appendChild(div);
     });
@@ -553,7 +554,7 @@ async function abrirEditorPedido(id) {
     divAdd.style.borderRadius = "5px";
     divAdd.innerHTML = `
       <h4>Adicionar Novo Item</h4>
-      <div style="display:flex; gap:5px; flex-wrap:wrap;">
+      <div style="display:flex; gap:5px; flex-wrap:wrap; margin-bottom: 8px;">
           <select id="novo-subtipo" style="padding:5px; border-radius:3px; border:1px solid #ccc;">
             <option value="macacão" data-dias="3">Macacão</option>
             <option value="vestido normal" data-dias="3">Vestido Normal</option>
@@ -568,7 +569,8 @@ async function abrirEditorPedido(id) {
           <input type="number" id="novo-preco" placeholder="€" step="0.01" min="0" style="width:70px; padding:5px; border-radius:3px; border:1px solid #ccc;">
           <input type="number" id="novo-quantidade" placeholder="Qtd" min="1" value="1" style="width:50px; padding:5px; border-radius:3px; border:1px solid #ccc;">
       </div>
-      <button id="btn-add-item" style="margin-top:5px; width:100%; background:#4CAF50; color:white; padding:8px; border:none; border-radius:3px; cursor:pointer;">+ Adicionar Item</button>
+      <textarea id="novo-descricao" placeholder="Descrição do novo item..." style="width:100%; padding:8px; border-radius:3px; border:1px solid #ccc; box-sizing:border-box; margin-bottom: 8px; min-height:60px; font-family:inherit; resize:vertical;"></textarea>
+      <button id="btn-add-item" style="width:100%; background:#4CAF50; color:white; padding:8px; border:none; border-radius:3px; cursor:pointer;">+ Adicionar Item</button>
     `;
     container.appendChild(divAdd);
 
@@ -586,6 +588,7 @@ async function abrirEditorPedido(id) {
       const subtipo = select.value;
       const preco = parseFloat(document.getElementById("novo-preco").value) || 0;
       const quantidade = parseInt(document.getElementById("novo-quantidade").value) || 1;
+      const descricao = document.getElementById("novo-descricao").value.trim() || "";
       const dias = parseInt(select.selectedOptions[0].dataset.dias);
 
       if (preco <= 0) {
@@ -602,7 +605,7 @@ async function abrirEditorPedido(id) {
         tipo,
         subtipo,
         dias,
-        descricao: "(Adicionado na edição)",
+        descricao: descricao,
         preco,
         quantidade,
         preco_total_item: preco * quantidade
@@ -621,6 +624,14 @@ async function abrirEditorPedido(id) {
       renderItensModal();
     }
   };
+
+  // Delegação de evento para atualizar a descrição
+  container.addEventListener("input", (e) => {
+    if (e.target.classList.contains("editar-descricao")) {
+      const index = parseInt(e.target.dataset.index);
+      itensEditados[index].descricao = e.target.value;
+    }
+  });
 
   // Botão Salvar Geral (Itens e Preço)
   // NOTA: Também salvamos o email aqui caso a pessoa tenha editado mas esquecido de clicar em "Reenviar"
