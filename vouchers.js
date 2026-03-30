@@ -15,6 +15,33 @@ const db = window.supabaseClient;
 let todosVouchers = [];
 let filtroAtivo = 'todos';
 let modoVitalicio = false;
+let voucherIdAtribuir = null; // ID do voucher a atribuir cliente
+
+// =========================================
+// MODAL DE CONFIRMAÇÃO PERSONALIZADO
+// =========================================
+function confirmarModal({ icone = '⚠️', titulo, texto, corBotao = '#c62828', textoBotao = 'Confirmar', onConfirm }) {
+  document.getElementById('modal-confirmar-icone').textContent = icone;
+  document.getElementById('modal-confirmar-titulo').textContent = titulo;
+  document.getElementById('modal-confirmar-texto').textContent = texto;
+
+  const okBtn = document.getElementById('modal-confirmar-ok');
+  okBtn.textContent = textoBotao;
+  okBtn.style.background = corBotao;
+  okBtn.style.color = '#fff';
+  okBtn.onclick = () => {
+    fecharModalConfirmar();
+    onConfirm();
+  };
+
+  document.getElementById('modal-confirmar').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function fecharModalConfirmar() {
+  document.getElementById('modal-confirmar').style.display = 'none';
+  document.body.style.overflow = 'auto';
+}
 
 // =========================================
 // TOGGLE VITALÍCIO
@@ -56,9 +83,10 @@ async function criarVoucher() {
   const numero = document.getElementById('v-numero').value.trim();
   const email = document.getElementById('v-email').value.trim();
   const validade = document.getElementById('v-validade').value;
+  const desconto = parseInt(document.getElementById('v-desconto').value);
 
-  if (!nome) {
-    alert('Por favor, insira o nome da cliente.');
+  if (!desconto || desconto < 1 || desconto > 100) {
+    alert('Por favor, insira uma percentagem de desconto válida (1–100%).');
     return;
   }
 
@@ -74,9 +102,10 @@ async function criarVoucher() {
 
   const novoVoucher = {
     codigo: gerarCodigo(),
-    nome_cliente: nome,
+    nome_cliente: nome || null,
     numero_cliente: numero || null,
     email_cliente: email || null,
+    desconto_percentagem: desconto,
     data_validade: modoVitalicio ? null : validade,
     vitalicio: modoVitalicio,
     estado: 'disponivel',
@@ -110,6 +139,7 @@ async function criarVoucher() {
   document.getElementById('v-numero').value = '';
   document.getElementById('v-email').value = '';
   document.getElementById('v-validade').value = '';
+  document.getElementById('v-desconto').value = '';
   if (modoVitalicio) toggleVitalicio(); // reset
 
   alert(`✅ Voucher criado com sucesso!\nCódigo: ${novoVoucher.codigo}`);
@@ -176,6 +206,8 @@ function renderVouchers() {
   }
 
   container.innerHTML = lista.map(v => {
+    const nomeStr = v.nome_cliente || '<em style="color:#bbb;">Sem cliente atribuído</em>';
+    const descontoStr = v.desconto_percentagem ? `${v.desconto_percentagem}%` : '—';
     const badgeClasse = v.estado === 'disponivel' ? 'badge-disponivel' :
                         v.estado === 'utilizado'  ? 'badge-utilizado'  : 'badge-expirado';
     const badgeLabel  = v.estado === 'disponivel' ? '✅ Disponível' :
@@ -192,6 +224,7 @@ function renderVouchers() {
     const emailStr = v.email_cliente  ? `✉️ ${v.email_cliente}`  : '';
 
     const botoesFooter = v.estado === 'disponivel' ? `
+      ${!v.nome_cliente ? `<button class="btn-atribuir" onclick="abrirModalAtribuir('${v.id}')">👤 Atribuir Cliente</button>` : ''}
       <button class="btn-utilizado" onclick="marcarUtilizado('${v.id}')">✔️ Já Utilizado</button>
       <button class="btn-excluir"   onclick="excluirVoucher('${v.id}')">🗑️ Excluir</button>
     ` : `
@@ -205,7 +238,10 @@ function renderVouchers() {
           <span class="badge ${badgeClasse}">${badgeLabel}</span>
         </div>
         <div class="ticket-body">
-          <div class="cliente-nome">👤 ${v.nome_cliente}</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div class="cliente-nome">👤 ${nomeStr}</div>
+            <div style="background:#fff8e1; border:1px solid #ffe082; border-radius:8px; padding:4px 10px; font-size:1rem; font-weight:900; color:#7a5c00; white-space:nowrap;">${descontoStr} OFF</div>
+          </div>
           <div class="ticket-meta">
             ${numStr   ? `<span>${numStr}</span>`   : ''}
             ${emailStr ? `<span>${emailStr}</span>` : ''}
@@ -238,17 +274,62 @@ function filtrarVouchers() {
 // MARCAR COMO UTILIZADO
 // =========================================
 async function marcarUtilizado(id) {
-  if (!confirm('Marcar este voucher como já utilizado?')) return;
+  confirmarModal({
+    icone: '✔️',
+    titulo: 'Marcar como Utilizado',
+    texto: 'Tem a certeza que deseja marcar este voucher como já utilizado? Esta ação não pode ser desfeita.',
+    corBotao: '#2e7d32',
+    textoBotao: '✔️ Confirmar',
+    onConfirm: async () => {
+      const { error } = await db
+        .from('vouchers')
+        .update({ estado: 'utilizado', data_estado_mudado: new Date().toISOString() })
+        .eq('id', id);
+
+      if (error) {
+        alert('Erro ao atualizar voucher: ' + error.message);
+        return;
+      }
+      await carregarVouchers();
+    }
+  });
+}
+
+// =========================================
+// ATRIBUIR CLIENTE A VOUCHER SEM NOME
+// =========================================
+function abrirModalAtribuir(id) {
+  voucherIdAtribuir = id;
+  document.getElementById('modal-nome-cliente').value = '';
+  document.getElementById('modal-atribuir').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('modal-nome-cliente').focus(), 100);
+}
+
+function fecharModalAtribuir() {
+  voucherIdAtribuir = null;
+  document.getElementById('modal-atribuir').style.display = 'none';
+  document.body.style.overflow = 'auto';
+}
+
+async function salvarAtribuicao() {
+  const nome = document.getElementById('modal-nome-cliente').value.trim();
+  if (!nome) {
+    alert('Por favor, insira o nome da cliente.');
+    return;
+  }
 
   const { error } = await db
     .from('vouchers')
-    .update({ estado: 'utilizado', data_estado_mudado: new Date().toISOString() })
-    .eq('id', id);
+    .update({ nome_cliente: nome })
+    .eq('id', voucherIdAtribuir);
 
   if (error) {
-    alert('Erro ao atualizar voucher: ' + error.message);
+    alert('Erro ao atribuir cliente: ' + error.message);
     return;
   }
+
+  fecharModalAtribuir();
   await carregarVouchers();
 }
 
@@ -256,14 +337,21 @@ async function marcarUtilizado(id) {
 // EXCLUIR VOUCHER
 // =========================================
 async function excluirVoucher(id) {
-  if (!confirm('Tem a certeza que deseja excluir este voucher permanentemente?')) return;
-
-  const { error } = await db.from('vouchers').delete().eq('id', id);
-  if (error) {
-    alert('Erro ao excluir: ' + error.message);
-    return;
-  }
-  await carregarVouchers();
+  confirmarModal({
+    icone: '🗑️',
+    titulo: 'Excluir Voucher',
+    texto: 'Tem a certeza que deseja excluir este voucher permanentemente? Esta ação não pode ser desfeita.',
+    corBotao: '#c62828',
+    textoBotao: '🗑️ Excluir',
+    onConfirm: async () => {
+      const { error } = await db.from('vouchers').delete().eq('id', id);
+      if (error) {
+        alert('Erro ao excluir: ' + error.message);
+        return;
+      }
+      await carregarVouchers();
+    }
+  });
 }
 
 // =========================================

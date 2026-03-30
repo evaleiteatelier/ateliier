@@ -68,9 +68,9 @@
       <label style="display:block; font-weight:bold; font-size:0.95rem; margin-bottom:8px; color:#7a5c00;">
         🎟️ Cupão de Desconto (opcional)
       </label>
-      <div style="display:flex; gap:8px; align-items:center;">
-        <input type="text" id="cupao-busca" placeholder="Código do cupão ou nome da cliente" style="flex:1; margin-bottom:0;">
-        <button type="button" onclick="buscarCupaoFormulario()" style="margin-top:0; padding:0.8rem 14px; white-space:nowrap; background:#d4af37; color:#000; font-weight:bold;">Verificar</button>
+      <div style="display:flex; gap:8px; align-items:stretch;">
+        <input type="text" id="cupao-busca" placeholder="Código do cupão ou nome da cliente" style="flex:1; width:auto; min-width:0; margin-bottom:0; box-sizing:border-box;">
+        <button type="button" onclick="buscarCupaoFormulario()" style="flex-shrink:0; margin-top:0; padding:0.8rem 18px; white-space:nowrap; background:#d4af37; color:#000; font-weight:bold; width:auto;">Verificar</button>
       </div>
       <div id="cupao-resultado" style="margin-top:8px; font-size:0.9rem; display:none;"></div>
       <input type="hidden" id="cupao-id-selecionado" value="">
