@@ -78,6 +78,15 @@ if (document.getElementById('form-pedido')) {
         // Tenta enviar o email de confirmação
         const NOVO_TEMPLATE_ID = "template_0uin60y"; // Confirme se este ID está certo no EmailJS
         await enviarEmailConfirmacao(novoPedido, NOVO_TEMPLATE_ID);
+
+        // Se há cupão selecionado, marca como utilizado
+        const cupaoIdEl = document.getElementById('cupao-id-selecionado');
+        if (cupaoIdEl && cupaoIdEl.value) {
+          await supabase
+            .from('vouchers')
+            .update({ estado: 'utilizado', data_estado_mudado: new Date().toISOString() })
+            .eq('id', cupaoIdEl.value);
+        }
         
         alert("Pedido salvo com sucesso!");
         location.reload();

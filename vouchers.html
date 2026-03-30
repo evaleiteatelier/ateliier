@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vouchers - Eva Leite Atelier</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ---- PÁGINA DE VOUCHERS ---- */
+    .vouchers-layout {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 30px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* FORMULÁRIO DE CRIAR CUPÃO */
+    .criar-voucher-card {
+      background: #fff;
+      border: 2px dashed #bba68a;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+      position: sticky;
+      top: 110px;
+      align-self: start;
+    }
+
+    .criar-voucher-card h2 {
+      margin-top: 0;
+      border-bottom: 2px solid #d4af37;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+      font-family: 'Playfair Display', serif;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: bold;
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+      margin-top: 0;
+      color: #444;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+      box-sizing: border-box;
+      background: #fdfdfd;
+      margin-top: 0;
+    }
+
+    .validade-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+    .validade-row .form-group {
+      flex: 1;
+      margin-bottom: 0;
+    }
+    .btn-vitalicio {
+      background: #6a4f35;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      margin-top: 0;
+      transition: background 0.2s;
+    }
+    .btn-vitalicio:hover { background: #bba68a; color: #000; }
+    .btn-vitalicio.active {
+      background: #d4af37;
+      color: #000;
+      font-weight: bold;
+    }
+
+    .btn-criar {
+      width: 100%;
+      background: #000;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 14px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 6px;
+      letter-spacing: 1px;
+      transition: background 0.2s;
+    }
+    .btn-criar:hover { background: #bba68a; color: #000; }
+
+    /* GRID DOS TICKETS */
+    .vouchers-grid-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      text-align: center;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #d4af37;
+      padding-bottom: 10px;
+    }
+
+    .filtros-voucher {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filtros-voucher button {
+      margin-top: 0;
+      padding: 8px 18px;
+      border-radius: 20px;
+      border: 2px solid #bba68a;
+      background: transparent;
+      color: #555;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filtros-voucher button:hover,
+    .filtros-voucher button.ativo {
+      background: #d4af37;
+      color: #000;
+      border-color: #d4af37;
+      font-weight: bold;
+    }
+
+    #pesquisa-vouchers {
+      flex: 1;
+      min-width: 180px;
+      padding: 8px 14px;
+      border: 1px solid #ccc;
+      border-radius: 20px;
+      font-size: 0.95rem;
+      background: #fdfdfd;
+      margin-top: 0;
+      width: auto;
+    }
+
+    /* OS TICKETS */
+    .vouchers-lista {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 18px;
+    }
+
+    .ticket {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      overflow: hidden;
+      border: 1px solid #e8e0d5;
+      position: relative;
+      transition: transform 0.2s, box-shadow 0.2s;
+      break-inside: avoid;
+    }
+    .ticket:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.13);
+    }
+
+    .ticket-header {
+      padding: 16px 18px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px dashed #e8e0d5;
+    }
+    .ticket-header .codigo {
+      font-family: 'Courier New', monospace;
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #333;
+      letter-spacing: 2px;
+    }
+
+    .badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-disponivel { background: #e6f4ea; color: #2e7d32; }
+    .badge-utilizado  { background: #fce8e6; color: #c62828; }
+    .badge-expirado   { background: #f5f5f5; color: #757575; }
+
+    .ticket-body {
+      padding: 14px 18px;
+    }
+    .ticket-body .cliente-nome {
+      font-size: 1.05rem;
+      font-weight: bold;
+      margin-bottom: 6px;
+      color: #222;
+    }
+    .ticket-meta {
+      font-size: 0.85rem;
+      color: #777;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .ticket-meta span { display: flex; align-items: center; gap: 5px; }
+
+    .ticket-footer {
+      padding: 10px 18px 14px;
+      display: flex;
+      gap: 8px;
+      border-top: 1px solid #f0ebe4;
+    }
+    .btn-utilizado {
+      flex: 1;
+      background: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #a5d6a7;
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      margin-top: 0;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    .btn-utilizado:hover { background: #c8e6c9; }
+    .btn-excluir {
+      flex: 1;
+      background: #fce8e6;
+      color: #c62828;
+      border: 1px solid #ef9a9a;
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      margin-top: 0;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    .btn-excluir:hover { background: #ffcdd2; }
+
+    /* Watermark no ticket utilizado/expirado */
+    .ticket.usado .ticket-header,
+    .ticket.expirado .ticket-header {
+      opacity: 0.6;
+    }
+    .ticket.usado::after,
+    .ticket.expirado::after {
+      content: attr(data-label);
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-25deg);
+      font-size: 2.5rem;
+      font-weight: 900;
+      opacity: 0.07;
+      color: #000;
+      pointer-events: none;
+      white-space: nowrap;
+      letter-spacing: 4px;
+    }
+
+    /* Responsividade */
+    @media (max-width: 860px) {
+      .vouchers-layout {
+        grid-template-columns: 1fr;
+      }
+      .criar-voucher-card {
+        position: static;
+      }
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #999;
+      padding: 40px;
+      grid-column: 1 / -1;
+    }
+    .empty-state p:first-child { font-size: 3rem; }
+  </style>
+
+  <script>
+    if (localStorage.getItem("tipoUsuario") === "cliente") {
+      window.location.href = "lista-espera.html";
+    }
+  </script>
+</head>
+<body>
+
+  <h1>Gestão de Vouchers</h1>
+
+  <div class="vouchers-layout">
+
+    <!-- COLUNA ESQUERDA: Formulário Criar Voucher -->
+    <div class="criar-voucher-card">
+      <h2>🎟️ Criar Cupão</h2>
+
+      <div class="form-group">
+        <label>Nome da Cliente *</label>
+        <input type="text" id="v-nome" placeholder="Ex: Maria Silva" required>
+      </div>
+
+      <div class="form-group">
+        <label>Número (opcional)</label>
+        <input type="tel" id="v-numero" placeholder="Ex: 912 345 678">
+      </div>
+
+      <div class="form-group">
+        <label>Email (opcional)</label>
+        <input type="email" id="v-email" placeholder="Ex: cliente@email.com">
+      </div>
+
+      <div class="form-group">
+        <label>Prazo de Validade</label>
+        <div class="validade-row">
+          <div class="form-group">
+            <input type="date" id="v-validade" placeholder="Data de validade">
+          </div>
+          <button class="btn-vitalicio" id="btn-vitalicio-toggle" onclick="toggleVitalicio()">♾️ Vitalício</button>
+        </div>
+        <small style="color:#888; font-size:0.82rem;">Deixe em branco ou clique em Vitalício para sem expiração.</small>
+      </div>
+
+      <button class="btn-criar" onclick="criarVoucher()">✨ Criar Voucher</button>
+    </div>
+
+    <!-- COLUNA DIREITA: Lista de Vouchers -->
+    <div>
+      <div class="vouchers-grid-title">Cupões Registados</div>
+
+      <div class="filtros-voucher">
+        <input type="text" id="pesquisa-vouchers" placeholder="🔍 Buscar por nome ou código..." oninput="filtrarVouchers()">
+        <button id="filtro-todos" class="ativo" onclick="aplicarFiltro('todos')">Todos</button>
+        <button id="filtro-disponivel" onclick="aplicarFiltro('disponivel')">✅ Disponíveis</button>
+        <button id="filtro-utilizado" onclick="aplicarFiltro('utilizado')">❌ Utilizados</button>
+        <button id="filtro-expirado" onclick="aplicarFiltro('expirado')">⌛ Expirados</button>
+      </div>
+
+      <div class="vouchers-lista" id="vouchers-lista">
+        <div class="empty-state"><p>⏳</p><p>A carregar vouchers...</p></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="navbar.js"></script>
+  <script src="vouchers.js"></script>
+
+</body>
+</html>

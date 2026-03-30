@@ -63,6 +63,19 @@
     <label for="email_cliente">Email (para notificação opcional):</label>
     <input type="email" id="email_cliente" name="email_cliente" placeholder="exemplo@email.com" />
     
+    <!-- SECÇÃO DE CUPÃO -->
+    <div style="background:#fffdf5; border:2px dashed #d4af37; border-radius:8px; padding:16px; margin-bottom:1rem;">
+      <label style="display:block; font-weight:bold; font-size:0.95rem; margin-bottom:8px; color:#7a5c00;">
+        🎟️ Cupão de Desconto (opcional)
+      </label>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <input type="text" id="cupao-busca" placeholder="Código do cupão ou nome da cliente" style="flex:1; margin-bottom:0;">
+        <button type="button" onclick="buscarCupaoFormulario()" style="margin-top:0; padding:0.8rem 14px; white-space:nowrap; background:#d4af37; color:#000; font-weight:bold;">Verificar</button>
+      </div>
+      <div id="cupao-resultado" style="margin-top:8px; font-size:0.9rem; display:none;"></div>
+      <input type="hidden" id="cupao-id-selecionado" value="">
+    </div>
+    
     <button type="submit">Salvar Pedido</button>
   </form>
 
@@ -70,10 +83,82 @@
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   
   <script src="email-notification.js"></script> 
-  
+  <script src="vouchers.js"></script>
   <script src="script.js"></script>
   
   <script src="navbar.js"></script>
+
+  <script>
+    // Busca e exibe resultado do cupão no formulário de pedido
+    async function buscarCupaoFormulario() {
+      const termo = document.getElementById('cupao-busca').value.trim();
+      const resultadoDiv = document.getElementById('cupao-resultado');
+      const idHidden = document.getElementById('cupao-id-selecionado');
+
+      resultadoDiv.style.display = 'none';
+      idHidden.value = '';
+
+      if (!termo) {
+        alert('Insira o código do cupão ou o nome da cliente.');
+        return;
+      }
+
+      resultadoDiv.style.display = 'block';
+      resultadoDiv.innerHTML = '<span style="color:#888;">A verificar...</span>';
+
+      const voucher = await buscarVoucher(termo);
+
+      if (!voucher) {
+        resultadoDiv.innerHTML = `<span style="color:#c62828;">❌ Cupão não encontrado ou já utilizado/expirado.</span>`;
+        idHidden.value = '';
+        return;
+      }
+
+      // Validar expiração
+      const hoje = new Date(); hoje.setHours(0,0,0,0);
+      if (!voucher.vitalicio && voucher.data_validade) {
+        const val = new Date(voucher.data_validade + 'T00:00:00');
+        if (val < hoje) {
+          resultadoDiv.innerHTML = `<span style="color:#c62828;">⌛ Cupão expirado em ${new Date(voucher.data_validade+'T00:00:00').toLocaleDateString('pt-PT')}.</span>`;
+          idHidden.value = '';
+          return;
+        }
+      }
+
+      const validadeStr = voucher.vitalicio ? '♾️ Vitalício' : `📅 Válido até ${new Date(voucher.data_validade+'T00:00:00').toLocaleDateString('pt-PT')}`;
+
+      resultadoDiv.innerHTML = `
+        <div style="background:#e8f5e9; border:1px solid #a5d6a7; border-radius:6px; padding:10px;">
+          <strong>✅ Cupão encontrado!</strong><br>
+          <span>👤 ${voucher.nome_cliente}</span>&nbsp;&nbsp;
+          <span style="font-family:monospace; font-weight:bold;">${voucher.codigo}</span>&nbsp;&nbsp;
+          <span>${validadeStr}</span>
+          <div style="margin-top:6px;">
+            <button type="button" onclick="selecionarCupao('${voucher.id}', '${voucher.codigo}')" 
+              style="margin-top:4px; background:#2e7d32; color:#fff; border:none; padding:6px 14px; border-radius:4px; cursor:pointer; font-size:0.85rem;">
+              ✔️ Usar este cupão
+            </button>
+          </div>
+        </div>`;
+      idHidden.value = ''; // só confirma se clicar em "Usar"
+    }
+
+    function selecionarCupao(id, codigo) {
+      document.getElementById('cupao-id-selecionado').value = id;
+      const resultadoDiv = document.getElementById('cupao-resultado');
+      resultadoDiv.innerHTML = `
+        <div style="background:#e8f5e9; border:1px solid #a5d6a7; border-radius:6px; padding:10px;">
+          🎟️ Cupão <strong>${codigo}</strong> será aplicado ao guardar o pedido.
+          <button type="button" onclick="removerCupao()" style="margin-top:0; margin-left:10px; background:transparent; color:#c62828; border:none; cursor:pointer; font-size:0.85rem; padding:0;">✖ Remover</button>
+        </div>`;
+    }
+
+    function removerCupao() {
+      document.getElementById('cupao-id-selecionado').value = '';
+      document.getElementById('cupao-resultado').style.display = 'none';
+      document.getElementById('cupao-busca').value = '';
+    }
+  </script>
 
 </body>
 </html>
