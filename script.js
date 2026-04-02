@@ -54,6 +54,19 @@ if (document.getElementById('form-pedido')) {
     const dataEntrega = calcularDataEntrega(dataInicioReal, diasTotais);
     // ------------------------------------------
 
+    const cupao_codigo_el = document.getElementById('cupao-codigo');
+    const cupao_desconto_el = document.getElementById('cupao-desconto');
+    const cupao_codigo = (cupao_codigo_el && cupao_codigo_el.value) ? cupao_codigo_el.value : null;
+    const desconto_percentagem = (cupao_desconto_el && cupao_desconto_el.value) ? parseInt(cupao_desconto_el.value) : null;
+    
+    const adiantamento_el = document.getElementById('valor_adiantado');
+    const valor_adiantado = (adiantamento_el && adiantamento_el.value) ? parseFloat(adiantamento_el.value) : 0;
+    
+    let preco_final = preco_total;
+    if (desconto_percentagem && desconto_percentagem > 0) {
+      preco_final = preco_total - (preco_total * desconto_percentagem / 100);
+    }
+
     const pedidoObj = {
       nome,
       data_pedido: dataEscolhida.toISOString().split('T')[0],
@@ -62,6 +75,10 @@ if (document.getElementById('form-pedido')) {
       data_entrega: dataEntrega.toISOString().split('T')[0],
       status: 'pendente',
       preco_total: preco_total,
+      preco_final: preco_final,
+      cupao_codigo: cupao_codigo,
+      desconto_percentagem: desconto_percentagem,
+      valor_adiantado: valor_adiantado,
       email_cliente: email_cliente
     };
 
@@ -262,8 +279,27 @@ function atualizarPrecoTotal() {
         const quantidade = parseInt(div.querySelector('.quantidade-item').value) || 1;
         total += preco * quantidade;
     });
+
+    const inputDesconto = document.getElementById('cupao-desconto');
+    let precoFinal = total;
+    if (inputDesconto && inputDesconto.value) {
+        precoFinal = total - (total * parseInt(inputDesconto.value) / 100);
+    }
+    
     const inputTotal = document.getElementById('preco_total');
-    if (inputTotal) inputTotal.value = total.toFixed(2);
+    if (inputTotal) inputTotal.value = precoFinal.toFixed(2);
+    
+    const displayTotal = document.getElementById("final_total_display");
+    if (displayTotal) displayTotal.innerText = precoFinal.toFixed(2);
+    
+    const adiantamentoEl = document.getElementById("valor_adiantado");
+    const valor_adiantado = adiantamentoEl && adiantamentoEl.value ? parseFloat(adiantamentoEl.value) : 0;
+    
+    const lblPago = document.getElementById("final_pago_display");
+    if (lblPago) lblPago.innerText = valor_adiantado.toFixed(2);
+    
+    const lblFalta = document.getElementById("final_falta_display");
+    if (lblFalta) lblFalta.innerText = Math.max(0, precoFinal - valor_adiantado).toFixed(2);
 }
 
 function adicionarItem() {
@@ -356,6 +392,47 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
     const dataPedidoF = formatarDataParaExibir(p.data_pedido);
     const dataEntregaF = formatarDataParaExibir(p.data_entrega);
 
+    const precoOriginal = p.preco_total ? Number(p.preco_total).toFixed(2) : '0.00';
+    let precoDisplay = `<p><strong>Total:</strong> €${precoOriginal}</p>`;
+    
+    let finalValueRendered = p.preco_total ? Number(p.preco_total) : 0;
+    
+    if (p.cupao_codigo && p.desconto_percentagem) {
+       finalValueRendered = p.preco_final || p.preco_total;
+       precoDisplay = `
+       <div style="background:#fff8e1; border:1px solid #ffe082; padding:10px; border-radius:6px; margin-bottom:10px;">
+         <p style="margin:0 0 5px 0; text-decoration:line-through; color:#777; font-size:0.9rem;">Subtotal: €${precoOriginal}</p>
+         <p style="margin:0 0 5px 0; font-size:0.95rem;">🎟️ Cupão <strong>${p.cupao_codigo}</strong> (-${p.desconto_percentagem}%)</p>
+         <p style="margin:0; font-size:1.1rem; color:#d4af37;"><strong>Total a Pagar: €${Number(finalValueRendered).toFixed(2)}</strong></p>
+       </div>
+       `;
+    }
+
+    // Caixa de pagamento: aparece SEMPRE em todos os pedidos
+    {
+       const adiantado = p.valor_adiantado ? Number(p.valor_adiantado) : 0;
+       if (!p.cupao_codigo) {
+           finalValueRendered = p.preco_total ? Number(p.preco_total) : 0;
+       } else {
+           finalValueRendered = p.preco_final ? Number(p.preco_final) : (p.preco_total ? Number(p.preco_total) : 0);
+       }
+       const falta = Math.max(0, finalValueRendered - adiantado);
+       const pct = finalValueRendered > 0 ? Math.min(100, Math.round((adiantado / finalValueRendered) * 100)) : 0;
+       const corGrafico = pct === 100 ? '#4caf50' : (pct > 50 ? '#ff9800' : '#f44336');
+       
+       precoDisplay += `
+       <div style="background:#f4f9f4; border:1px solid #c8e6c9; padding:10px; border-radius:6px; margin-bottom:10px; display:flex; align-items:center; gap:15px;">
+         <div style="position:relative; width:54px; height:54px; border-radius:50%; background: conic-gradient(${corGrafico} ${pct * 3.6}deg, #e0e0e0 0deg); display:flex; justify-content:center; align-items:center; flex-shrink:0;">
+            <div style="width:42px; height:42px; background:#f4f9f4; border-radius:50%; display:flex; justify-content:center; align-items:center; font-size:0.8rem; font-weight:bold; color:#2e7d32;">${pct}%</div>
+         </div>
+         <div style="flex:1; min-width:0;">
+            <p style="margin:0 0 3px 0; font-size:0.85rem; color:#2e7d32;"><strong>Pago:</strong> €${adiantado.toFixed(2)} / €${finalValueRendered.toFixed(2)}</p>
+            <p style="margin:0; font-size:1rem; color:#c62828;"><strong>Falta:</strong> €${falta.toFixed(2)}</p>
+         </div>
+       </div>
+       `;
+    }
+
     div.innerHTML = `
       <strong>${p.nome}</strong>
       <ul>
@@ -370,7 +447,8 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
          Pedido: ${dataPedidoF} | 
          Entrega: <strong>${dataEntregaF}</strong>
       </p>
-      <p><strong>Total:</strong> €${p.preco_total ? Number(p.preco_total).toFixed(2) : '0.00'}</p>
+      
+      ${precoDisplay}
       
       <div class="acoes-pedido">
           ${botaoAcao ? `<button class="admin-only" onclick="mudarStatus('${p.id}', '${novoStatus}')">${botaoAcao}</button>` : ''}
@@ -386,6 +464,11 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
   });
   
   esconderBotoesSeCliente();
+  
+  // Applica Masonry effect após os itens estarem no DOM
+  setTimeout(() => {
+    aplicarMasonryUI(filtro);
+  }, 50);
 }
 
 async function mudarStatus(id, novoStatus) {
@@ -430,11 +513,17 @@ function filtrarPedidos() {
     pedidos.forEach(pedido => {
         const nomeCliente = pedido.getAttribute('data-nome');
         if (nomeCliente.includes(termo)) {
-            pedido.style.display = "block";
+            pedido.style.display = "flex"; // Volta o display original para os pedidos
         } else {
             pedido.style.display = "none";
         }
     });
+    
+    // Reconstrói o mosaico para preencher os buracos das pesquisas
+    let filtroPagina = 'pendente';
+    if (window.location.pathname.includes('concluidos')) filtroPagina = 'concluido';
+    if (window.location.pathname.includes('entregues')) filtroPagina = 'entregue';
+    setTimeout(() => aplicarMasonryUI(filtroPagina), 20);
 }
 
 // ==========================================
@@ -493,7 +582,7 @@ async function abrirEditorPedido(id) {
   // 3. Prepara os dados
   const itens = typeof pedido.itens === "string" ? JSON.parse(pedido.itens) : pedido.itens;
   let itensEditados = [...itens]; // Cópia para edição
-  let precoOriginal = pedido.preco_total || 0;
+  let precoOriginal = pedido.preco_final || pedido.preco_total || 0;
 
   // Elementos do DOM
   const container = document.getElementById("itens-editar");
@@ -501,10 +590,43 @@ async function abrirEditorPedido(id) {
   const precoNovo = document.getElementById("preco-novo");
   const diferenca = document.getElementById("diferenca");
 
+  // Cupão
+  const cupaoIdHidden = document.getElementById("editor-cupao-id");
+  const cupaoCodigoHidden = document.getElementById("editor-cupao-codigo");
+  const cupaoDescontoHidden = document.getElementById("editor-cupao-desconto");
+  const cupaoResultado = document.getElementById("editor-cupao-resultado");
+  const cupaoBusca = document.getElementById("editor-cupao-busca");
+  
+  if (cupaoBusca) cupaoBusca.value = '';
+  if (pedido.cupao_codigo && pedido.desconto_percentagem) {
+      if (cupaoIdHidden) cupaoIdHidden.value = "manter";
+      if (cupaoCodigoHidden) cupaoCodigoHidden.value = pedido.cupao_codigo;
+      if (cupaoDescontoHidden) cupaoDescontoHidden.value = pedido.desconto_percentagem;
+      if (cupaoResultado) {
+        cupaoResultado.style.display = "block";
+        cupaoResultado.innerHTML = `
+          <div style="background:#e8f5e9; border:1px solid #a5d6a7; border-radius:6px; padding:10px; display:flex; align-items:center; flex-wrap:wrap; gap:10px;">
+            <span>🎟️ Cupão <strong>${pedido.cupao_codigo}</strong> <span style="color:#7a5c00; font-weight:bold;">(${pedido.desconto_percentagem}% OFF)</span> ativo neste pedido.</span>
+            <button type="button" onclick="removerCupaoEditor()" style="margin-top:0; background:transparent; color:#c62828; border:none; cursor:pointer; font-size:0.85rem; padding:0; text-decoration:underline;">✖ Remover</button>
+          </div>`;
+      }
+  } else {
+      if (cupaoIdHidden) cupaoIdHidden.value = "";
+      if (cupaoCodigoHidden) cupaoCodigoHidden.value = "";
+      if (cupaoDescontoHidden) cupaoDescontoHidden.value = "";
+      if (cupaoResultado) cupaoResultado.style.display = "none";
+  }
+
   // Preenche os preços iniciais
   precoAntigo.textContent = precoOriginal.toFixed(2);
   precoNovo.textContent = precoOriginal.toFixed(2);
   diferenca.textContent = "0.00";
+
+  // Preenche o adiantamento existente
+  const editorAdiantamento = document.getElementById("editor-valor-adiantado");
+  if (editorAdiantamento) {
+    editorAdiantamento.value = pedido.valor_adiantado ? Number(pedido.valor_adiantado).toFixed(2) : '';
+  }
 
   // --- NOVA ÁREA: EDIÇÃO DE EMAIL ---
   // Vamos criar um container para o email antes da lista de itens
@@ -580,6 +702,7 @@ async function abrirEditorPedido(id) {
 
   // Função interna para renderizar a lista de itens (igual à anterior)
   const renderItensModal = () => {
+    window.renderItensModal = renderItensModal;
     container.innerHTML = ""; // Limpa a lista visual, mas mantemos o divEmail acima pois ele está fora do container
     
     // Lista itens existentes
@@ -627,10 +750,18 @@ async function abrirEditorPedido(id) {
     container.appendChild(divAdd);
 
     // Atualiza Totais
-    const novoTotal = itensEditados.reduce((acc, i) => acc + i.preco_total_item, 0);
-    precoNovo.textContent = novoTotal.toFixed(2);
+    const novoSubtotal = itensEditados.reduce((acc, i) => acc + i.preco_total_item, 0);
+    const inputDesconto = document.getElementById("editor-cupao-desconto");
+    const desconto = (inputDesconto && inputDesconto.value) ? parseInt(inputDesconto.value) : 0;
     
-    const dif = (novoTotal - precoOriginal).toFixed(2);
+    let novoPrecoFinal = novoSubtotal;
+    if (desconto > 0) {
+      novoPrecoFinal = novoSubtotal - (novoSubtotal * desconto / 100);
+    }
+    
+    precoNovo.textContent = novoPrecoFinal.toFixed(2);
+    
+    const dif = (novoPrecoFinal - precoOriginal).toFixed(2);
     diferenca.textContent = (dif >= 0 ? "+" : "") + dif;
     diferenca.style.color = dif > 0 ? "green" : (dif < 0 ? "red" : "black");
 
@@ -688,17 +819,39 @@ async function abrirEditorPedido(id) {
   // Botão Salvar Geral (Itens e Preço)
   // NOTA: Também salvamos o email aqui caso a pessoa tenha editado mas esquecido de clicar em "Reenviar"
   document.getElementById("salvar-edicao").onclick = async () => {
-    const novoTotal = parseFloat(precoNovo.textContent);
-    const emailFinal = document.getElementById("editor-email-cliente").value; // Pega o valor do campo de email
+    const inputDesconto = document.getElementById("editor-cupao-desconto");
+    const desconto = (inputDesconto && inputDesconto.value) ? parseInt(inputDesconto.value) : 0;
+    const inputCodigo = document.getElementById("editor-cupao-codigo");
+    const codigo = (inputCodigo && inputCodigo.value) ? inputCodigo.value : null;
+    const cupaoIdHidden = document.getElementById("editor-cupao-id");
+    const cupaoId = (cupaoIdHidden && cupaoIdHidden.value) ? cupaoIdHidden.value : null;
+
+    const novoSubtotal = itensEditados.reduce((acc, i) => acc + i.preco_total_item, 0);
+    let novoPrecoFinal = novoSubtotal;
+    if (desconto > 0) {
+      novoPrecoFinal = novoSubtotal - (novoSubtotal * desconto / 100);
+    }
+    const emailFinal = document.getElementById("editor-email-cliente").value;
+    const adiantadoInput = document.getElementById("editor-valor-adiantado");
+    const novoAdiantado = (adiantadoInput && adiantadoInput.value) ? parseFloat(adiantadoInput.value) : 0;
     
     const { error: updateError } = await supabase
       .from("pedidos")
       .update({
         itens: JSON.stringify(itensEditados),
-        preco_total: novoTotal,
-        email_cliente: emailFinal // Garante que o email é salvo mesmo sem reenviar
+        preco_total: novoSubtotal,
+        preco_final: novoPrecoFinal,
+        cupao_codigo: codigo,
+        desconto_percentagem: desconto > 0 ? desconto : null,
+        valor_adiantado: novoAdiantado,
+        email_cliente: emailFinal
       })
       .eq("id", id);
+      
+    // Marca o voucher como utilizado se for novo
+    if (cupaoId && cupaoId !== "manter") {
+      await supabase.from("vouchers").update({ estado: 'utilizado', data_estado_mudado: new Date().toISOString() }).eq('id', cupaoId);
+    }
 
     if (updateError) {
       alert("Erro ao salvar alterações.");
@@ -757,3 +910,154 @@ async function limparPedidosAntigos() {
     console.error("Erro inesperado na limpeza:", err);
   }
 }
+
+// =========================================
+// LÓGICA DE CUPÃO NO EDITOR DE PEDIDOS
+// =========================================
+window.verificarCupaoEditor = async function() {
+  const termo = document.getElementById('editor-cupao-busca').value.trim();
+  const resultadoDiv = document.getElementById('editor-cupao-resultado');
+  
+  if (!termo) {
+    if (typeof alertaModal !== "undefined") { alertaModal('Aviso', 'Insira o código do cupão ou o nome da cliente.', '⚠️'); }
+    else { alert('Insira o código do cupão ou o nome da cliente.'); }
+    return;
+  }
+  
+  resultadoDiv.style.display = 'block';
+  resultadoDiv.innerHTML = '<span style="color:#888;">A verificar...</span>';
+  
+  const voucher = await buscarVoucher(termo);
+  if (!voucher) {
+    resultadoDiv.innerHTML = `<span style="color:#c62828;">❌ Cupão não encontrado ou já utilizado/expirado.</span>`;
+    return;
+  }
+  
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  if (!voucher.vitalicio && voucher.data_validade) {
+    const val = new Date(voucher.data_validade + 'T00:00:00');
+    if (val < hoje) {
+      resultadoDiv.innerHTML = `<span style="color:#c62828;">⌛ Cupão expirado.</span>`;
+      return;
+    }
+  }
+  
+  const nomeStr = voucher.nome_cliente || 'Sem cliente associado';
+  const desconto = voucher.desconto_percentagem || 0;
+  
+  resultadoDiv.innerHTML = `
+    <div style="background:#e8f5e9; border:1px solid #a5d6a7; border-radius:6px; padding:10px;">
+      <strong>✅ Cupão encontrado!</strong><br>
+      <span>👤 ${nomeStr}</span>&nbsp;&nbsp;
+      <span style="font-family:monospace; font-weight:bold;">${voucher.codigo}</span>&nbsp;&nbsp;
+      <strong style="color:#7a5c00;">(${desconto}% OFF)</strong>
+      <div style="margin-top:6px;">
+        <button type="button" onclick="selecionarCupaoEditor('${voucher.id}', '${voucher.codigo}', ${desconto})" 
+          style="margin-top:4px; background:#2e7d32; color:#fff; border:none; padding:6px 14px; border-radius:4px; cursor:pointer; font-size:0.85rem;">
+          ✔️ Aplicar
+        </button>
+      </div>
+    </div>`;
+}
+
+window.selecionarCupaoEditor = function(id, codigo, desconto) {
+  document.getElementById('editor-cupao-id').value = id;
+  document.getElementById('editor-cupao-codigo').value = codigo;
+  document.getElementById('editor-cupao-desconto').value = desconto;
+
+  const resultadoDiv = document.getElementById('editor-cupao-resultado');
+  resultadoDiv.innerHTML = `
+    <div style="background:#e8f5e9; border:1px solid #a5d6a7; border-radius:6px; padding:10px; display:flex; align-items:center; flex-wrap:wrap; gap:10px;">
+      <span>🎟️ Cupão <strong>${codigo}</strong> <span style="color:#7a5c00; font-weight:bold;">(${desconto}% OFF)</span> será aplicado.</span>
+      <button type="button" onclick="removerCupaoEditor()" style="margin-top:0; background:transparent; color:#c62828; border:none; cursor:pointer; font-size:0.85rem; padding:0; text-decoration:underline;">✖ Remover</button>
+    </div>`;
+  
+  if (typeof window.renderItensModal === 'function') window.renderItensModal();
+}
+
+window.removerCupaoEditor = function() {
+  document.getElementById('editor-cupao-id').value = '';
+  document.getElementById('editor-cupao-codigo').value = '';
+  document.getElementById('editor-cupao-desconto').value = '';
+  document.getElementById('editor-cupao-resultado').style.display = 'none';
+  document.getElementById('editor-cupao-busca').value = '';
+}
+
+// =========================================
+// MASONRY / PINTEREST LAYOUT PERFEITO (Puro JS)
+// =========================================
+function aplicarMasonryUI(filtroAtivo = null) {
+  let containerId = 'lista-espera';
+  if (filtroAtivo === 'concluido') containerId = 'lista-concluidos';
+  if (filtroAtivo === 'entregue') containerId = 'lista-entregues';
+  
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  
+  const allItems = Array.from(container.querySelectorAll('.pedido'));
+  const items = allItems.filter(item => item.style.display !== 'none');
+  
+  if (items.length === 0) {
+      container.style.height = 'auto';
+      return;
+  }
+  
+  // Garantir que todas as imagens e estilos estão prontos para altura correta
+  const gap = 20;
+  const minWidth = 320;
+  const containerWidth = container.getBoundingClientRect().width || container.offsetWidth;
+  
+  // Define colunas com base no espaço, max 10
+  let cols = Math.floor(containerWidth / minWidth);
+  if (cols < 1) cols = 1;
+  // Não cria espaço vazio inútil na direita se houver menos cartões visíveis que o espaço permite:
+  if (items.length < cols) cols = items.length;
+  
+  // Se for apenas 1 coluna, volta para modo block normal ocupando tudo
+  if (cols === 1) {
+    items.forEach(item => {
+      item.style.position = 'static';
+      item.style.width = '100%';
+      item.style.marginBottom = gap + 'px';
+    });
+    container.style.height = 'auto';
+    return;
+  }
+  
+  const itemWidth = (containerWidth - (gap * (cols - 1)) - 20) / cols; // -20 por causa do padding do container
+  let colHeights = Array(cols).fill(0);
+  
+  items.forEach(item => {
+    item.style.position = 'absolute';
+    item.style.width = itemWidth + 'px';
+    item.style.marginBottom = '0px'; // Reseta
+    
+    // Descobre a coluna mais baixa
+    let minCol = 0;
+    let minH = colHeights[0];
+    for(let i=1; i<cols; i++) {
+        if(colHeights[i] < minH) {
+            minH = colHeights[i];
+            minCol = i;
+        }
+    }
+    
+    // Posiciona o card
+    const leftOffset = 10 + (minCol * (itemWidth + gap)); // 10px offset for container padding
+    const topOffset = 10 + minH;
+    
+    item.style.left = leftOffset + 'px';
+    item.style.top = topOffset + 'px';
+    
+    colHeights[minCol] += item.offsetHeight + gap;
+  });
+  
+  // Container ganha altura exata para não sobrepor outras coisas
+  container.style.height = (Math.max(...colHeights) + 20) + 'px';
+}
+
+window.addEventListener('resize', () => {
+  aplicarMasonryUI('pendente');
+  aplicarMasonryUI('concluido');
+  aplicarMasonryUI('entregue');
+});

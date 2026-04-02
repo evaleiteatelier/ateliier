@@ -44,6 +44,44 @@ function fecharModalConfirmar() {
 }
 
 // =========================================
+// MODAL DE ALERTA RÁPIDO
+// =========================================
+window.alertaModal = function(titulo, texto, icone = 'ℹ️') {
+  const m = document.getElementById('modal-confirmar');
+  if(!m) { 
+      alert(texto.replace(/<br>/g, '\n').replace(/<[^>]+>/g, '')); 
+      return; 
+  }
+  
+  document.getElementById('modal-confirmar-icone').textContent = icone;
+  document.getElementById('modal-confirmar-titulo').innerHTML = titulo;
+  document.getElementById('modal-confirmar-texto').innerHTML = texto;
+
+  const okBtn = document.getElementById('modal-confirmar-ok');
+  okBtn.textContent = 'OK';
+  okBtn.style.background = '#000';
+  okBtn.style.color = '#fff';
+
+  const botoes = document.querySelectorAll('#modal-confirmar button');
+  let cancelarBtn = null;
+  botoes.forEach(b => {
+      if (b.innerText.toLowerCase().includes('cancelar')) {
+          cancelarBtn = b;
+      }
+  });
+
+  if (cancelarBtn) cancelarBtn.style.display = 'none';
+
+  okBtn.onclick = () => {
+    fecharModalConfirmar();
+    if (cancelarBtn) cancelarBtn.style.display = 'block';
+  };
+
+  m.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+// =========================================
 // TOGGLE VITALÍCIO
 // =========================================
 function toggleVitalicio() {
@@ -129,7 +167,8 @@ async function criarVoucher() {
   btn.disabled = false;
 
   if (error) {
-    alert('Erro ao criar voucher: ' + error.message);
+    if (typeof alertaModal === 'function') alertaModal('Erro', 'Erro ao criar voucher: ' + error.message, '❌');
+    else alert('Erro ao criar voucher: ' + error.message);
     console.error(error);
     return;
   }
@@ -142,7 +181,11 @@ async function criarVoucher() {
   document.getElementById('v-desconto').value = '';
   if (modoVitalicio) toggleVitalicio(); // reset
 
-  alert(`✅ Voucher criado com sucesso!\nCódigo: ${novoVoucher.codigo}`);
+  if (typeof alertaModal === 'function') {
+      alertaModal('Sucesso!', `✅ O voucher foi criado com êxito.<br><br>Código gerado:<br><strong style="font-size:1.3rem; color:#2e7d32; font-family:monospace; background:#e8f5e9; padding:6px 12px; border-radius:6px; display:inline-block; margin-top:8px;">${novoVoucher.codigo}</strong>`, '✨');
+  } else {
+      alert(`✅ Voucher criado com sucesso!\nCódigo: ${novoVoucher.codigo}`);
+  }
   await carregarVouchers();
 }
 
@@ -315,7 +358,8 @@ function fecharModalAtribuir() {
 async function salvarAtribuicao() {
   const nome = document.getElementById('modal-nome-cliente').value.trim();
   if (!nome) {
-    alert('Por favor, insira o nome da cliente.');
+    if (typeof alertaModal === 'function') alertaModal('Atenção', 'Por favor, insira o nome da cliente.', '⚠️');
+    else alert('Por favor, insira o nome da cliente.');
     return;
   }
 
@@ -325,7 +369,8 @@ async function salvarAtribuicao() {
     .eq('id', voucherIdAtribuir);
 
   if (error) {
-    alert('Erro ao atribuir cliente: ' + error.message);
+    if (typeof alertaModal === 'function') alertaModal('Erro', 'Erro ao atribuir cliente: ' + error.message, '❌');
+    else alert('Erro ao atribuir cliente: ' + error.message);
     return;
   }
 

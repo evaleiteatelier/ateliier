@@ -12,7 +12,7 @@
       background: #f9f9f9;
     }
     form {
-      max-width: 600px;
+      max-width: 1000px;
       margin: auto;
     }
     input, textarea, select, button {
@@ -29,8 +29,31 @@
       border: 1px solid #ccc;
       border-radius: 5px;
     }
+    .item textarea {
+      width: 100%;
+      margin-top: 10px;
+      padding: 8px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
     #itens {
       margin-top: 1rem;
+    }
+    .form-layout {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 30px;
+      align-items: start;
+    }
+    .col-left, .col-right {
+      display: flex;
+      flex-direction: column;
+    }
+    @media (max-width: 850px) {
+      .form-layout {
+        grid-template-columns: 1fr; /* Responsivo */
+      }
     }
   </style>
 
@@ -42,41 +65,75 @@
 </head>
 
 <body>
-  <nav id="barra-login"></nav>
 
   <h1>Adicionar Novo Pedido</h1>
   
   <form id="form-pedido">
-    <input type="text" id="nome" placeholder="Nome da Cliente" required>
-    
-    <label for="data">Data desejada para início:</label>
-    <input type="date" id="data" required>
+    <div class="form-layout">
+      <!-- LADO ESQUERDO: Dados e Itens -->
+      <div class="col-left">
+        <label for="nome" style="margin-top:0;">Nome da Cliente:</label>
+        <input type="text" id="nome" placeholder="Nome completo" required style="margin-top:5px;">
+        
+        <label for="data" style="margin-top:15px;">Data desejada para início:</label>
+        <input type="date" id="data" required style="margin-top:5px;">
 
-    <h3>Itens do Pedido</h3>
-    <div id="itens"></div>
-    
-    <button type="button" onclick="adicionarItem()">+ Adicionar Item</button>
-    
-    <label for="preco_total">Preço total (€):</label>
-    <input type="number" id="preco_total" step="0.01" readonly>
-    
-    <label for="email_cliente">Email (para notificação opcional):</label>
-    <input type="email" id="email_cliente" name="email_cliente" placeholder="exemplo@email.com" />
-    
-    <!-- SECÇÃO DE CUPÃO -->
-    <div style="background:#fffdf5; border:2px dashed #d4af37; border-radius:8px; padding:16px; margin-bottom:1rem;">
-      <label style="display:block; font-weight:bold; font-size:0.95rem; margin-bottom:8px; color:#7a5c00;">
-        🎟️ Cupão de Desconto (opcional)
-      </label>
-      <div style="display:flex; gap:8px; align-items:stretch;">
-        <input type="text" id="cupao-busca" placeholder="Código do cupão ou nome da cliente" style="flex:1; width:auto; min-width:0; margin-bottom:0; box-sizing:border-box;">
-        <button type="button" onclick="buscarCupaoFormulario()" style="flex-shrink:0; margin-top:0; padding:0.8rem 18px; white-space:nowrap; background:#d4af37; color:#000; font-weight:bold; width:auto;">Verificar</button>
+        <label for="email_cliente" style="margin-top:15px;">Email (para notificação opcional):</label>
+        <input type="email" id="email_cliente" name="email_cliente" placeholder="exemplo@email.com" style="margin-top:5px;" />
+
+        <h3 style="margin-top:25px; text-align:left;">Itens do Pedido</h3>
+        <div id="itens" style="margin-top:5px;"></div>
+        
+        <button type="button" onclick="adicionarItem()" style="background:#555; color:#fff;">+ Adicionar Item</button>
       </div>
-      <div id="cupao-resultado" style="margin-top:8px; font-size:0.9rem; display:none;"></div>
-      <input type="hidden" id="cupao-id-selecionado" value="">
+      
+      <!-- LADO DIREITO: Finanças -->
+      <div class="col-right">
+        
+        <label for="preco_total" style="margin-top:0;">Preço original dos itens (€):</label>
+        <input type="number" id="preco_total" step="0.01" readonly style="margin-bottom:20px; background:#f0f0f0;">
+        
+        <!-- SECÇÃO DE CUPÃO -->
+        <div style="background:#fffdf5; border:2px dashed #d4af37; border-radius:8px; padding:16px; margin-bottom:1rem;">
+          <label style="display:block; font-weight:bold; font-size:0.95rem; margin-bottom:8px; color:#7a5c00; margin-top:0;">
+            🎟️ Cupão de Desconto (opcional)
+          </label>
+          <div style="display:flex; gap:8px; align-items:stretch;">
+            <input type="text" id="cupao-busca" placeholder="Código ou nome" style="flex:1; width:auto; min-width:0; margin-bottom:0; box-sizing:border-box;">
+            <button type="button" onclick="buscarCupaoFormulario()" style="flex-shrink:0; margin-top:0; padding:0.8rem 18px; white-space:nowrap; background:#d4af37; color:#000; font-weight:bold; width:auto;">Verificar</button>
+          </div>
+          <div id="cupao-resultado" style="margin-top:8px; font-size:0.9rem; display:none;"></div>
+          <input type="hidden" id="cupao-id-selecionado" value="">
+          <input type="hidden" id="cupao-codigo" value="">
+          <input type="hidden" id="cupao-desconto" value="">
+        </div>
+        
+        <!-- SECÇÃO DE ADIANTAMENTO E TOTAIS -->
+        <div style="background:#f4f9f4; border:2px dashed #a5d6a7; border-radius:8px; padding:16px; margin-bottom:1rem;">
+          <label for="valor_adiantado" style="display:block; font-weight:bold; font-size:0.95rem; margin-bottom:8px; color:#2e7d32; margin-top:0;">
+            💶 Valor Adiantado (Opcional)
+          </label>
+          <input type="number" id="valor_adiantado" placeholder="Ex: 50.00" step="0.01" min="0" onkeyup="atualizarPrecoTotal()" onchange="atualizarPrecoTotal()" style="margin-bottom: 15px;">
+          
+          <div id="resumo-financeiro" style="display:flex; flex-direction:column; gap:10px; background:#fff; padding:15px; border-radius:6px; border:1px solid #ddd;">
+            <div style="display:flex; justify-content:space-between; font-size:1.1rem; color:#000;">
+              <span><strong>Total:</strong></span>
+              <span>€<span id="final_total_display">0.00</span></span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:1.1rem; color:#2e7d32; border-bottom:1px solid #eee; padding-bottom:10px;">
+              <span><strong>Pago:</strong></span>
+              <span>€<span id="final_pago_display">0.00</span></span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:1.2rem; color:#c62828;">
+              <span><strong>Falta Pagar:</strong></span>
+              <span><strong>€<span id="final_falta_display">0.00</span></strong></span>
+            </div>
+          </div>
+        </div>
+        
+        <button type="submit" style="margin-top:auto; padding:15px; font-size:1.1rem; font-weight:bold; background:#000; color:#fff;">✓ Salvar Pedido</button>
+      </div>
     </div>
-    
-    <button type="submit">Salvar Pedido</button>
   </form>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
@@ -94,9 +151,13 @@
       const termo = document.getElementById('cupao-busca').value.trim();
       const resultadoDiv = document.getElementById('cupao-resultado');
       const idHidden = document.getElementById('cupao-id-selecionado');
+      const codigoHidden = document.getElementById('cupao-codigo');
+      const descontoHidden = document.getElementById('cupao-desconto');
 
       resultadoDiv.style.display = 'none';
       idHidden.value = '';
+      codigoHidden.value = '';
+      descontoHidden.value = '';
 
       if (!termo) {
         alert('Insira o código do cupão ou o nome da cliente.');
@@ -110,7 +171,6 @@
 
       if (!voucher) {
         resultadoDiv.innerHTML = `<span style="color:#c62828;">❌ Cupão não encontrado ou já utilizado/expirado.</span>`;
-        idHidden.value = '';
         return;
       }
 
@@ -120,43 +180,53 @@
         const val = new Date(voucher.data_validade + 'T00:00:00');
         if (val < hoje) {
           resultadoDiv.innerHTML = `<span style="color:#c62828;">⌛ Cupão expirado em ${new Date(voucher.data_validade+'T00:00:00').toLocaleDateString('pt-PT')}.</span>`;
-          idHidden.value = '';
           return;
         }
       }
 
       const validadeStr = voucher.vitalicio ? '♾️ Vitalício' : `📅 Válido até ${new Date(voucher.data_validade+'T00:00:00').toLocaleDateString('pt-PT')}`;
+      const nomeStr = voucher.nome_cliente || 'Sem cliente associado';
+      const desconto = voucher.desconto_percentagem || 0;
 
       resultadoDiv.innerHTML = `
         <div style="background:#e8f5e9; border:1px solid #a5d6a7; border-radius:6px; padding:10px;">
           <strong>✅ Cupão encontrado!</strong><br>
-          <span>👤 ${voucher.nome_cliente}</span>&nbsp;&nbsp;
+          <span>👤 ${nomeStr}</span>&nbsp;&nbsp;
           <span style="font-family:monospace; font-weight:bold;">${voucher.codigo}</span>&nbsp;&nbsp;
-          <span>${validadeStr}</span>
+          <span>${validadeStr}</span>&nbsp;&nbsp;
+          <strong style="color:#7a5c00;">(${desconto}% OFF)</strong>
           <div style="margin-top:6px;">
-            <button type="button" onclick="selecionarCupao('${voucher.id}', '${voucher.codigo}')" 
+            <button type="button" onclick="selecionarCupao('${voucher.id}', '${voucher.codigo}', ${desconto})" 
               style="margin-top:4px; background:#2e7d32; color:#fff; border:none; padding:6px 14px; border-radius:4px; cursor:pointer; font-size:0.85rem;">
               ✔️ Usar este cupão
             </button>
           </div>
         </div>`;
-      idHidden.value = ''; // só confirma se clicar em "Usar"
     }
 
-    function selecionarCupao(id, codigo) {
+    function selecionarCupao(id, codigo, desconto) {
       document.getElementById('cupao-id-selecionado').value = id;
+      document.getElementById('cupao-codigo').value = codigo;
+      document.getElementById('cupao-desconto').value = desconto;
+
       const resultadoDiv = document.getElementById('cupao-resultado');
       resultadoDiv.innerHTML = `
-        <div style="background:#e8f5e9; border:1px solid #a5d6a7; border-radius:6px; padding:10px;">
-          🎟️ Cupão <strong>${codigo}</strong> será aplicado ao guardar o pedido.
-          <button type="button" onclick="removerCupao()" style="margin-top:0; margin-left:10px; background:transparent; color:#c62828; border:none; cursor:pointer; font-size:0.85rem; padding:0;">✖ Remover</button>
+        <div style="background:#e8f5e9; border:1px solid #a5d6a7; border-radius:6px; padding:10px; display:flex; align-items:center; flex-wrap:wrap; gap:10px;">
+          <span>🎟️ Cupão <strong>${codigo}</strong> <span style="color:#7a5c00; font-weight:bold;">(${desconto}% OFF)</span> será aplicado.</span>
+          <button type="button" onclick="removerCupao()" style="margin-top:0; background:transparent; color:#c62828; border:none; cursor:pointer; font-size:0.85rem; padding:0; text-decoration:underline;">✖ Remover</button>
         </div>`;
+      
+      if(typeof atualizarPrecoTotal === 'function') atualizarPrecoTotal();
     }
 
     function removerCupao() {
       document.getElementById('cupao-id-selecionado').value = '';
+      document.getElementById('cupao-codigo').value = '';
+      document.getElementById('cupao-desconto').value = '';
       document.getElementById('cupao-resultado').style.display = 'none';
       document.getElementById('cupao-busca').value = '';
+      
+      if(typeof atualizarPrecoTotal === 'function') atualizarPrecoTotal();
     }
   </script>
 

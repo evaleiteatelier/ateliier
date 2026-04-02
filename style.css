@@ -137,22 +137,19 @@ footer {
     box-sizing: border-box;
 }
 
-/* O Container das Listas (Masonry / Pinterest) */
+/* O Container das Listas (Responsivo c/ Grid e auto-fit para não deixar buracos) */
 #lista-espera, 
 #lista-concluidos, 
 #lista-entregues {
-    column-count: 4;           /* Define 4 colunas em telas grandes */
-    column-gap: 20px;          /* Espaço lateral entre colunas */
+    display: block;   /* Será controlado pelo Masonry JS! */
+    position: relative; 
     padding: 10px;
 }
 
 /* O Cartão Individual (.pedido) */
 .pedido {
-    /* --- O SEGREDO DO ESPAÇAMENTO --- */
-    display: inline-block;     /* Faz o bloco comportar-se bem dentro da coluna */
-    width: 100%;               /* Garante que ocupa a largura da coluna */
-    margin-bottom: 20px;       /* O ESPAÇO VERTICAL QUE FALTAVA */
-    break-inside: avoid;       /* Impede que o cartão seja cortado ao meio */
+    width: 100%;
+    height: max-content; /* O tamanho é regulado pelo conteúdo */
     
     /* Estilo Visual */
     background-color: #fff;
@@ -160,26 +157,16 @@ footer {
     border-radius: 12px;
     padding: 20px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    transition: transform 0.2s;
+    transition: transform 0.2s, top 0.3s ease-out, left 0.3s ease-out; /* Animação suave no Masonry */
+    
+    /* Flex interno apenas para empurrar conteúdo, se necessário */
+    display: flex;
+    flex-direction: column;
 }
 
-/* Ajuste para telas menores (Responsividade) */
-@media (max-width: 1200px) {
-    #lista-espera, #lista-concluidos, #lista-entregues {
-        column-count: 3;
-    }
-}
-
-@media (max-width: 900px) {
-    #lista-espera, #lista-concluidos, #lista-entregues {
-        column-count: 2;
-    }
-}
-
-@media (max-width: 600px) {
-    #lista-espera, #lista-concluidos, #lista-entregues {
-        column-count: 1;
-    }
+/* Força os botões para baixo se o cartão for mais alto */
+.pedido .acoes-pedido {
+    margin-top: auto;
 }
 
 /* =========================================
