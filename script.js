@@ -37,17 +37,27 @@ if (document.getElementById('form-pedido')) {
     }
 
     // --- LÓGICA INTELIGENTE DE AGENDAMENTO ---
-    let semanaData = ajustarParaSegunda(dataEscolhida);
-    let diasTotais = 0;
-    let itensProcessados = [];
+    // 1. Verifica se o pedido INTEIRO cabe numa única semana técnica (vazia)
+    // Isso evita o loop infinito se o pedido for maior que a capacidade da semana.
+    const umaSemanaVazia = new Date(2099, 0, 1); // Uma data qualquer vazia
+    if (!(await semanaTemEspaco(umaSemanaVazia, itens))) {
+      alert("Este pedido é demasiado grande para uma única semana de trabalho (Max: 1 Vestido de Festa OU 3 Criações OU 15 Concertos). Por favor, divida o pedido em dois.");
+      return;
+    }
 
-    for (const item of itens) {
-      itensProcessados.push(item);
-      // Procura uma semana com vaga para este conjunto de itens (acumulativo do mesmo pedido)
-      while (!(await semanaTemEspaco(semanaData, itensProcessados))) {
-        semanaData.setDate(semanaData.getDate() + 7);
-      }
-      diasTotais += (item.dias * item.quantidade);
+    let semanaData = ajustarParaSegunda(dataEscolhida);
+    let diasTotais = itens.reduce((acc, i) => acc + (i.dias * i.quantidade), 0);
+    
+    // 2. Procura a primeira semana que tem espaço para o pedido INTEIRO
+    let limiteSeguranca = 0;
+    while (!(await semanaTemEspaco(semanaData, itens)) && limiteSeguranca < 52) {
+      semanaData.setDate(semanaData.getDate() + 7);
+      limiteSeguranca++;
+    }
+
+    if (limiteSeguranca >= 52) {
+      alert("Não foi possível encontrar uma vaga nos próximos 12 meses. Verifique a sua agenda.");
+      return;
     }
 
     // O trabalho não pode começar no passado (ex: se hoje é Quinta, não conta Segunda/Terça/Quarta)
