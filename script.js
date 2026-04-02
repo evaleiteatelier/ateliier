@@ -140,6 +140,12 @@ function calcularDataEntrega(inicio, dias) {
       }
     }
   }
+
+  // Garantia extra: Nunca entrega ao Domingo
+  while (entrega.getDay() === 0) {
+    entrega.setDate(entrega.getDate() + 1);
+  }
+
   return entrega;
 }
 
@@ -172,14 +178,17 @@ async function semanaTemEspaco(segunda, novosItens) {
   for (const item of novosItens) {
     const qtd = parseInt(item.quantidade) || 1;
     
+    // REGRA DE OURO: Se já houver um vestido de festa, a semana está FECHADA para tudo.
+    if (temVestidoFesta) return false;
+
     if (item.subtipo === 'vestido de festa') {
-      // Bloqueia se já houver vestido de festa, se houver criações, ou se tentar adicionar > 1
-      if (temVestidoFesta || pecasNormais > 0 || qtd > 1) return false;
+      // "Um vestido de festa fecha a semana" -> Não pode haver NADA antes.
+      if (pecasNormais > 0 || concertos > 0 || qtd > 1) return false;
       temVestidoFesta = true;
     } 
     else if (item.tipo === 'criacao') {
-      // Bloqueia se já houver vestido de festa ou se ultrapassar o limite de 3 criações
-      if (temVestidoFesta || (pecasNormais + qtd) > 3) return false;
+      // Bloqueia se ultrapassar o limite de 3 criações
+      if ((pecasNormais + qtd) > 3) return false;
       pecasNormais += qtd;
     } 
     else if (item.tipo === 'concerto' || item.tipo === 'modificacao') {
