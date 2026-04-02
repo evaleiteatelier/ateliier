@@ -39,13 +39,15 @@ if (document.getElementById('form-pedido')) {
     // --- LÓGICA INTELIGENTE DE AGENDAMENTO ---
     let semanaData = ajustarParaSegunda(dataEscolhida);
     let diasTotais = 0;
+    let itensProcessados = [];
 
     for (const item of itens) {
-      // Procura uma semana com vaga para este tipo de item
-      while (!(await semanaTemEspaco(semanaData, [item]))) {
+      itensProcessados.push(item);
+      // Procura uma semana com vaga para este conjunto de itens (acumulativo do mesmo pedido)
+      while (!(await semanaTemEspaco(semanaData, itensProcessados))) {
         semanaData.setDate(semanaData.getDate() + 7);
       }
-      diasTotais += item.dias;
+      diasTotais += (item.dias * item.quantidade);
     }
 
     const dataEntrega = calcularDataEntrega(semanaData, diasTotais);
@@ -101,11 +103,13 @@ if (document.getElementById('form-pedido')) {
 // --- Funções Auxiliares de Agendamento ---
 
 function ajustarParaSegunda(data) {
-  const dia = data.getDay();
-  if (dia === 0) { // Se for domingo, avança para segunda
-    data.setDate(data.getDate() + 1);
-  }
-  return new Date(data.getFullYear(), data.getMonth(), data.getDate());
+  const d = new Date(data);
+  const day = d.getDay();
+  // Se for Domingo (0), recua 6 dias para a Segunda. Caso contrário, recua (day - 1) dias.
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  d.setDate(diff);
+  d.setHours(0, 0, 0, 0); // Zera as horas para comparação de datas limpa
+  return d;
 }
 
 function calcularDataEntrega(inicio, dias) {
@@ -153,29 +157,35 @@ async function semanaTemEspaco(segunda, novosItens) {
   let concertos = 0;
   let temVestidoFesta = false;
 
-  // Conta o que já existe na semana
+  // Conta o que já existe no banco de dados para esta semana
   for (const pedido of pedidos) {
     const itensSalvos = typeof pedido.itens === 'string' ? JSON.parse(pedido.itens) : pedido.itens;
     for (const item of itensSalvos) {
+      const qtd = parseInt(item.quantidade) || 1;
       if (item.subtipo === 'vestido de festa') temVestidoFesta = true;
-      else if (item.tipo === 'criacao') pecasNormais++;
-      else if (item.tipo === 'concerto') concertos++;
+      else if (item.tipo === 'criacao') pecasNormais += qtd;
+      else if (item.tipo === 'concerto' || item.tipo === 'modificacao') concertos += qtd;
     }
   }
 
-  // Verifica se os novos itens cabem
+  // Verifica se o conjunto de novos itens cabe nesta semana
   for (const item of novosItens) {
+    const qtd = parseInt(item.quantidade) || 1;
+    
     if (item.subtipo === 'vestido de festa') {
-      if (temVestidoFesta || pecasNormais > 0) return false;
+      // Bloqueia se já houver vestido de festa, se houver criações, ou se tentar adicionar > 1
+      if (temVestidoFesta || pecasNormais > 0 || qtd > 1) return false;
       temVestidoFesta = true;
     } 
     else if (item.tipo === 'criacao') {
-      if (temVestidoFesta || pecasNormais >= 3) return false;
-      pecasNormais++;
+      // Bloqueia se já houver vestido de festa ou se ultrapassar o limite de 3 criações
+      if (temVestidoFesta || (pecasNormais + qtd) > 3) return false;
+      pecasNormais += qtd;
     } 
-    else if (item.tipo === 'concerto') {
-      if (concertos >= 15) return false;
-      concertos++;
+    else if (item.tipo === 'concerto' || item.tipo === 'modificacao') {
+      // Bloqueia se ultrapassar o limite de 15 concertos/modificações
+      if ((concertos + qtd) > 15) return false;
+      concertos += qtd;
     }
   }
   return true;
