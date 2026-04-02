@@ -50,13 +50,17 @@ if (document.getElementById('form-pedido')) {
       diasTotais += (item.dias * item.quantidade);
     }
 
-    const dataEntrega = calcularDataEntrega(semanaData, diasTotais);
+    // O trabalho não pode começar no passado (ex: se hoje é Quinta, não conta Segunda/Terça/Quarta)
+    let dataInicioReal = new Date(dataEscolhida);
+    if (dataInicioReal < semanaData) dataInicioReal = new Date(semanaData);
+
+    const dataEntrega = calcularDataEntrega(dataInicioReal, diasTotais);
     // ------------------------------------------
 
     const pedidoObj = {
       nome,
       data_pedido: dataEscolhida.toISOString().split('T')[0],
-      data_real: hoje.toISOString().split('T')[0],
+      data_real: new Date().toISOString().split('T')[0],
       itens: JSON.stringify(itens),
       data_entrega: dataEntrega.toISOString().split('T')[0],
       status: 'pendente',
@@ -112,6 +116,23 @@ function ajustarParaSegunda(data) {
   return d;
 }
 
+// Função para formatar data YYYY-MM-DD para DD/MM/YYYY sem fuso horário
+function formatarDataParaExibir(dataISO) {
+  if (!dataISO) return '-';
+  const partes = dataISO.split('T')[0].split('-');
+  if (partes.length !== 3) return dataISO;
+  return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
+// Função para formatar objeto Date para YYYY-MM-DD sem fuso horário
+function formatarParaISO(date) {
+  const d = new Date(date);
+  const ano = d.getFullYear();
+  const mes = String(d.getMonth() + 1).padStart(2, '0');
+  const dia = String(d.getDate()).padStart(2, '0');
+  return `${ano}-${mes}-${dia}`;
+}
+
 function calcularDataEntrega(inicio, dias) {
   let entrega = new Date(inicio);
   let adicionados = 0;
@@ -156,8 +177,8 @@ async function semanaTemEspaco(segunda, novosItens) {
   const { data: pedidos } = await supabase
     .from('pedidos')
     .select('itens, data_pedido')
-    .gte('data_pedido', segunda.toISOString().split('T')[0])
-    .lte('data_pedido', domingo.toISOString().split('T')[0]);
+    .gte('data_pedido', formatarParaISO(segunda))
+    .lte('data_pedido', formatarParaISO(domingo));
 
   let pecasNormais = 0;
   let concertos = 0;
@@ -328,9 +349,9 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
     div.className = 'pedido';
     div.setAttribute('data-nome', p.nome ? p.nome.toLowerCase() : ""); // Proteção contra nome vazio
     
-    // Formata datas para o padrão PT (Dia/Mês/Ano)
-    const dataPedidoF = p.data_pedido ? new Date(p.data_pedido).toLocaleDateString('pt-PT') : '-';
-    const dataEntregaF = p.data_entrega ? new Date(p.data_entrega).toLocaleDateString('pt-PT') : '-';
+    // Formata datas para o padrão PT (Dia/Mês/Ano) - Protegido contra fuso horário
+    const dataPedidoF = formatarDataParaExibir(p.data_pedido);
+    const dataEntregaF = formatarDataParaExibir(p.data_entrega);
 
     div.innerHTML = `
       <strong>${p.nome}</strong>
