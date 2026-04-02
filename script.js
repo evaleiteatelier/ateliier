@@ -184,24 +184,30 @@ async function semanaTemEspaco(segunda, novosItens) {
   const domingo = new Date(segunda);
   domingo.setDate(domingo.getDate() + 6);
 
-  const { data: pedidos } = await supabase
+  const { data: pedidos, error } = await supabase
     .from('pedidos')
     .select('itens, data_pedido')
     .gte('data_pedido', formatarParaISO(segunda))
     .lte('data_pedido', formatarParaISO(domingo));
 
+  if (error) {
+    console.error("Erro ao buscar pedidos da semana:", error);
+  }
+
   let pecasNormais = 0;
   let concertos = 0;
   let temVestidoFesta = false;
 
-  // Conta o que já existe no banco de dados para esta semana
-  for (const pedido of pedidos) {
-    const itensSalvos = typeof pedido.itens === 'string' ? JSON.parse(pedido.itens) : pedido.itens;
-    for (const item of itensSalvos) {
-      const qtd = parseInt(item.quantidade) || 1;
-      if (item.subtipo === 'vestido de festa') temVestidoFesta = true;
-      else if (item.tipo === 'criacao') pecasNormais += qtd;
-      else if (item.tipo === 'concerto' || item.tipo === 'modificacao') concertos += qtd;
+  // Conta o que já existe no banco de dados para esta semana (se houver)
+  if (pedidos) {
+    for (const pedido of pedidos) {
+      const itensSalvos = typeof pedido.itens === 'string' ? JSON.parse(pedido.itens) : pedido.itens;
+      for (const item of itensSalvos) {
+        const qtd = parseInt(item.quantidade) || 1;
+        if (item.subtipo === 'vestido de festa') temVestidoFesta = true;
+        else if (item.tipo === 'criacao') pecasNormais += qtd;
+        else if (item.tipo === 'concerto' || item.tipo === 'modificacao') concertos += qtd;
+      }
     }
   }
 
