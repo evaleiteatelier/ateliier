@@ -37,27 +37,14 @@ if (document.getElementById('form-pedido')) {
     }
 
     // --- LÓGICA INTELIGENTE DE AGENDAMENTO ---
-    // 1. Verifica se o pedido INTEIRO cabe numa única semana técnica (vazia)
-    // Isso evita o loop infinito se o pedido for maior que a capacidade da semana.
-    const umaSemanaVazia = new Date(2099, 0, 1); // Uma data qualquer vazia
-    if (!(await semanaTemEspaco(umaSemanaVazia, itens))) {
-      alert("Este pedido é demasiado grande para uma única semana de trabalho (Max: 1 Vestido de Festa OU 3 Criações OU 15 Concertos). Por favor, divida o pedido em dois.");
-      return;
-    }
-
     let semanaData = ajustarParaSegunda(dataEscolhida);
     let diasTotais = itens.reduce((acc, i) => acc + (i.dias * i.quantidade), 0);
     
-    // 2. Procura a primeira semana que tem espaço para o pedido INTEIRO
+    // Procura a primeira semana que tem espaço para pelo menos o começo deste pedido
     let limiteSeguranca = 0;
-    while (!(await semanaTemEspaco(semanaData, itens)) && limiteSeguranca < 52) {
+    while (!(await semanaTemEspaco(semanaData, [itens[0]])) && limiteSeguranca < 52) {
       semanaData.setDate(semanaData.getDate() + 7);
       limiteSeguranca++;
-    }
-
-    if (limiteSeguranca >= 52) {
-      alert("Não foi possível encontrar uma vaga nos próximos 12 meses. Verifique a sua agenda.");
-      return;
     }
 
     // O trabalho não pode começar no passado (ex: se hoje é Quinta, não conta Segunda/Terça/Quarta)
@@ -186,9 +173,9 @@ async function semanaTemEspaco(segunda, novosItens) {
 
   const { data: pedidos, error } = await supabase
     .from('pedidos')
-    .select('itens, data_pedido')
-    .gte('data_pedido', formatarParaISO(segunda))
-    .lte('data_pedido', formatarParaISO(domingo));
+    .select('itens, data_pedido, data_entrega') // Buscamos a entrega também para ver o intervalo
+    .lte('data_pedido', formatarParaISO(domingo)) // O pedido começou antes de o domingo acabar
+    .gte('data_entrega', formatarParaISO(segunda)); // O pedido acaba depois de a segunda começar
 
   if (error) {
     console.error("Erro ao buscar pedidos da semana:", error);
