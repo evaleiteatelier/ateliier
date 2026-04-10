@@ -191,6 +191,7 @@ async function semanaTemEspaco(segunda, novosItens) {
   const { data: pedidos, error } = await supabase
     .from('pedidos')
     .select('itens, data_pedido, data_entrega') // Buscamos a entrega também para ver o intervalo
+    .eq('status', 'pendente') // APENAS AS ENCOMENDAS AINDA NÃO CONCLUÍDAS OCUPAM LUGAR
     .lte('data_pedido', formatarParaISO(domingo)) // O pedido começou antes de o domingo acabar
     .gte('data_entrega', formatarParaISO(segunda)); // O pedido acaba depois de a segunda começar
 
@@ -205,12 +206,24 @@ async function semanaTemEspaco(segunda, novosItens) {
   // Conta o que já existe no banco de dados para esta semana (se houver)
   if (pedidos) {
     for (const pedido of pedidos) {
+      const d1 = new Date(pedido.data_pedido);
+      const d2 = new Date(pedido.data_entrega);
+      let spanDias = (d2 - d1) / (1000 * 60 * 60 * 24);
+      if (spanDias < 1) spanDias = 1;
+      const spansSemanas = Math.ceil(spanDias / 7) || 1;
+
       const itensSalvos = typeof pedido.itens === 'string' ? JSON.parse(pedido.itens) : pedido.itens;
       for (const item of itensSalvos) {
-        const qtd = parseInt(item.quantidade) || 1;
+        if (item.status_item === 'concluido') continue; // ✅ ITENS CONCLUÍDOS NÃO PESAM NA AGENDA
+        
+        let qtd = parseInt(item.quantidade) || 1;
+        // Amortiza a carga do pedido pelas semanas em que ele vai ocorrer
+        let cargaSemanal = Math.ceil(qtd / spansSemanas);
+        if (cargaSemanal === 0) cargaSemanal = 1;
+
         if (item.subtipo === 'vestido de festa') temVestidoFesta = true;
-        else if (item.tipo === 'criacao') pecasNormais += qtd;
-        else if (item.tipo === 'concerto' || item.tipo === 'modificacao') concertos += qtd;
+        else if (item.tipo === 'criacao') pecasNormais += cargaSemanal;
+        else if (item.tipo === 'concerto' || item.tipo === 'modificacao') concertos += cargaSemanal;
       }
     }
   }
@@ -218,24 +231,28 @@ async function semanaTemEspaco(segunda, novosItens) {
   // Verifica se o conjunto de novos itens cabe nesta semana
   for (const item of novosItens) {
     const qtd = parseInt(item.quantidade) || 1;
+    // O mesmo item novo também amortece para sabermos se o "arranque" dele cabe
+    const spanDiasItem = (item.dias * qtd);
+    const spanSemanalDesteItem = Math.ceil(spanDiasItem / 5) || 1; // 5 dias uteis
+    const cargaSemanalNovo = Math.ceil(qtd / spanSemanalDesteItem);
     
     // REGRA DE OURO: Se já houver um vestido de festa, a semana está FECHADA para tudo.
     if (temVestidoFesta) return false;
 
     if (item.subtipo === 'vestido de festa') {
       // "Um vestido de festa fecha a semana" -> Não pode haver NADA antes.
-      if (pecasNormais > 0 || concertos > 0 || qtd > 1) return false;
+      if (pecasNormais > 0 || concertos > 0 || cargaSemanalNovo > 1) return false;
       temVestidoFesta = true;
     } 
     else if (item.tipo === 'criacao') {
       // Bloqueia se ultrapassar o limite de 3 criações
-      if ((pecasNormais + qtd) > 3) return false;
-      pecasNormais += qtd;
+      if ((pecasNormais + cargaSemanalNovo) > 3) return false;
+      pecasNormais += cargaSemanalNovo;
     } 
     else if (item.tipo === 'concerto' || item.tipo === 'modificacao') {
       // Bloqueia se ultrapassar o limite de 15 concertos/modificações
-      if ((concertos + qtd) > 15) return false;
-      concertos += qtd;
+      if ((concertos + cargaSemanalNovo) > 15) return false;
+      concertos += cargaSemanalNovo;
     }
   }
   return true;
@@ -266,7 +283,8 @@ function coletarItens() {
             descricao: desc,
             preco,
             quantidade,
-            preco_total_item
+            preco_total_item,
+            status_item: 'pendente'
         });
     });
     return itens;
@@ -436,10 +454,18 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
     div.innerHTML = `
       <strong>${p.nome}</strong>
       <ul>
-        ${Array.isArray(itensList) ? itensList.map(i => `
-          <li>
-            <strong>${i.subtipo || 'Item'}</strong> (${i.quantidade || 1}x)
-            ${i.descricao ? `<br><em>${i.descricao}</em>` : ''}
+        ${Array.isArray(itensList) ? itensList.map((i, idx) => `
+          <li style="display: flex; align-items: start; justify-content: space-between; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px dashed #eee;">
+            <div style="flex: 1; margin-right: 10px;">
+              <strong>${i.subtipo || 'Item'}</strong> (${i.quantidade || 1}x)
+              ${i.status_item === 'concluido' ? '<span style="color: #4caf50; font-size: 0.85em; font-weight: bold; margin-left: 5px;">[✓ Concluído]</span>' : ''}
+              ${i.descricao ? `<br><em style="font-size: 0.9em; color:#555;">${i.descricao}</em>` : ''}
+            </div>
+            ${filtro === 'pendente' ? `
+              <button class="admin-only" onclick="alternarStatusItem('${p.id}', ${idx})" style="padding: 4px 8px; font-size: 0.75rem; background: ${i.status_item === 'concluido' ? '#f44336' : '#4caf50'}; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap; margin-top:2px;">
+                 ${i.status_item === 'concluido' ? 'Desfazer' : '✓ Concluir Item'}
+              </button>
+            ` : ''}
           </li>
         `).join('') : '<li>Erro nos itens</li>'}
       </ul>
@@ -502,6 +528,49 @@ async function excluirPedido(id) {
     console.error("Erro inesperado:", err);
     alert("Ocorreu um erro inesperado: " + err.message);
   }
+}
+
+// --- NOVA FUNÇÃO: ALTERNAR STATUS DO ITEM INDIVIDUAL ---
+async function alternarStatusItem(pedidoId, itemIndex) {
+  const { data: pedido, error } = await supabase
+    .from('pedidos')
+    .select('itens')
+    .eq('id', pedidoId)
+    .single();
+
+  if (error || !pedido) {
+    alert("Erro ao buscar pedido para alternar item.");
+    return;
+  }
+
+  let itensList = typeof pedido.itens === 'string' ? JSON.parse(pedido.itens) : pedido.itens;
+  
+  if (itensList[itemIndex].status_item === 'concluido') {
+    itensList[itemIndex].status_item = 'pendente';
+  } else {
+    itensList[itemIndex].status_item = 'concluido';
+  }
+
+  const todosConcluidos = itensList.every(i => i.status_item === 'concluido');
+
+  const { error: errorUpdate } = await supabase
+    .from('pedidos')
+    .update({ itens: JSON.stringify(itensList) })
+    .eq('id', pedidoId);
+
+  if (errorUpdate) {
+    alert("Erro ao salvar mudança de status do item.");
+    return;
+  }
+  
+  if (todosConcluidos) {
+    if(confirm("Todos os itens estão concluídos! Deseja passar o pedido para a aba de Concluídos?")) {
+      await mudarStatus(pedidoId, 'concluido');
+      return;
+    }
+  }
+
+  location.reload();
 }
 
 // --- FUNÇÃO DE PESQUISA (ESTAVA FALTANDO) ---
@@ -791,7 +860,8 @@ async function abrirEditorPedido(id) {
         descricao: descricao,
         preco,
         quantidade,
-        preco_total_item: preco * quantidade
+        preco_total_item: preco * quantidade,
+        status_item: 'pendente'
       });
       renderItensModal();
     };
