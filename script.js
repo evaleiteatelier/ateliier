@@ -461,16 +461,15 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
       
       <div class="acoes-pedido">
           ${filtro === 'pendente' ? `
-            <button class="admin-only" 
+            <button class="admin-only btn-concluir-pago" 
               onclick="concluirEPago('${p.id}', ${Number(p.preco_final || p.preco_total || 0)})"
-              style="background:linear-gradient(135deg,#2e7d32,#43a047); color:#fff; border:none; border-radius:6px; padding:9px 14px; font-size:0.9rem; font-weight:bold; cursor:pointer; flex:1; transition:opacity .2s;"
               title="Marcar como concluído e 100% pago">
               ✅ Concluído &amp; Pago
             </button>` : ''}
           ${botaoAcao ? `<button class="admin-only" onclick="mudarStatus('${p.id}', '${novoStatus}')">${botaoAcao}</button>` : ''}
           ${filtro === 'pendente' ? `
-            <button class="admin-only" onclick="abrirEditorPedido('${p.id}')">Editar</button>
-            <button class="admin-only" style="background-color: #d32f2f;" onclick="excluirPedido('${p.id}')">Excluir</button>
+            <button class="admin-only btn-editar" onclick="abrirEditorPedido('${p.id}')">Editar</button>
+            <button class="admin-only btn-excluir" onclick="excluirPedido('${p.id}')">Excluir</button>
           ` : ''}
       </div>
       <hr>

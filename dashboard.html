@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,11 +24,11 @@
       --blue-light: #e3f2fd;
       --bg: #f5f1ea;
       --radius: 14px;
-      --shadow: 0 4px 20px rgba(0,0,0,0.08);
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     }
 
     body {
-      font-family: 'Georgia', serif;
+      font-family: 'Inter', system-ui, sans-serif;
       background: var(--bg);
       color: var(--text);
       margin: 0;
@@ -64,25 +65,29 @@
     .month-picker {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       background: white;
       border: 2px solid var(--gold);
       border-radius: 30px;
-      padding: 8px 18px;
-      font-size: 0.95rem;
-      font-family: 'Georgia', serif;
-      color: var(--dark);
-      cursor: pointer;
+      padding: 10px 20px;
+      font-size: 0.85rem;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-weight: 500;
+      color: var(--text-muted);
+      white-space: nowrap;
+      /* ← impede quebra de linha */
+      flex-shrink: 0;
     }
 
     .month-picker select {
       border: none;
       background: transparent;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-weight: 600;
       color: var(--dark);
       cursor: pointer;
       outline: none;
-      font-family: 'Georgia', serif;
       padding: 0;
       margin: 0;
     }
@@ -109,11 +114,21 @@
       transition: transform 0.2s;
     }
 
-    .kpi-card:hover { transform: translateY(-3px); }
+    .kpi-card:hover {
+      transform: translateY(-3px);
+    }
 
-    .kpi-card.green { border-color: var(--green); }
-    .kpi-card.blue  { border-color: var(--blue); }
-    .kpi-card.red   { border-color: var(--red); }
+    .kpi-card.green {
+      border-color: var(--green);
+    }
+
+    .kpi-card.blue {
+      border-color: var(--blue);
+    }
+
+    .kpi-card.red {
+      border-color: var(--red);
+    }
 
     .kpi-icon {
       font-size: 2rem;
@@ -134,10 +149,21 @@
       line-height: 1;
     }
 
-    .kpi-value.gold { color: var(--gold); }
-    .kpi-value.green { color: var(--green); }
-    .kpi-value.red   { color: var(--red); }
-    .kpi-value.blue  { color: var(--blue); }
+    .kpi-value.gold {
+      color: var(--gold);
+    }
+
+    .kpi-value.green {
+      color: var(--green);
+    }
+
+    .kpi-value.red {
+      color: var(--red);
+    }
+
+    .kpi-value.blue {
+      color: var(--blue);
+    }
 
     .kpi-sub {
       font-size: 0.82rem;
@@ -171,7 +197,9 @@
     }
 
     @media (max-width: 900px) {
-      .charts-grid { grid-template-columns: 1fr; }
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     .chart-card {
@@ -211,11 +239,15 @@
     }
 
     @media (max-width: 1100px) {
-      .second-row { grid-template-columns: 1fr 1fr; }
+      .second-row {
+        grid-template-columns: 1fr 1fr;
+      }
     }
 
     @media (max-width: 700px) {
-      .second-row { grid-template-columns: 1fr; }
+      .second-row {
+        grid-template-columns: 1fr;
+      }
     }
 
     /* ---- RECENT ORDERS TABLE ---- */
@@ -251,8 +283,13 @@
       vertical-align: middle;
     }
 
-    .recent-table tr:last-child td { border-bottom: none; }
-    .recent-table tr:hover td { background: #fafafa; }
+    .recent-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .recent-table tr:hover td {
+      background: #fafafa;
+    }
 
     .status-pill {
       display: inline-block;
@@ -262,9 +299,20 @@
       font-weight: bold;
     }
 
-    .pill-pendente  { background: #fff3e0; color: #e65100; }
-    .pill-concluido { background: var(--blue-light); color: var(--blue); }
-    .pill-entregue  { background: var(--green-light); color: var(--green); }
+    .pill-pendente {
+      background: #fff3e0;
+      color: #e65100;
+    }
+
+    .pill-concluido {
+      background: var(--blue-light);
+      color: var(--blue);
+    }
+
+    .pill-entregue {
+      background: var(--green-light);
+      color: var(--green);
+    }
 
     /* ---- TOP ITEMS ---- */
     .item-bar {
@@ -320,8 +368,13 @@
     }
 
     @keyframes spin {
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(360deg); }
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
     }
 
     /* ---- UTIL ---- */
@@ -337,10 +390,10 @@
     }
 
     .section-divider::after {
-      content:'';
-      flex:1;
-      height:1px;
-      background:#e0e0e0;
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e0e0e0;
     }
 
     .empty-state {
@@ -363,9 +416,9 @@
 
     <!-- HEADER -->
     <div class="dash-header">
-      <h1>📊 Dashboard <span>Eva Leite Atelier</span></h1>
+      <h1>Dashboard</h1>
       <div class="month-picker">
-        📅 A ver:
+        📅
         <select id="sel-mes" onchange="carregarDashboard()"></select>
         <select id="sel-ano" onchange="carregarDashboard()"></select>
       </div>
@@ -433,7 +486,9 @@
     <div class="second-row">
       <div class="chart-card">
         <div class="chart-title">🏆 Itens Mais Encomendados</div>
-        <div id="top-itens-list"><div class="loading-spinner"></div></div>
+        <div id="top-itens-list">
+          <div class="loading-spinner"></div>
+        </div>
       </div>
       <div class="chart-card">
         <div class="chart-title">📊 Pedidos por Mês <span>— últimos 6 meses</span></div>
@@ -464,7 +519,11 @@
           </tr>
         </thead>
         <tbody id="tbody-entregas">
-          <tr><td colspan="5"><div class="loading-spinner"></div></td></tr>
+          <tr>
+            <td colspan="5">
+              <div class="loading-spinner"></div>
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -486,7 +545,11 @@
           </tr>
         </thead>
         <tbody id="tbody-recentes">
-          <tr><td colspan="7"><div class="loading-spinner"></div></td></tr>
+          <tr>
+            <td colspan="7">
+              <div class="loading-spinner"></div>
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -511,7 +574,7 @@
     // chart instances (para destruir antes de recriar)
     let chartReceitaDiaria, chartStatus, chartMensal, chartPagoFalta;
 
-    const MESES_PT = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    const MESES_PT = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
     // ============================================================
     // PREENCHER SELECTS DE MÊS/ANO
@@ -558,7 +621,7 @@
     }
 
     function destroyChart(ref) {
-      if (ref) { try { ref.destroy(); } catch(e){} }
+      if (ref) { try { ref.destroy(); } catch (e) { } }
     }
 
     function getItensDoPedido(p) {
@@ -574,9 +637,9 @@
     async function carregarDashboard() {
       const { mes, ano } = getMesAnoSelecionado();
 
-      const inicio = `${ano}-${String(mes+1).padStart(2,'0')}-01`;
-      const fimDate = new Date(ano, mes+1, 0);
-      const fim = `${ano}-${String(mes+1).padStart(2,'0')}-${String(fimDate.getDate()).padStart(2,'0')}`;
+      const inicio = `${ano}-${String(mes + 1).padStart(2, '0')}-01`;
+      const fimDate = new Date(ano, mes + 1, 0);
+      const fim = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(fimDate.getDate()).padStart(2, '0')}`;
 
       // Busca pedidos do mês selecionado (por data_real ou data_pedido)
       const [{ data: pedidosMes }, { data: todosPendentes }, { data: vouchersUsados }] = await Promise.all([
@@ -589,25 +652,25 @@
 
       // ---- KPIs ----
       const concluidos = pedidos.filter(p => p.status === 'concluido' || p.status === 'entregue');
-      const emEspera   = todosPendentes || [];
-      const entregues  = pedidos.filter(p => p.status === 'entregue');
+      const emEspera = todosPendentes || [];
+      const entregues = pedidos.filter(p => p.status === 'entregue');
 
-      const receitaTotal   = pedidos.reduce((s, p) => s + Number(p.preco_final || p.preco_total || 0), 0);
+      const receitaTotal = pedidos.reduce((s, p) => s + Number(p.preco_final || p.preco_total || 0), 0);
       const adiantadoTotal = pedidos.reduce((s, p) => s + Number(p.valor_adiantado || 0), 0);
-      const faltaTotal     = receitaTotal - adiantadoTotal;
+      const faltaTotal = receitaTotal - adiantadoTotal;
 
-      document.getElementById('kpi-receita').textContent        = fmt(receitaTotal);
-      document.getElementById('kpi-receita-sub').textContent    = `${pedidos.length} pedido(s) registados`;
-      document.getElementById('kpi-concluidos').textContent     = concluidos.length;
-      document.getElementById('kpi-concluidos-sub').textContent = `${fmt(concluidos.reduce((s,p)=>s+Number(p.preco_final||p.preco_total||0),0))} em valor`;
-      document.getElementById('kpi-espera').textContent         = emEspera.length;
-      document.getElementById('kpi-espera-sub').textContent     = `${fmt(emEspera.reduce((s,p)=>s+Number(p.preco_final||p.preco_total||0),0))} em valor`;
-      document.getElementById('kpi-entregues').textContent      = entregues.length;
-      document.getElementById('kpi-entregues-sub').textContent  = `finalizados e entregues`;
-      document.getElementById('kpi-adiantado').textContent      = fmt(adiantadoTotal);
-      document.getElementById('kpi-adiantado-sub').textContent  = `Falta receber: ${fmt(Math.max(0, faltaTotal))}`;
-      document.getElementById('kpi-vouchers').textContent       = (vouchersUsados || []).length;
-      document.getElementById('kpi-vouchers-sub').textContent   = `cupões utilizados no total`;
+      document.getElementById('kpi-receita').textContent = fmt(receitaTotal);
+      document.getElementById('kpi-receita-sub').textContent = `${pedidos.length} pedido(s) registados`;
+      document.getElementById('kpi-concluidos').textContent = concluidos.length;
+      document.getElementById('kpi-concluidos-sub').textContent = `${fmt(concluidos.reduce((s, p) => s + Number(p.preco_final || p.preco_total || 0), 0))} em valor`;
+      document.getElementById('kpi-espera').textContent = emEspera.length;
+      document.getElementById('kpi-espera-sub').textContent = `${fmt(emEspera.reduce((s, p) => s + Number(p.preco_final || p.preco_total || 0), 0))} em valor`;
+      document.getElementById('kpi-entregues').textContent = entregues.length;
+      document.getElementById('kpi-entregues-sub').textContent = `finalizados e entregues`;
+      document.getElementById('kpi-adiantado').textContent = fmt(adiantadoTotal);
+      document.getElementById('kpi-adiantado-sub').textContent = `Falta receber: ${fmt(Math.max(0, faltaTotal))}`;
+      document.getElementById('kpi-vouchers').textContent = (vouchersUsados || []).length;
+      document.getElementById('kpi-vouchers-sub').textContent = `cupões utilizados no total`;
 
       // ---- CHART: Receita dos últimos 30 dias ----
       renderChartReceitaDiaria(pedidos, mes, ano);
@@ -635,8 +698,8 @@
     // CHART: RECEITA DIÁRIA
     // ============================================================
     function renderChartReceitaDiaria(pedidos, mes, ano) {
-      const diasNoMes = new Date(ano, mes+1, 0).getDate();
-      const labels = Array.from({length: diasNoMes}, (_, i) => `${i+1}`);
+      const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+      const labels = Array.from({ length: diasNoMes }, (_, i) => `${i + 1}`);
       const valores = Array(diasNoMes).fill(0);
 
       pedidos.forEach(p => {
@@ -678,7 +741,7 @@
             x: { grid: { display: false }, ticks: { maxTicksLimit: 10 } },
             y: {
               grid: { color: '#f0f0f0' },
-              ticks: { callback: v => '€'+v }
+              ticks: { callback: v => '€' + v }
             }
           }
         }
@@ -731,10 +794,10 @@
         let m = mesAtual - i;
         let a = anoAtual;
         while (m < 0) { m += 12; a--; }
-        const ini = `${a}-${String(m+1).padStart(2,'0')}-01`;
-        const fim = `${a}-${String(m+1).padStart(2,'0')}-${new Date(a,m+1,0).getDate()}`;
-        labels.push(MESES_PT[m].substring(0,3));
-        promises.push(db.from('pedidos').select('id', {count:'exact'}).gte('data_real', ini).lte('data_real', fim));
+        const ini = `${a}-${String(m + 1).padStart(2, '0')}-01`;
+        const fim = `${a}-${String(m + 1).padStart(2, '0')}-${new Date(a, m + 1, 0).getDate()}`;
+        labels.push(MESES_PT[m].substring(0, 3));
+        promises.push(db.from('pedidos').select('id', { count: 'exact' }).gte('data_real', ini).lte('data_real', fim));
       }
 
       const results = await Promise.all(promises);
@@ -807,7 +870,7 @@
             x: {
               stacked: true,
               grid: { color: '#f0f0f0' },
-              ticks: { callback: v => '€'+v }
+              ticks: { callback: v => '€' + v }
             },
             y: { stacked: true, grid: { display: false } }
           }
@@ -828,7 +891,7 @@
         });
       });
 
-      const sorted = Object.entries(contagem).sort((a,b) => b[1]-a[1]).slice(0, 8);
+      const sorted = Object.entries(contagem).sort((a, b) => b[1] - a[1]).slice(0, 8);
       const container = document.getElementById('top-itens-list');
 
       if (sorted.length === 0) {
@@ -841,7 +904,7 @@
         <div class="item-bar">
           <div class="item-bar-label">${nome}</div>
           <div class="item-bar-track">
-            <div class="item-bar-fill" style="width:${Math.round((qtd/max)*100)}%"></div>
+            <div class="item-bar-fill" style="width:${Math.round((qtd / max) * 100)}%"></div>
           </div>
           <div class="item-bar-count">${qtd}x</div>
         </div>
@@ -853,7 +916,7 @@
     // ============================================================
     function renderProximasEntregas(pendentes) {
       const hoje = new Date();
-      hoje.setHours(0,0,0,0);
+      hoje.setHours(0, 0, 0, 0);
       const em14 = new Date(hoje);
       em14.setDate(em14.getDate() + 14);
 
@@ -863,7 +926,7 @@
           const d = new Date(p.data_entrega + 'T00:00:00');
           return d >= hoje && d <= em14;
         })
-        .sort((a,b) => a.data_entrega.localeCompare(b.data_entrega));
+        .sort((a, b) => a.data_entrega.localeCompare(b.data_entrega));
 
       const tbody = document.getElementById('tbody-entregas');
 
@@ -874,9 +937,9 @@
 
       tbody.innerHTML = proximas.map(p => {
         const itens = getItensDoPedido(p);
-        const resumoItens = itens.map(i => `${i.subtipo||i.tipo} (${i.quantidade||1}x)`).join(', ');
+        const resumoItens = itens.map(i => `${i.subtipo || i.tipo} (${i.quantidade || 1}x)`).join(', ');
         const entrega = new Date(p.data_entrega + 'T00:00:00');
-        const diffDias = Math.ceil((entrega - hoje) / (1000*60*60*24));
+        const diffDias = Math.ceil((entrega - hoje) / (1000 * 60 * 60 * 24));
         const urgencia = diffDias <= 3
           ? `<span style="color:#c62828; font-weight:bold;">em ${diffDias}d ⚠️</span>`
           : `em ${diffDias}d`;
@@ -895,7 +958,7 @@
     // PEDIDOS DO MÊS (Tabela)
     // ============================================================
     function renderPedidosRecentes(pedidos) {
-      const sorted = [...pedidos].sort((a,b) => b.data_real?.localeCompare(a.data_real||'')||0);
+      const sorted = [...pedidos].sort((a, b) => b.data_real?.localeCompare(a.data_real || '') || 0);
       const tbody = document.getElementById('tbody-recentes');
 
       if (sorted.length === 0) {
@@ -905,7 +968,7 @@
 
       tbody.innerHTML = sorted.map(p => {
         const itens = getItensDoPedido(p);
-        const qtdItens = itens.reduce((s, i) => s + (i.quantidade||1), 0);
+        const qtdItens = itens.reduce((s, i) => s + (i.quantidade || 1), 0);
         const adiantado = Number(p.valor_adiantado || 0);
         const total = Number(p.preco_final || p.preco_total || 0);
 
@@ -931,4 +994,5 @@
     carregarDashboard();
   </script>
 </body>
+
 </html>

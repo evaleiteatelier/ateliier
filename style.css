@@ -1,10 +1,28 @@
+/* =========================================
+   FONTE: Inter (local, da pasta /font)
+   ========================================= */
+@font-face {
+    font-family: 'Inter';
+    src: url('font/Inter-VariableFont_opsz,wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Inter';
+    src: url('font/Inter-Italic-VariableFont_opsz,wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: italic;
+    font-display: swap;
+}
+
 /* Paleta: bege suave (#f5f1ea), branco (#fff), preto (#000) */
 
 body {
   background-color: #f5f1ea;
   color: #000;
-  font-family: 'Georgia', serif;
-  font-size: 18px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 16px;
   margin: 0;
   padding: 20px;
   line-height: 1.6;
@@ -14,8 +32,9 @@ h1, h2, h3 {
   color: #000;
   text-align: center;
   margin-top: 0;
-  font-family: 'Playfair Display', serif;
-  letter-spacing: 1px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.3px;
 }
 
 .container {
@@ -82,7 +101,6 @@ nav {
   gap: 20px;
   background: #fff;
   padding: 15px 0;
-  border-bottom: 2px dashed #bba68a;
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -167,6 +185,40 @@ footer {
 /* Força os botões para baixo se o cartão for mais alto */
 .pedido .acoes-pedido {
     margin-top: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 15px;
+}
+
+/* Estilo para os botões de ação nos cards */
+.acoes-pedido button {
+    padding: 8px 16px;
+    font-size: 0.8rem;
+    border-radius: 25px;
+    margin-top: 0;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    flex: 1;
+    min-width: fit-content;
+}
+
+.acoes-pedido button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.btn-concluir-pago {
+    background: linear-gradient(135deg, #2e7d32, #43a047) !important;
+    color: white !important;
+}
+
+.btn-excluir {
+    background-color: #d32f2f !important;
+}
+
+.btn-editar {
+    background-color: #555 !important;
 }
 
 /* =========================================

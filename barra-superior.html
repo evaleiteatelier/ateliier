@@ -1,140 +1,227 @@
 <style>
-    /* --- CORREÇÃO DO CONTEÚDO ESCONDIDO --- */
-    /* Como a barra é fixa, precisamos empurrar o site para baixo */
+    /* ── Offset para o conteúdo não ficar escondido ── */
     body {
-        padding-top: 100px !important; /* Altura da barra + espaço extra */
+        padding-top: 90px !important;
         margin: 0;
     }
 
-    /* --- ESTILOS DA BARRA --- */
-    /* DENTRO DE BARRA-SUPERIOR.HTML */
+    /* ── BARRA PRINCIPAL ── */
     .top-bar {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
-        height: 80px;
-        background-color: #ffffff;
-        border-bottom: 3px solid #d4af37;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        
-        /* MUDE AQUI 👇 */
-        z-index: 1000; /* Antes estava 9999. Vamos baixar para 1000 */
-        
-        display: flex;
-        justify-content: center;
-        font-family: sans-serif;
+        z-index: 1000;
+        background: #ffffff;
+        box-shadow: 0 1px 0 rgba(212,175,55,.25), 0 4px 20px rgba(0,0,0,.06);
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    /* Linha dourada muito fina no topo */
+    .top-bar::before {
+        content: '';
+        display: block;
+        height: 3px;
+        background: linear-gradient(90deg, transparent 0%, #d4af37 30%, #f5e6a3 60%, #d4af37 80%, transparent 100%);
     }
 
     .header-content {
         width: 100%;
-        max-width: 1200px;
+        max-width: 1300px;
+        margin: 0 auto;
+        height: 76px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0 20px;
+        padding: 0 28px;
+        box-sizing: border-box;
     }
 
-    /* Logo e Marca */
+    /* ── LOGO ── */
     .brand {
         display: flex;
         align-items: center;
-        gap: 12px;
         text-decoration: none;
+        flex-shrink: 0;
     }
 
     .nav-logo {
-        height: 55px;
+        height: 52px;
         width: auto;
+        display: block;
+        /* Filtro para imagem branca/cinza — remove se a logo já é escura */
+        filter: none;
+        transition: opacity 0.25s;
     }
 
-    .nav-title {
-        font-size: 1.3rem;
-        font-weight: bold;
-        color: #222;
-        text-transform: uppercase;
-        letter-spacing: 1px;
+    .brand:hover .nav-logo {
+        opacity: 0.8;
     }
 
-    /* Links de Navegação */
+    /* ── SEPARADOR VERTICAL ── */
+    .nav-divider {
+        width: 1px;
+        height: 28px;
+        background: #e0d5c1;
+        margin: 0 24px 0 32px;
+        flex-shrink: 0;
+    }
+
+    /* ── LINKS DE NAVEGAÇÃO ── */
     .nav-links {
         display: flex;
-        gap: 30px;
+        align-items: center;
+        gap: 6px;
+        flex: 1;
     }
 
     .nav-links a {
         text-decoration: none;
-        color: #666;
-        font-weight: 500;
-        font-size: 1rem;
-        transition: all 0.3s;
-        padding: 5px 0;
+        color: #555;
+        font-size: 0.82rem;
+        font-family: 'Inter', system-ui, sans-serif;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        padding: 6px 12px;
+        border-radius: 4px;
         position: relative;
+        transition: color 0.25s, background 0.25s;
+        white-space: nowrap;
     }
 
     .nav-links a:hover {
         color: #d4af37;
+        background: rgba(212,175,55,.07);
     }
 
-    /* Efeito de link ativo (sublinhado dourado) */
+    /* Sublinhado dourado ao passar */
+    .nav-links a::after {
+        content: '';
+        position: absolute;
+        bottom: 2px;
+        left: 12px;
+        right: 12px;
+        height: 1.5px;
+        background: #d4af37;
+        transform: scaleX(0);
+        transform-origin: center;
+        transition: transform 0.25s ease;
+        border-radius: 1px;
+    }
+
+    .nav-links a:hover::after,
+    .active-link::after {
+        transform: scaleX(1) !important;
+    }
+
+    /* Link activo */
     .active-link {
         color: #d4af37 !important;
         font-weight: bold;
     }
-    .active-link::after {
-        content: '';
-        position: absolute;
-        width: 100%;
-        height: 2px;
-        bottom: 0;
-        left: 0;
-        background-color: #d4af37;
+
+    /* ── SEPARADOR ANTES DOS LINKS ADMIN ── */
+    .nav-admin-sep {
+        width: 1px;
+        height: 18px;
+        background: #ddd;
+        margin: 0 6px;
+        flex-shrink: 0;
     }
 
-    /* Botão Sair */
+    /* Destaque especial para "+ Novo Pedido" */
+    .nav-links a.link-novo {
+        background: #1a1a2e;
+        color: #d4af37 !important;
+        border-radius: 20px;
+        padding: 6px 16px;
+        letter-spacing: 0.6px;
+        font-size: 0.8rem;
+    }
+
+    .nav-links a.link-novo:hover {
+        background: #2e2e4e;
+    }
+
+    .nav-links a.link-novo::after {
+        display: none;
+    }
+
+    /* ── LADO DIREITO: SAIR ── */
+    .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-shrink: 0;
+        margin-left: 16px;
+    }
+
     .btn-logout {
-        background-color: #f44336;
-        color: white;
-        border: none;
-        padding: 8px 18px;
+        background: transparent;
+        color: #999;
+        border: 1px solid #ddd;
+        padding: 7px 16px;
         border-radius: 20px;
         cursor: pointer;
-        font-weight: bold;
-        font-size: 0.9rem;
-        transition: background 0.3s;
-        margin-top: 0 !important; /* Remove margem padrão de botões do css global */
+        font-size: 0.78rem;
+        font-family: 'Inter', system-ui, sans-serif;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        transition: all 0.25s;
+        margin: 0 !important;
     }
 
     .btn-logout:hover {
-        background-color: #d32f2f;
+        border-color: #c62828;
+        color: #c62828;
+        background: rgba(198,40,40,.05);
     }
 
-    /* Responsividade */
+    /* ── RESPONSIVO ── */
+    @media (max-width: 960px) {
+        .nav-links a { font-size: 0.75rem; padding: 5px 8px; }
+        .nav-divider  { margin: 0 12px 0 20px; }
+        .header-content { padding: 0 16px; }
+    }
+
     @media (max-width: 768px) {
-        .nav-title { display: none; }
-        .nav-links { gap: 15px; font-size: 0.9rem; }
-        .header-content { padding: 0 10px; }
-        body { padding-top: 90px !important; }
+        .nav-admin-sep { display: none; }
+        .nav-links { gap: 2px; }
+        .nav-links a { font-size: 0.7rem; padding: 5px 6px; letter-spacing: 0; }
+        body { padding-top: 80px !important; }
     }
 </style>
 
 <header class="top-bar">
     <div class="header-content">
+
+        <!-- LOGO -->
         <a href="lista-espera.html" class="brand">
-            <img src="img/logo.png" alt="Logo" class="nav-logo">
-            <span class="nav-title">Eva Leite Atelier</span>
+            <img src="img/logo.png" alt="Eva Leite Atelier" class="nav-logo">
         </a>
 
+        <!-- SEPARADOR VERTICAL -->
+        <div class="nav-divider"></div>
+
+        <!-- LINKS -->
         <nav class="nav-links">
-            <a href="lista-espera.html" data-page="lista-espera.html">Lista de Espera</a>
-            <a href="concluidos.html" data-page="concluidos.html">Concluídos</a>
-            
+            <a href="lista-espera.html"  data-page="lista-espera.html">Lista de Espera</a>
+            <a href="concluidos.html"    data-page="concluidos.html">Concluídos</a>
+
+            <!-- Links apenas para Admin -->
             <span class="admin-only-group" style="display:contents">
-                <a href="adicionar-pedido.html" data-page="adicionar-pedido.html">+ Novo Pedido</a>
-                <a href="entregues.html" data-page="entregues.html">Histórico</a>
-                <a href="vouchers.html" data-page="vouchers.html">🎟️ Vouchers</a>
-                <a href="dashboard.html" data-page="dashboard.html">📊 Dashboard</a>
+                <div class="nav-admin-sep"></div>
+                <a href="adicionar-pedido.html" data-page="adicionar-pedido.html" class="link-novo">+ Novo Pedido</a>
+                <a href="entregues.html"  data-page="entregues.html">Histórico</a>
+                <a href="vouchers.html"   data-page="vouchers.html">Vouchers</a>
+                <a href="dashboard.html"  data-page="dashboard.html">Dashboard</a>
             </span>
         </nav>
+
+        <!-- BOTÃO SAIR -->
+        <div class="nav-right admin-only-group">
+            <button class="btn-logout" onclick="sair()">Sair</button>
+        </div>
+
     </div>
 </header>
