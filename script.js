@@ -191,7 +191,6 @@ async function semanaTemEspaco(segunda, novosItens) {
   const { data: pedidos, error } = await supabase
     .from('pedidos')
     .select('itens, data_pedido, data_entrega') // Buscamos a entrega também para ver o intervalo
-    .eq('status', 'pendente') // APENAS AS ENCOMENDAS AINDA NÃO CONCLUÍDAS OCUPAM LUGAR
     .lte('data_pedido', formatarParaISO(domingo)) // O pedido começou antes de o domingo acabar
     .gte('data_entrega', formatarParaISO(segunda)); // O pedido acaba depois de a segunda começar
 
@@ -206,24 +205,12 @@ async function semanaTemEspaco(segunda, novosItens) {
   // Conta o que já existe no banco de dados para esta semana (se houver)
   if (pedidos) {
     for (const pedido of pedidos) {
-      const d1 = new Date(pedido.data_pedido);
-      const d2 = new Date(pedido.data_entrega);
-      let spanDias = (d2 - d1) / (1000 * 60 * 60 * 24);
-      if (spanDias < 1) spanDias = 1;
-      const spansSemanas = Math.ceil(spanDias / 7) || 1;
-
       const itensSalvos = typeof pedido.itens === 'string' ? JSON.parse(pedido.itens) : pedido.itens;
       for (const item of itensSalvos) {
-        if (item.status_item === 'concluido') continue; // ✅ ITENS CONCLUÍDOS NÃO PESAM NA AGENDA
-        
-        let qtd = parseInt(item.quantidade) || 1;
-        // Amortiza a carga do pedido pelas semanas em que ele vai ocorrer
-        let cargaSemanal = Math.ceil(qtd / spansSemanas);
-        if (cargaSemanal === 0) cargaSemanal = 1;
-
+        const qtd = parseInt(item.quantidade) || 1;
         if (item.subtipo === 'vestido de festa') temVestidoFesta = true;
-        else if (item.tipo === 'criacao') pecasNormais += cargaSemanal;
-        else if (item.tipo === 'concerto' || item.tipo === 'modificacao') concertos += cargaSemanal;
+        else if (item.tipo === 'criacao') pecasNormais += qtd;
+        else if (item.tipo === 'concerto' || item.tipo === 'modificacao') concertos += qtd;
       }
     }
   }
@@ -231,28 +218,24 @@ async function semanaTemEspaco(segunda, novosItens) {
   // Verifica se o conjunto de novos itens cabe nesta semana
   for (const item of novosItens) {
     const qtd = parseInt(item.quantidade) || 1;
-    // O mesmo item novo também amortece para sabermos se o "arranque" dele cabe
-    const spanDiasItem = (item.dias * qtd);
-    const spanSemanalDesteItem = Math.ceil(spanDiasItem / 5) || 1; // 5 dias uteis
-    const cargaSemanalNovo = Math.ceil(qtd / spanSemanalDesteItem);
     
     // REGRA DE OURO: Se já houver um vestido de festa, a semana está FECHADA para tudo.
     if (temVestidoFesta) return false;
 
     if (item.subtipo === 'vestido de festa') {
       // "Um vestido de festa fecha a semana" -> Não pode haver NADA antes.
-      if (pecasNormais > 0 || concertos > 0 || cargaSemanalNovo > 1) return false;
+      if (pecasNormais > 0 || concertos > 0 || qtd > 1) return false;
       temVestidoFesta = true;
     } 
     else if (item.tipo === 'criacao') {
       // Bloqueia se ultrapassar o limite de 3 criações
-      if ((pecasNormais + cargaSemanalNovo) > 3) return false;
-      pecasNormais += cargaSemanalNovo;
+      if ((pecasNormais + qtd) > 3) return false;
+      pecasNormais += qtd;
     } 
     else if (item.tipo === 'concerto' || item.tipo === 'modificacao') {
       // Bloqueia se ultrapassar o limite de 15 concertos/modificações
-      if ((concertos + cargaSemanalNovo) > 15) return false;
-      concertos += cargaSemanalNovo;
+      if ((concertos + qtd) > 15) return false;
+      concertos += qtd;
     }
   }
   return true;
@@ -283,8 +266,7 @@ function coletarItens() {
             descricao: desc,
             preco,
             quantidade,
-            preco_total_item,
-            status_item: 'pendente'
+            preco_total_item
         });
     });
     return itens;
@@ -452,20 +434,21 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
     }
 
     div.innerHTML = `
-      <strong>${p.nome}</strong>
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px;">
+        <strong>${p.nome}</strong>
+        ${filtro === 'pendente' ? `
+          <label class="admin-only" title="Selecionar" style="display:flex; align-items:center; gap:5px; cursor:pointer; font-size:0.8rem; color:#888; white-space:nowrap; margin-top:2px;">
+            <input type="checkbox" class="check-selecionar" data-id="${p.id}" 
+              onchange="atualizarBarraSel()" 
+              style="width:16px; height:16px; cursor:pointer; accent-color:#2e7d32;">
+            Selecionar
+          </label>` : ''}
+      </div>
       <ul>
-        ${Array.isArray(itensList) ? itensList.map((i, idx) => `
-          <li style="display: flex; align-items: start; justify-content: space-between; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px dashed #eee;">
-            <div style="flex: 1; margin-right: 10px;">
-              <strong>${i.subtipo || 'Item'}</strong> (${i.quantidade || 1}x)
-              ${i.status_item === 'concluido' ? '<span style="color: #4caf50; font-size: 0.85em; font-weight: bold; margin-left: 5px;">[✓ Concluído]</span>' : ''}
-              ${i.descricao ? `<br><em style="font-size: 0.9em; color:#555;">${i.descricao}</em>` : ''}
-            </div>
-            ${filtro === 'pendente' ? `
-              <button class="admin-only" onclick="alternarStatusItem('${p.id}', ${idx})" style="padding: 4px 8px; font-size: 0.75rem; background: ${i.status_item === 'concluido' ? '#f44336' : '#4caf50'}; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap; margin-top:2px;">
-                 ${i.status_item === 'concluido' ? 'Desfazer' : '✓ Concluir Item'}
-              </button>
-            ` : ''}
+        ${Array.isArray(itensList) ? itensList.map(i => `
+          <li>
+            <strong>${i.subtipo || 'Item'}</strong> (${i.quantidade || 1}x)
+            ${i.descricao ? `<br><em>${i.descricao}</em>` : ''}
           </li>
         `).join('') : '<li>Erro nos itens</li>'}
       </ul>
@@ -477,8 +460,14 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
       ${precoDisplay}
       
       <div class="acoes-pedido">
+          ${filtro === 'pendente' ? `
+            <button class="admin-only" 
+              onclick="concluirEPago('${p.id}', ${Number(p.preco_final || p.preco_total || 0)})"
+              style="background:linear-gradient(135deg,#2e7d32,#43a047); color:#fff; border:none; border-radius:6px; padding:9px 14px; font-size:0.9rem; font-weight:bold; cursor:pointer; flex:1; transition:opacity .2s;"
+              title="Marcar como concluído e 100% pago">
+              ✅ Concluído &amp; Pago
+            </button>` : ''}
           ${botaoAcao ? `<button class="admin-only" onclick="mudarStatus('${p.id}', '${novoStatus}')">${botaoAcao}</button>` : ''}
-          
           ${filtro === 'pendente' ? `
             <button class="admin-only" onclick="abrirEditorPedido('${p.id}')">Editar</button>
             <button class="admin-only" style="background-color: #d32f2f;" onclick="excluirPedido('${p.id}')">Excluir</button>
@@ -511,6 +500,132 @@ async function mudarStatus(id, novoStatus) {
   location.reload();
 }
 
+// =====================================================
+// CONCLUIR & PAGO — individual
+// =====================================================
+async function concluirEPago(id, precoFinal) {
+  const confirmado = await new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:14px;padding:28px 30px;max-width:360px;width:90%;box-shadow:0 10px 30px rgba(0,0,0,.2);text-align:center;">
+        <div style="font-size:2.5rem;margin-bottom:10px;">✅</div>
+        <h3 style="margin:0 0 8px;font-size:1.1rem;">Concluir e Marcar como Pago?</h3>
+        <p style="color:#666;font-size:0.9rem;margin-bottom:20px;">Este pedido será marcado como <strong>Concluído</strong> e o valor de <strong style="color:#2e7d32;">€${Number(precoFinal).toFixed(2)}</strong> ficará registado como 100% pago.</p>
+        <div style="display:flex;gap:10px;">
+          <button id="btn-conf-ok" style="flex:1;background:#2e7d32;color:#fff;border:none;border-radius:8px;padding:11px;font-size:1rem;cursor:pointer;margin:0;">✅ Confirmar</button>
+          <button id="btn-conf-cancel" style="flex:1;background:#f5f5f5;color:#555;border:1px solid #ddd;border-radius:8px;padding:11px;font-size:1rem;cursor:pointer;margin:0;">Cancelar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.querySelector('#btn-conf-ok').onclick    = () => { document.body.removeChild(overlay); resolve(true); };
+    overlay.querySelector('#btn-conf-cancel').onclick = () => { document.body.removeChild(overlay); resolve(false); };
+  });
+
+  if (!confirmado) return;
+
+  try { await enviarEmailConclusao(id, supabase); } catch(e) { console.warn('Email falhou:', e); }
+
+  await supabase.from('pedidos').update({
+    status: 'concluido',
+    valor_adiantado: precoFinal   // 100% pago
+  }).eq('id', id);
+
+  location.reload();
+}
+
+// =====================================================
+// SELEÇÃO MÚLTIPLA — barra flutuante
+// =====================================================
+function atualizarBarraSel() {
+  const checks = Array.from(document.querySelectorAll('.check-selecionar:checked'));
+  let barra = document.getElementById('barra-sel-multipla');
+
+  if (checks.length === 0) {
+    if (barra) barra.style.display = 'none';
+    return;
+  }
+
+  if (!barra) {
+    barra = document.createElement('div');
+    barra.id = 'barra-sel-multipla';
+    barra.style.cssText = `
+      position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+      background:#1a1a2e; color:#fff; border-radius:40px;
+      padding:12px 22px; display:flex; align-items:center; gap:14px;
+      box-shadow:0 8px 30px rgba(0,0,0,.35); z-index:5000;
+      font-family:sans-serif; font-size:0.9rem; animation:slideUp .25s ease-out;
+    `;
+    document.body.appendChild(barra);
+
+    const style = document.createElement('style');
+    style.textContent = `@keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}`;
+    document.head.appendChild(style);
+  }
+
+  barra.style.display = 'flex';
+  barra.innerHTML = `
+    <span id="barra-sel-count" style="font-weight:bold;">${checks.length} selecionado(s)</span>
+    <button onclick="concluirEPagoMultiplo()" style="background:#2e7d32;color:#fff;border:none;border-radius:20px;padding:8px 18px;font-size:0.88rem;font-weight:bold;cursor:pointer;margin:0;">✅ Concluir todos & Pago</button>
+    <button onclick="desmarcarTodos()" style="background:transparent;color:#aaa;border:1px solid #444;border-radius:20px;padding:7px 14px;font-size:0.85rem;cursor:pointer;margin:0;">✕ Cancelar</button>
+  `;
+}
+
+function desmarcarTodos() {
+  document.querySelectorAll('.check-selecionar').forEach(c => c.checked = false);
+  const barra = document.getElementById('barra-sel-multipla');
+  if (barra) barra.style.display = 'none';
+}
+
+async function concluirEPagoMultiplo() {
+  const checks = Array.from(document.querySelectorAll('.check-selecionar:checked'));
+  if (checks.length === 0) return;
+
+  const ids = checks.map(c => c.dataset.id);
+
+  const confirmado = await new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;';
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:14px;padding:28px 30px;max-width:380px;width:90%;box-shadow:0 10px 30px rgba(0,0,0,.2);text-align:center;">
+        <div style="font-size:2.5rem;margin-bottom:10px;">🎉</div>
+        <h3 style="margin:0 0 8px;font-size:1.1rem;">Concluir ${ids.length} pedido(s)?</h3>
+        <p style="color:#666;font-size:0.9rem;margin-bottom:20px;">Todos os pedidos selecionados serão marcados como <strong>Concluídos</strong> com pagamento a <strong style="color:#2e7d32;">100%</strong>.</p>
+        <div style="display:flex;gap:10px;">
+          <button id="btn-m-ok" style="flex:1;background:#2e7d32;color:#fff;border:none;border-radius:8px;padding:11px;font-size:1rem;cursor:pointer;margin:0;">✅ Confirmar tudo</button>
+          <button id="btn-m-cancel" style="flex:1;background:#f5f5f5;color:#555;border:1px solid #ddd;border-radius:8px;padding:11px;font-size:1rem;cursor:pointer;margin:0;">Cancelar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.querySelector('#btn-m-ok').onclick     = () => { document.body.removeChild(overlay); resolve(true); };
+    overlay.querySelector('#btn-m-cancel').onclick  = () => { document.body.removeChild(overlay); resolve(false); };
+  });
+
+  if (!confirmado) return;
+
+  // Busca os preços dos pedidos selecionados para definir o pago a 100%
+  const { data: pedidosSel } = await supabase
+    .from('pedidos')
+    .select('id, preco_final, preco_total')
+    .in('id', ids);
+
+  const updates = (pedidosSel || []).map(p =>
+    supabase.from('pedidos').update({
+      status: 'concluido',
+      valor_adiantado: Number(p.preco_final || p.preco_total || 0)
+    }).eq('id', p.id)
+  );
+
+  await Promise.all(updates);
+
+  // Tenta enviar emails (sem bloquear)
+  for (const id of ids) {
+    try { await enviarEmailConclusao(id, supabase); } catch(e) { console.warn('Email falhou para', id); }
+  }
+
+  location.reload();
+}
+
 async function excluirPedido(id) {
   if (!confirm("Tem a certeza que deseja excluir este pedido? Esta ação não pode ser desfeita.")) {
     return;
@@ -528,49 +643,6 @@ async function excluirPedido(id) {
     console.error("Erro inesperado:", err);
     alert("Ocorreu um erro inesperado: " + err.message);
   }
-}
-
-// --- NOVA FUNÇÃO: ALTERNAR STATUS DO ITEM INDIVIDUAL ---
-async function alternarStatusItem(pedidoId, itemIndex) {
-  const { data: pedido, error } = await supabase
-    .from('pedidos')
-    .select('itens')
-    .eq('id', pedidoId)
-    .single();
-
-  if (error || !pedido) {
-    alert("Erro ao buscar pedido para alternar item.");
-    return;
-  }
-
-  let itensList = typeof pedido.itens === 'string' ? JSON.parse(pedido.itens) : pedido.itens;
-  
-  if (itensList[itemIndex].status_item === 'concluido') {
-    itensList[itemIndex].status_item = 'pendente';
-  } else {
-    itensList[itemIndex].status_item = 'concluido';
-  }
-
-  const todosConcluidos = itensList.every(i => i.status_item === 'concluido');
-
-  const { error: errorUpdate } = await supabase
-    .from('pedidos')
-    .update({ itens: JSON.stringify(itensList) })
-    .eq('id', pedidoId);
-
-  if (errorUpdate) {
-    alert("Erro ao salvar mudança de status do item.");
-    return;
-  }
-  
-  if (todosConcluidos) {
-    if(confirm("Todos os itens estão concluídos! Deseja passar o pedido para a aba de Concluídos?")) {
-      await mudarStatus(pedidoId, 'concluido');
-      return;
-    }
-  }
-
-  location.reload();
 }
 
 // --- FUNÇÃO DE PESQUISA (ESTAVA FALTANDO) ---
@@ -860,8 +932,7 @@ async function abrirEditorPedido(id) {
         descricao: descricao,
         preco,
         quantidade,
-        preco_total_item: preco * quantidade,
-        status_item: 'pendente'
+        preco_total_item: preco * quantidade
       });
       renderItensModal();
     };
