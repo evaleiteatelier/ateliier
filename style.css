@@ -275,3 +275,215 @@ footer {
     padding-bottom: 10px;
     margin-bottom: 20px;
 }
+
+/* =========================================
+   ESTILO DO COMBOBOX DINÂMICO DE ITENS
+   ========================================= */
+
+.combobox-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+/* Wrapper to position the text input and the float + button */
+.combobox-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.filtro-tipo-item {
+    width: 100%;
+    padding: 10px 40px 10px 10px !important; /* Space for the search icon or '+' button */
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fdfdfd;
+    box-sizing: border-box;
+    margin-top: 5px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.filtro-tipo-item:focus {
+    outline: none;
+    border-color: #bba68a;
+    box-shadow: 0 0 0 3px rgba(187, 166, 138, 0.2);
+}
+
+/* Float add button inside input */
+.btn-combobox-add {
+    position: absolute;
+    right: 8px;
+    top: 54%;
+    transform: translateY(-50%);
+    background: #2e7d32;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 1;
+    margin-top: 0 !important;
+    padding: 0;
+    transition: background 0.2s, transform 0.2s;
+    z-index: 5;
+}
+
+.btn-combobox-add:hover {
+    background: #1b5e20;
+    transform: translateY(-50%) scale(1.1);
+    color: #fff;
+}
+
+/* Suggestions Dropdown Container */
+.sugestoes-tipo-item {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    width: 100%;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 9999;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    box-sizing: border-box;
+    animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Individual suggestion item */
+.sugestao-item {
+    padding: 10px 12px;
+    font-size: 15px;
+    cursor: pointer;
+    color: #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f5f5f5;
+    transition: background 0.15s, color 0.15s;
+    text-align: left;
+}
+
+.sugestao-item:last-child {
+    border-bottom: none;
+}
+
+.sugestao-item:hover, .sugestao-item.selected {
+    background-color: #f5f1ea;
+    color: #000;
+}
+
+.sugestao-item .sugestao-dias {
+    font-size: 0.8rem;
+    color: #777;
+    background: #eaeaea;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.sugestao-item-add {
+    background-color: #f4f9f4;
+    color: #2e7d32;
+    font-weight: bold;
+    border-top: 1px dashed #a5d6a7;
+}
+
+.sugestao-item-add:hover {
+    background-color: #e8f5e9;
+    color: #1b5e20;
+}
+
+/* Inline Cadastro de Tempo Box */
+.novo-item-tempo-box {
+    margin-top: 10px;
+    padding: 14px;
+    background: #f4f9f4;
+    border: 2px dashed #a5d6a7;
+    border-radius: 8px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);
+    animation: slideDown 0.2s ease-out;
+    text-align: left;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.novo-item-tempo-box p {
+    margin: 0 0 8px 0 !important;
+    font-size: 14px;
+    color: #2e7d32;
+    font-weight: bold;
+}
+
+.novo-item-tempo-box .form-inline {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.novo-item-tempo-box label {
+    margin-top: 0 !important;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+}
+
+.novo-item-tempo-box input[type="number"] {
+    width: 80px;
+    padding: 6px 8px;
+    font-size: 14px;
+    border: 1px solid #a5d6a7;
+    border-radius: 4px;
+    margin-top: 0 !important;
+    box-sizing: border-box;
+    display: inline-block;
+}
+
+.novo-item-tempo-box button {
+    margin-top: 0 !important;
+    padding: 6px 12px;
+    font-size: 14px;
+    border-radius: 4px;
+    font-weight: 600;
+    display: inline-block;
+    width: auto;
+}
+
+.novo-item-tempo-box .btn-confirmar-novo-item {
+    background-color: #2e7d32;
+    color: #fff;
+}
+
+.novo-item-tempo-box .btn-confirmar-novo-item:hover {
+    background-color: #1b5e20;
+    color: #fff;
+}
+
+.novo-item-tempo-box .btn-cancelar-novo-item {
+    background-color: #777;
+    color: #fff;
+}
+
+.novo-item-tempo-box .btn-cancelar-novo-item:hover {
+    background-color: #555;
+    color: #fff;
+}
+
