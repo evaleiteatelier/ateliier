@@ -15,6 +15,154 @@ if (!window.supabaseClient) {
 // 2. Define a variável 'supabase' para ser usada no resto deste arquivo.
 // Usamos 'var' em vez de 'const' porque 'var' não dá erro se o arquivo carregar 2 vezes.
 var supabase = window.supabaseClient;
+
+// ==========================================
+// 1.5. GERENCIAMENTO DINÂMICO DE TIPOS DE ITENS
+// ==========================================
+window.tiposItensCarregados = [];
+
+async function carregarTodosTiposItens() {
+    const defaults = [
+      { nome: "macacão", dias: 3, label: "Macacão" },
+      { nome: "vestido normal", dias: 3, label: "Vestido Normal" },
+      { nome: "vestido de festa", dias: 7, label: "Vestido de Festa" },
+      { nome: "pantalona", dias: 3, label: "Pantalona" },
+      { nome: "saia", dias: 3, label: "Saia" },
+      { nome: "kimono", dias: 3, label: "Kimono" },
+      { nome: "fato", dias: 3, label: "Fato" },
+      { nome: "concerto", dias: 3, label: "Concerto" },
+      { nome: "modificacao", dias: 3, label: "Modificação" }
+    ];
+
+    const map = new Map();
+    defaults.forEach(d => map.set(d.nome.toLowerCase().trim(), d));
+
+    // 1. Tentar ler do Supabase
+    try {
+        const { data: dbTypes, error } = await supabase
+            .from('tipos_itens')
+            .select('*');
+            
+        if (!error && dbTypes && dbTypes.length > 0) {
+            dbTypes.forEach(t => {
+                const nomeL = t.nome.toLowerCase().trim();
+                map.set(nomeL, {
+                    nome: nomeL,
+                    dias: parseInt(t.dias),
+                    label: t.nome.charAt(0).toUpperCase() + t.nome.slice(1)
+                });
+            });
+        }
+    } catch (err) {
+        console.warn("Tabela 'tipos_itens' não disponível no Supabase. Usando fallbacks.", err);
+    }
+    
+    // 2. Fallback localStorage
+    try {
+        const localCustom = JSON.parse(localStorage.getItem("tipos_itens_custom") || "[]");
+        localCustom.forEach(item => {
+            const nomeL = item.nome.toLowerCase().trim();
+            map.set(nomeL, {
+                nome: nomeL,
+                dias: parseInt(item.dias),
+                label: item.nome.charAt(0).toUpperCase() + item.nome.slice(1)
+            });
+        });
+    } catch(e) {}
+    
+    // 3. Fallback: Ler pedidos antigos
+    try {
+        const { data: pedidos, error } = await supabase
+            .from('pedidos')
+            .select('itens');
+            
+        if (!error && pedidos) {
+            pedidos.forEach(p => {
+                let itensList = [];
+                try {
+                    if (typeof p.itens === 'object' && p.itens !== null) {
+                        itensList = p.itens;
+                    } else if (typeof p.itens === 'string') {
+                        itensList = JSON.parse(p.itens);
+                    }
+                } catch(e) {}
+                
+                if (Array.isArray(itensList)) {
+                    itensList.forEach(item => {
+                        if (item.subtipo) {
+                            const nameL = item.subtipo.toLowerCase().trim();
+                            if (!map.has(nameL)) {
+                                map.set(nameL, {
+                                    nome: nameL,
+                                    dias: parseInt(item.dias) || 3,
+                                    label: item.subtipo.charAt(0).toUpperCase() + item.subtipo.slice(1)
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+        }
+    } catch(e) {}
+    
+    window.tiposItensCarregados = Array.from(map.values());
+    
+    // Atualizar selects de outros locais (como o modal de edição se já estiver aberto)
+    atualizarOpcoesSelectsEditor();
+    
+    return window.tiposItensCarregados;
+}
+
+// Salva o novo tipo de item
+async function salvarNovoTipoItem(nome, dias) {
+    const nomeLimpo = nome.toLowerCase().trim();
+    const diasInt = parseInt(dias) || 3;
+    
+    // 1. Tentar salvar no Supabase
+    try {
+        const { error } = await supabase
+            .from('tipos_itens')
+            .insert({ nome: nomeLimpo, dias: diasInt });
+        if (error) {
+            console.warn("Erro ao inserir na tabela 'tipos_itens' do Supabase:", error.message);
+        }
+    } catch (err) {
+        console.error("Falha ao salvar no banco de dados:", err);
+    }
+    
+    // 2. Salvar no localStorage (Garante funcionamento se offline/sem tabela)
+    try {
+        let localCustom = JSON.parse(localStorage.getItem("tipos_itens_custom") || "[]");
+        // Evita duplicatas no localStorage
+        if (!localCustom.some(item => item.nome.toLowerCase().trim() === nomeLimpo)) {
+            localCustom.push({ nome: nomeLimpo, dias: diasInt });
+            localStorage.setItem("tipos_itens_custom", JSON.stringify(localCustom));
+        }
+    } catch(e) {}
+    
+    // 3. Atualiza na lista em memória e sincroniza tudo
+    await carregarTodosTiposItens();
+}
+
+function atualizarOpcoesSelectsEditor() {
+    const editorSelect = document.getElementById("novo-subtipo");
+    if (editorSelect) {
+        const valAnterior = editorSelect.value;
+        editorSelect.innerHTML = "";
+        window.tiposItensCarregados.forEach(item => {
+            const opt = document.createElement("option");
+            opt.value = item.nome;
+            opt.dataset.dias = item.dias;
+            opt.textContent = item.label;
+            editorSelect.appendChild(opt);
+        });
+        if (valAnterior) editorSelect.value = valAnterior;
+    }
+}
+
+// Disparar o carregamento assim que carregar o script
+carregarTodosTiposItens();
+
 // ==========================================
 // 2. LÓGICA DE ADICIONAR PEDIDO (NOVA LÓGICA DE AGENDAMENTO)
 // ==========================================
@@ -307,20 +455,33 @@ function adicionarItem() {
     const div = document.createElement('div');
     div.className = 'item';
     div.innerHTML = `
-        <select class="tipo-item">
-            <option value="macacão" data-dias="3">Macacão</option>
-            <option value="vestido normal" data-dias="3">Vestido Normal</option>
-            <option value="vestido de festa" data-dias="7">Vestido de Festa</option>
-            <option value="pantalona" data-dias="3">Pantalona</option>
-            <option value="saia" data-dias="3">Saia</option>
-            <option value="kimono" data-dias="3">Kimono</option>
-            <option value="fato" data-dias="3">Fato</option>
-            <option value="concerto" data-dias="3">Concerto</option>
-            <option value="modificacao" data-dias="3">Modificação</option>
-        </select>
-        <textarea placeholder="Descrição do item..." class="descricao-item"></textarea>
+        <div class="combobox-container">
+            <label style="margin-top:0;">Selecionar Tipo do Item:</label>
+            <div class="combobox-wrapper">
+                <input type="text" class="filtro-tipo-item" placeholder="Pesquise ou digite o tipo..." autocomplete="off">
+                <button type="button" class="btn-combobox-add" style="display:none;" title="Adicionar novo tipo">+</button>
+            </div>
+            
+            <select class="tipo-item" style="display:none;">
+                <!-- Dinamicamente preenchido -->
+            </select>
+            
+            <div class="sugestoes-tipo-item" style="display:none;"></div>
+            
+            <div class="novo-item-tempo-box" style="display:none;">
+                <p>✨ Adicionar Novo Tipo de Item: "<span class="novo-item-nome-lbl"></span>"</p>
+                <div class="form-inline">
+                    <label>Tempo (dias):</label>
+                    <input type="number" class="novo-item-dias-input" min="1" value="3">
+                    <button type="button" class="btn-confirmar-novo-item">Confirmar</button>
+                    <button type="button" class="btn-cancelar-novo-item">Cancelar</button>
+                </div>
+            </div>
+        </div>
         
-        <label>Preço (€):</label>
+        <textarea placeholder="Descrição do item..." class="descricao-item" style="margin-top:10px;"></textarea>
+        
+        <label style="margin-top:10px;">Preço (€):</label>
         <input type="number" class="preco-item" step="0.01" min="0" placeholder="Ex: 25.00">
         
         <label>Quantidade:</label>
@@ -328,11 +489,206 @@ function adicionarItem() {
     `;
     container.appendChild(div);
 
+    // Seletores dos elementos recém-criados
+    const selectEl = div.querySelector('.tipo-item');
+    const inputFiltro = div.querySelector('.filtro-tipo-item');
+    const btnAdd = div.querySelector('.btn-combobox-add');
+    const sugestoesDiv = div.querySelector('.sugestoes-tipo-item');
+    const novoBox = div.querySelector('.novo-item-tempo-box');
+    const novoNomeLbl = div.querySelector('.novo-item-nome-lbl');
+    const novoDiasInput = div.querySelector('.novo-item-dias-input');
+    const btnConfirmar = div.querySelector('.btn-confirmar-novo-item');
+    const btnCancelar = div.querySelector('.btn-cancelar-novo-item');
+
+    const repopularSelect = (valorSelecionar = "") => {
+        selectEl.innerHTML = "";
+        window.tiposItensCarregados.forEach(item => {
+            const opt = document.createElement('option');
+            opt.value = item.nome;
+            opt.dataset.dias = item.dias;
+            opt.textContent = item.label;
+            selectEl.appendChild(opt);
+        });
+        if (valorSelecionar) {
+            selectEl.value = valorSelecionar;
+        } else if (window.tiposItensCarregados.length > 0) {
+            selectEl.value = window.tiposItensCarregados[0].nome;
+        }
+    };
+
+    // Inicializa o select oculto
+    repopularSelect();
+    
+    // Define o valor inicial do campo de busca com base na primeira opção padrão selecionada
+    if (selectEl.selectedOptions && selectEl.selectedOptions[0]) {
+        inputFiltro.value = selectEl.selectedOptions[0].textContent;
+    }
+
+    // Renderiza a lista de sugestões
+    const renderSugestoes = (filtro = "") => {
+        sugestoesDiv.innerHTML = "";
+        const termo = filtro.toLowerCase().trim();
+        
+        const filtrados = window.tiposItensCarregados.filter(item => 
+            item.label.toLowerCase().includes(termo) || 
+            item.nome.toLowerCase().includes(termo)
+        );
+
+        if (filtrados.length === 0) {
+            sugestoesDiv.innerHTML = `
+                <div class="sugestao-item sugestao-item-add" style="color:#2e7d32; font-weight:bold; cursor:pointer;">
+                    <span>➕ Adicionar "${filtro}"...</span>
+                </div>
+            `;
+        } else {
+            filtrados.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'sugestao-item';
+                if (selectEl.value === item.nome) {
+                    itemDiv.classList.add('selected');
+                }
+                itemDiv.innerHTML = `
+                    <span>${item.label}</span>
+                    <span class="sugestao-dias">${item.dias} dias</span>
+                `;
+                itemDiv.addEventListener('click', () => {
+                    selectEl.value = item.nome;
+                    inputFiltro.value = item.label;
+                    sugestoesDiv.style.display = 'none';
+                    btnAdd.style.display = 'none';
+                    atualizarPrecoTotal();
+                });
+                sugestoesDiv.appendChild(itemDiv);
+            });
+            
+            // Se o que o usuário escreveu não for uma correspondência exata, sugere adicionar
+            const correspondenciaExata = filtrados.some(item => item.label.toLowerCase() === termo || item.nome.toLowerCase() === termo);
+            if (termo && !correspondenciaExata) {
+                const addDiv = document.createElement('div');
+                addDiv.className = 'sugestao-item sugestao-item-add';
+                addDiv.innerHTML = `<span>➕ Adicionar "${filtro}"...</span>`;
+                sugestoesDiv.appendChild(addDiv);
+            }
+        }
+        
+        sugestoesDiv.style.display = 'block';
+    };
+
+    // Foco e escrita no campo de texto de busca
+    inputFiltro.addEventListener('focus', () => {
+        renderSugestoes(inputFiltro.value);
+    });
+
+    inputFiltro.addEventListener('input', () => {
+        const termo = inputFiltro.value.trim();
+        renderSugestoes(termo);
+        
+        // Verifica se o texto coincide exatamente com algum item cadastrado
+        const existeItem = window.tiposItensCarregados.some(item => 
+            item.label.toLowerCase() === termo.toLowerCase() || 
+            item.nome.toLowerCase() === termo.toLowerCase()
+        );
+        
+        if (termo && !existeItem) {
+            btnAdd.style.display = 'flex';
+        } else {
+            btnAdd.style.display = 'none';
+        }
+    });
+
+    // Fecha a lista de sugestões ao clicar fora do componente
+    document.addEventListener('click', (e) => {
+        if (!div.contains(e.target)) {
+            sugestoesDiv.style.display = 'none';
+        }
+    });
+
+    // Aciona a exibição da caixinha de cadastro inline
+    const abrirCadastroNovoItem = (nome) => {
+        if (!nome) return;
+        novoNomeLbl.textContent = nome;
+        novoDiasInput.value = "3";
+        sugestoesDiv.style.display = 'none';
+        btnAdd.style.display = 'none';
+        novoBox.style.display = 'block';
+        novoDiasInput.focus();
+    };
+
+    btnAdd.addEventListener('click', (e) => {
+        e.stopPropagation();
+        abrirCadastroNovoItem(inputFiltro.value.trim());
+    });
+
+    sugestoesDiv.addEventListener('click', (e) => {
+        const addEl = e.target.closest('.sugestao-item-add');
+        if (addEl) {
+            abrirCadastroNovoItem(inputFiltro.value.trim());
+        }
+    });
+
+    // Confirmação do cadastro inline
+    btnConfirmar.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const novoNome = inputFiltro.value.trim();
+        const novoDias = parseInt(novoDiasInput.value) || 3;
+        
+        if (!novoNome) return;
+        
+        // Exibe feedback visual
+        btnConfirmar.textContent = "Salvando...";
+        btnConfirmar.disabled = true;
+        
+        await salvarNovoTipoItem(novoNome, novoDias);
+        
+        // Atualiza todos os selects ativos na página para que o novo item fique selecionável
+        document.querySelectorAll('#itens .item').forEach(itemDiv => {
+            const outroSelect = itemDiv.querySelector('.tipo-item');
+            const outroFiltro = itemDiv.querySelector('.filtro-tipo-item');
+            
+            // Só atualiza os selects que NÃO estão atualmente no meio de um cadastro
+            if (outroSelect && outroSelect !== selectEl) {
+                const valorAtual = outroSelect.value;
+                outroSelect.innerHTML = "";
+                window.tiposItensCarregados.forEach(it => {
+                    const opt = document.createElement('option');
+                    opt.value = it.nome;
+                    opt.dataset.dias = it.dias;
+                    opt.textContent = it.label;
+                    outroSelect.appendChild(opt);
+                });
+                outroSelect.value = valorAtual;
+            }
+        });
+
+        // Repopula o select deste item e seleciona o recém-criado
+        repopularSelect(novoNome.toLowerCase().trim());
+        inputFiltro.value = novoNome.charAt(0).toUpperCase() + novoNome.slice(1);
+        
+        novoBox.style.display = 'none';
+        btnConfirmar.textContent = "Confirmar";
+        btnConfirmar.disabled = false;
+        
+        atualizarPrecoTotal();
+    });
+
+    // Cancelamento do cadastro inline
+    btnCancelar.addEventListener('click', (e) => {
+        e.stopPropagation();
+        novoBox.style.display = 'none';
+        // Restaura o campo de texto para a opção que estava anteriormente selecionada
+        if (selectEl.selectedOptions && selectEl.selectedOptions[0]) {
+            inputFiltro.value = selectEl.selectedOptions[0].textContent;
+        }
+    });
+
     const atualizarTotal = () => atualizarPrecoTotal();
     div.querySelector('.preco-item').addEventListener('input', atualizarTotal);
     div.querySelector('.quantidade-item').addEventListener('input', atualizarTotal);
-    div.querySelector('.tipo-item').addEventListener('change', atualizarTotal);
+    
+    // Atualiza o preço total do pedido caso o select oculto mude (ex: via cliques na sugestão)
+    selectEl.addEventListener('change', atualizarTotal);
 }
+
 
 // ==========================================
 // 3. LISTAGEM E GERENCIAMENTO DE PEDIDOS
@@ -871,15 +1227,9 @@ async function abrirEditorPedido(id) {
       <h4>Adicionar Novo Item</h4>
       <div style="display:flex; gap:5px; flex-wrap:wrap; margin-bottom: 8px;">
           <select id="novo-subtipo" style="padding:5px; border-radius:3px; border:1px solid #ccc;">
-            <option value="macacão" data-dias="3">Macacão</option>
-            <option value="vestido normal" data-dias="3">Vestido Normal</option>
-            <option value="vestido de festa" data-dias="7">Vestido de Festa</option>
-            <option value="pantalona" data-dias="3">Pantalona</option>
-            <option value="saia" data-dias="3">Saia</option>
-            <option value="kimono" data-dias="3">Kimono</option>
-            <option value="fato" data-dias="3">Fato</option>
-            <option value="concerto" data-dias="3">Concerto</option>
-            <option value="modificacao" data-dias="3">Modificação</option>
+            ${window.tiposItensCarregados.map(item => `
+              <option value="${item.nome}" data-dias="${item.dias}">${item.label}</option>
+            `).join('')}
           </select>
           <input type="number" id="novo-preco" placeholder="€" step="0.01" min="0" style="width:70px; padding:5px; border-radius:3px; border:1px solid #ccc;">
           <input type="number" id="novo-quantidade" placeholder="Qtd" min="1" value="1" style="width:50px; padding:5px; border-radius:3px; border:1px solid #ccc;">
