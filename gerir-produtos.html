@@ -276,7 +276,7 @@
 
       <div class="form-group">
         <label for="p-dias">Tempo Estimado de Produção (dias úteis):</label>
-        <input type="number" id="p-dias" min="1" value="3" placeholder="Ex: 3, 5, 7">
+        <input type="number" id="p-dias" min="0" value="3" placeholder="Ex: 3, 5, 7">
       </div>
 
       <button class="btn-criar" onclick="criarNovoProduto()">✨ Guardar Produto</button>
@@ -447,7 +447,9 @@
                 <span class="badge-armazenamento ${badgeClasse}">${badgeLabel}</span>
               </div>
               <div class="produto-dias">
-                ⏱️ <strong>${p.dias} dias úteis</strong> de produção
+                ${p.dias === 0 
+                  ? `<span style="color: #2e7d32; font-weight: bold; display: flex; align-items: center; gap: 4px;">🛍️ Pronto a Vestir (Imediato)</span>`
+                  : `⏱️ <strong>${p.dias} dias úteis</strong> de produção`}
               </div>
               <div class="produto-footer">
                 <button class="btn-editar-card" onclick="mostrarFormEdicao('${p.nome}', ${p.dias})">✏️ Editar</button>
@@ -464,7 +466,7 @@
                 <input type="text" class="edit-nome-input" value="${p.label}" disabled style="background:#f4f4f4; color:#777; cursor:not-allowed;">
                 
                 <label style="font-size:0.8rem; font-weight:bold; color:#555; margin-top:0;">Tempo (dias úteis):</label>
-                <input type="number" class="edit-dias-input" min="1" value="${p.dias}">
+                <input type="number" class="edit-dias-input" min="0" value="${p.dias}">
                 
                 <div class="edit-inline-actions">
                   <button class="btn-edit-confirmar" onclick="salvarEdicaoInline('${p.nome}')">Gravar</button>
@@ -486,14 +488,15 @@
       const diasInput = document.getElementById('p-dias');
       
       const nome = nomeInput.value.trim();
-      const dias = parseInt(diasInput.value) || 3;
+      const diasVal = parseInt(diasInput.value);
+      const dias = isNaN(diasVal) ? 3 : diasVal;
 
       if (!nome) {
         alert("Por favor, preencha o Nome do Tipo de Item.");
         return;
       }
-      if (dias < 1) {
-        alert("O tempo de produção deve ser de pelo menos 1 dia útil.");
+      if (dias < 0) {
+        alert("O tempo de produção deve ser de pelo menos 0 dias úteis.");
         return;
       }
 
@@ -565,10 +568,11 @@
       if (!card) return;
 
       const diasInput = card.querySelector('.edit-dias-input');
-      const diasNovos = parseInt(diasInput.value) || 3;
+      const diasNovosVal = parseInt(diasInput.value);
+      const diasNovos = isNaN(diasNovosVal) ? 3 : diasNovosVal;
 
-      if (diasNovos < 1) {
-        alert("O tempo de produção deve ser de pelo menos 1 dia útil.");
+      if (diasNovos < 0) {
+        alert("O tempo de produção deve ser de pelo menos 0 dias úteis.");
         return;
       }
 
