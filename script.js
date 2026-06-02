@@ -124,7 +124,7 @@ async function salvarNovoTipoItem(nome, dias) {
             .from('tipos_itens')
             .insert({ nome: nomeLimpo, dias: diasInt });
         if (error) {
-            console.warn("Erro ao inserir na tabela 'tipos_itens' do Supabase:", error.message);
+            console.warn("Erro ao inserir na tabela 'tipos_itens' do Supabase:", error.message || error);
         }
     } catch (err) {
         console.error("Falha ao salvar no banco de dados:", err);
@@ -170,10 +170,19 @@ carregarTodosTiposItens();
 if (document.getElementById('form-pedido')) {
   document.getElementById('form-pedido').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const nome = document.getElementById('nome').value.trim();
+    if (!nome) {
+      alert("Por favor, introduza o Nome da Cliente.");
+      return;
+    }
     
-    const nome = document.getElementById('nome').value;
-    const hoje = new Date();
     const dataInput = document.getElementById('data').value;
+    if (!dataInput) {
+      alert("Por favor, introduza a Data desejada para início.");
+      return;
+    }
+
+    const hoje = new Date();
     const dataEscolhida = new Date(dataInput);
     const itens = coletarItens();
     const preco_total = itens.reduce((acc, i) => acc + i.preco_total_item, 0);
@@ -396,8 +405,21 @@ function coletarItens() {
     document.querySelectorAll('#itens .item').forEach(div => {
         const sel = div.querySelector('select');
         const desc = div.querySelector('textarea').value.trim();
-        const dias = parseInt(sel.selectedOptions[0].dataset.dias);
-        const subtipo = sel.value;
+        
+        const selectedOpt = sel && sel.selectedOptions && sel.selectedOptions[0];
+        let dias = 3;
+        let subtipo = "";
+        
+        if (selectedOpt) {
+            dias = parseInt(selectedOpt.dataset.dias) || 3;
+            subtipo = sel.value;
+        } else {
+            // Se o select não tiver opções (ex: falha ao ler do banco), tenta usar o input de texto do filtro
+            const filtroInput = div.querySelector('.filtro-tipo-item');
+            subtipo = filtroInput ? filtroInput.value.toLowerCase().trim() : 'vestido normal';
+            dias = 3;
+        }
+        
         const preco = parseFloat(div.querySelector('.preco-item').value) || 0;
         const quantidade = parseInt(div.querySelector('.quantidade-item').value) || 1;
         const preco_total_item = preco * quantidade;
@@ -1262,7 +1284,8 @@ async function abrirEditorPedido(id) {
       const preco = parseFloat(document.getElementById("novo-preco").value) || 0;
       const quantidade = parseInt(document.getElementById("novo-quantidade").value) || 1;
       const descricao = document.getElementById("novo-descricao").value.trim() || "";
-      const dias = parseInt(select.selectedOptions[0].dataset.dias);
+      const selectedOpt = select.selectedOptions && select.selectedOptions[0];
+      const dias = selectedOpt ? (parseInt(selectedOpt.dataset.dias) || 3) : 3;
 
       if (preco <= 0) {
         alert("Insira um preço válido.");
