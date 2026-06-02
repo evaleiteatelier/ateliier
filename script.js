@@ -92,9 +92,10 @@ async function carregarTodosTiposItens() {
                         if (item.subtipo) {
                             const nameL = item.subtipo.toLowerCase().trim();
                             if (!map.has(nameL)) {
+                                const val = parseInt(item.dias);
                                 map.set(nameL, {
                                     nome: nameL,
-                                    dias: parseInt(item.dias) || 3,
+                                    dias: isNaN(val) ? 3 : val,
                                     label: item.subtipo.charAt(0).toUpperCase() + item.subtipo.slice(1)
                                 });
                             }
@@ -116,7 +117,8 @@ async function carregarTodosTiposItens() {
 // Salva o novo tipo de item
 async function salvarNovoTipoItem(nome, dias) {
     const nomeLimpo = nome.toLowerCase().trim();
-    const diasInt = parseInt(dias) || 3;
+    const val = parseInt(dias);
+    const diasInt = isNaN(val) ? 3 : val;
     
     // 1. Tentar salvar no Supabase
     try {
@@ -411,7 +413,8 @@ function coletarItens() {
         let subtipo = "";
         
         if (selectedOpt) {
-            dias = parseInt(selectedOpt.dataset.dias) || 3;
+            const val = parseInt(selectedOpt.dataset.dias);
+            dias = isNaN(val) ? 3 : val;
             subtipo = sel.value;
         } else {
             // Se o select não tiver opções (ex: falha ao ler do banco), tenta usar o input de texto do filtro
@@ -652,7 +655,8 @@ function adicionarItem() {
     btnConfirmar.addEventListener('click', async (e) => {
         e.stopPropagation();
         const novoNome = inputFiltro.value.trim();
-        const novoDias = parseInt(novoDiasInput.value) || 3;
+        const val = parseInt(novoDiasInput.value);
+        const novoDias = isNaN(val) ? 3 : val;
         
         if (!novoNome) return;
         
@@ -811,9 +815,11 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
        `;
     }
 
+    const isProntoAVestir = Array.isArray(itensList) && itensList.length > 0 && itensList.every(i => parseInt(i.dias) === 0);
+
     div.innerHTML = `
       <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px;">
-        <strong>${p.nome}</strong>
+        <strong>${p.nome} ${isProntoAVestir ? '<span style="background:#e8f5e9; color:#2e7d32; font-size:0.7rem; font-weight:bold; padding:3px 8px; border-radius:12px; margin-left:5px; white-space:nowrap; border: 1px solid #c8e6c9;">🛍️ Pronto a Vestir</span>' : ''}</strong>
         ${filtro === 'pendente' ? `
           <label class="admin-only" title="Selecionar" style="display:flex; align-items:center; gap:5px; cursor:pointer; font-size:0.8rem; color:#888; white-space:nowrap; margin-top:2px;">
             <input type="checkbox" class="check-selecionar" data-id="${p.id}" 
@@ -826,6 +832,7 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
         ${Array.isArray(itensList) ? itensList.map(i => `
           <li>
             <strong>${i.subtipo || 'Item'}</strong> (${i.quantidade || 1}x)
+            ${parseInt(i.dias) === 0 ? `<span style="background:#e8f5e9; color:#2e7d32; font-size:0.7rem; font-weight:bold; padding:2px 6px; border-radius:10px; margin-left:5px; border: 1px solid #c8e6c9;">🛍️ Pronto a Vestir</span>` : ''}
             ${i.descricao ? `<br><em>${i.descricao}</em>` : ''}
           </li>
         `).join('') : '<li>Erro nos itens</li>'}
@@ -845,6 +852,12 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
               ✅ Concluído &amp; Pago
             </button>` : ''}
           ${botaoAcao ? `<button class="admin-only" onclick="mudarStatus('${p.id}', '${novoStatus}')">${botaoAcao}</button>` : ''}
+          ${filtro === 'concluido' ? `
+            <button class="admin-only" style="background-color: #f57c00 !important; color: white !important;" 
+              onclick="mudarStatus('${p.id}', 'pendente')"
+              title="Mover este pedido de volta para a lista de espera">
+              ↩️ Reabrir Pedido
+            </button>` : ''}
           ${filtro === 'pendente' ? `
             <button class="admin-only btn-editar" onclick="abrirEditorPedido('${p.id}')">Editar</button>
             <button class="admin-only btn-excluir" onclick="excluirPedido('${p.id}')">Excluir</button>
@@ -1284,8 +1297,8 @@ async function abrirEditorPedido(id) {
       const preco = parseFloat(document.getElementById("novo-preco").value) || 0;
       const quantidade = parseInt(document.getElementById("novo-quantidade").value) || 1;
       const descricao = document.getElementById("novo-descricao").value.trim() || "";
-      const selectedOpt = select.selectedOptions && select.selectedOptions[0];
-      const dias = selectedOpt ? (parseInt(selectedOpt.dataset.dias) || 3) : 3;
+      const val = selectedOpt ? parseInt(selectedOpt.dataset.dias) : NaN;
+      const dias = isNaN(val) ? 3 : val;
 
       if (preco <= 0) {
         alert("Insira um preço válido.");
