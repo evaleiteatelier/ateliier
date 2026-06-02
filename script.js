@@ -494,7 +494,7 @@ function adicionarItem() {
                 <p>✨ Adicionar Novo Tipo de Item: "<span class="novo-item-nome-lbl"></span>"</p>
                 <div class="form-inline">
                     <label>Tempo (dias):</label>
-                    <input type="number" class="novo-item-dias-input" min="1" value="3">
+                    <input type="number" class="novo-item-dias-input" value="3">
                     <button type="button" class="btn-confirmar-novo-item">Confirmar</button>
                     <button type="button" class="btn-cancelar-novo-item">Cancelar</button>
                 </div>
