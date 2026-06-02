@@ -322,7 +322,7 @@
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeGptd2ZrZm1lZWRhanBtem1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MzM5ODIsImV4cCI6MjA2OTEwOTk4Mn0.vFvgRMK_oabG19FNauNaBu_CoQTL8QRSXcptyfY6rbM"
       );
     }
-    const supabase = window.supabaseClient;
+    const db = window.supabaseClient;
 
     let produtosEmMemoria = [];
     let defaultTypes = [
@@ -381,7 +381,7 @@
 
       // 2. Tenta ler do Supabase
       try {
-        const { data: dbTypes, error } = await supabase
+        const { data: dbTypes, error } = await db
           .from('tipos_itens')
           .select('*');
           
@@ -507,7 +507,7 @@
       // 1. Tentar salvar no Supabase
       let salvoNoSupabase = false;
       try {
-        const { error } = await supabase
+        const { error } = await db
           .from('tipos_itens')
           .upsert({ nome: nomeLimpo, dias: dias }, { onConflict: 'nome' });
 
@@ -577,7 +577,7 @@
       // 1. Tentar atualizar no Supabase
       let salvoNoSupabase = false;
       try {
-        const { error } = await supabase
+        const { error } = await db
           .from('tipos_itens')
           .upsert({ nome: nomeLimpo, dias: diasNovos }, { onConflict: 'nome' });
 
@@ -617,7 +617,7 @@
           // 1. Eliminar do Supabase
           let deletadoSupabase = false;
           try {
-            const { error } = await supabase
+            const { error } = await db
               .from('tipos_itens')
               .delete()
               .eq('nome', nomeLimpo);
