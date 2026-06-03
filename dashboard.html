@@ -641,9 +641,9 @@
       const fimDate = new Date(ano, mes + 1, 0);
       const fim = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(fimDate.getDate()).padStart(2, '0')}`;
 
-      // Busca pedidos do mês selecionado (por data_real ou data_pedido)
+      // Busca pedidos do mês selecionado (por data_pedido)
       const [{ data: pedidosMes }, { data: todosPendentes }, { data: vouchersUsados }] = await Promise.all([
-        db.from('pedidos').select('*').gte('data_real', inicio).lte('data_real', fim),
+        db.from('pedidos').select('*').gte('data_pedido', inicio).lte('data_pedido', fim),
         db.from('pedidos').select('id, nome, preco_total, preco_final, valor_adiantado, data_entrega, status, itens').eq('status', 'pendente'),
         db.from('vouchers').select('id').eq('estado', 'utilizado')
       ]);
@@ -703,8 +703,9 @@
       const valores = Array(diasNoMes).fill(0);
 
       pedidos.forEach(p => {
-        if (!p.data_real) return;
-        const dia = parseInt(p.data_real.split('-')[2]) - 1;
+        const dataUsar = p.data_pedido || p.data_real;
+        if (!dataUsar) return;
+        const dia = parseInt(dataUsar.split('-')[2]) - 1;
         if (dia >= 0 && dia < diasNoMes) {
           valores[dia] += Number(p.preco_final || p.preco_total || 0);
         }
@@ -797,7 +798,7 @@
         const ini = `${a}-${String(m + 1).padStart(2, '0')}-01`;
         const fim = `${a}-${String(m + 1).padStart(2, '0')}-${new Date(a, m + 1, 0).getDate()}`;
         labels.push(MESES_PT[m].substring(0, 3));
-        promises.push(db.from('pedidos').select('id', { count: 'exact' }).gte('data_real', ini).lte('data_real', fim));
+        promises.push(db.from('pedidos').select('id', { count: 'exact' }).gte('data_pedido', ini).lte('data_pedido', fim));
       }
 
       const results = await Promise.all(promises);
@@ -958,7 +959,7 @@
     // PEDIDOS DO MÊS (Tabela)
     // ============================================================
     function renderPedidosRecentes(pedidos) {
-      const sorted = [...pedidos].sort((a, b) => b.data_real?.localeCompare(a.data_real || '') || 0);
+      const sorted = [...pedidos].sort((a, b) => (b.data_pedido || b.data_real || '').localeCompare(a.data_pedido || a.data_real || '') || 0);
       const tbody = document.getElementById('tbody-recentes');
 
       if (sorted.length === 0) {
@@ -977,7 +978,7 @@
 
         return `<tr>
           <td><strong>${p.nome}</strong></td>
-          <td>${fmtData(p.data_real)}</td>
+          <td>${fmtData(p.data_pedido || p.data_real)}</td>
           <td>${fmtData(p.data_entrega)}</td>
           <td style="font-size:0.8rem; color:#666">${qtdItens} item(s)</td>
           <td><strong>${fmt(total)}</strong></td>
