@@ -492,11 +492,11 @@
       const dias = isNaN(diasVal) ? 3 : diasVal;
 
       if (!nome) {
-        alert("Por favor, preencha o Nome do Tipo de Item.");
+        await mostrarAviso("Por favor, preencha o Nome do Tipo de Item.", "Campo Obrigatório", "⚠️");
         return;
       }
       if (dias < 0) {
-        alert("O tempo de produção deve ser de pelo menos 0 dias úteis.");
+        await mostrarAviso("O tempo de produção deve ser de pelo menos 0 dias úteis.", "Aviso", "⚠️");
         return;
       }
 
@@ -539,7 +539,7 @@
       btn.textContent = "✨ Guardar Produto";
       btn.disabled = false;
 
-      alert(`✅ Produto "${label}" guardado com sucesso! ${salvoNoSupabase ? '(Sincronizado na Nuvem)' : '(Guardado Localmente)'}`);
+      await mostrarAviso(`Produto "${label}" guardado com sucesso! ${salvoNoSupabase ? '(Sincronizado na Nuvem)' : '(Guardado Localmente)'}`, "Sucesso", "✅");
       
       await carregarProdutos();
     }
@@ -572,7 +572,7 @@
       const diasNovos = isNaN(diasNovosVal) ? 3 : diasNovosVal;
 
       if (diasNovos < 0) {
-        alert("O tempo de produção deve ser de pelo menos 0 dias úteis.");
+        await mostrarAviso("O tempo de produção deve ser de pelo menos 0 dias úteis.", "Aviso", "⚠️");
         return;
       }
 
@@ -598,7 +598,7 @@
         localStorage.setItem("tipos_itens_custom", JSON.stringify(localCustom));
       } catch(e) {}
 
-      alert(`✅ Produto atualizado com sucesso! ${salvoNoSupabase ? '(Sincronizado na Nuvem)' : '(Guardado Localmente)'}`);
+      await mostrarAviso(`Produto atualizado com sucesso! ${salvoNoSupabase ? '(Sincronizado na Nuvem)' : '(Guardado Localmente)'}`, "Sucesso", "✅");
       
       await carregarProdutos();
     }
