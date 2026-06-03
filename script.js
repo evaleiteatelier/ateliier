@@ -815,6 +815,8 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
        `;
     }
 
+    const adiantadoVal = p.valor_adiantado ? Number(p.valor_adiantado) : 0;
+    const estaPago = (finalValueRendered - adiantadoVal) <= 0.01;
     const isProntoAVestir = Array.isArray(itensList) && itensList.length > 0 && itensList.every(i => parseInt(i.dias) === 0);
 
     div.innerHTML = `
@@ -851,7 +853,24 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
               title="Marcar como concluído e 100% pago">
               ✅ Concluído &amp; Pago
             </button>` : ''}
-          ${botaoAcao ? `<button class="admin-only" onclick="mudarStatus('${p.id}', '${novoStatus}')">${botaoAcao}</button>` : ''}
+          ${botaoAcao ? (
+            (filtro === 'concluido' && botaoAcao === 'Entregar') ? (
+              estaPago ? `
+                <button class="admin-only" onclick="mudarStatus('${p.id}', '${novoStatus}')" style="background-color: #2e7d32 !important; color: white !important;">
+                  📦 ${botaoAcao}
+                </button>
+              ` : `
+                <button class="admin-only" onclick="marcarComoPago('${p.id}', ${finalValueRendered})" style="background-color: #2e7d32 !important; color: white !important;" title="Marcar como Pago para libertar a entrega">
+                  💶 Marcar como Pago
+                </button>
+                <button class="admin-only" onclick="alert('Não é possível entregar este pedido porque ainda não foi totalmente pago!')" style="background-color: #ccc !important; color: #666 !important; cursor: not-allowed;" title="Entrega bloqueada: aguarda pagamento">
+                  📦 ${botaoAcao} (Bloqueado)
+                </button>
+              `
+            ) : `
+              <button class="admin-only" onclick="mudarStatus('${p.id}', '${novoStatus}')">${botaoAcao}</button>
+            `
+          ) : ''}
           ${filtro === 'concluido' ? `
             <button class="admin-only" style="background-color: #f57c00 !important; color: white !important;" 
               onclick="mudarStatus('${p.id}', 'pendente')"
@@ -923,6 +942,27 @@ async function concluirEPago(id, precoFinal) {
 
   location.reload();
 }
+
+window.marcarComoPago = async function(id, total) {
+  const confirmado = confirm(`Deseja marcar este pedido como totalmente pago (€${Number(total).toFixed(2)})?`);
+  if (!confirmado) return;
+  
+  try {
+    const { error } = await supabase
+      .from('pedidos')
+      .update({ valor_adiantado: total })
+      .eq('id', id);
+      
+    if (error) {
+      alert("Erro ao marcar como pago: " + error.message);
+    } else {
+      alert("Pedido marcado como pago com sucesso!");
+      location.reload();
+    }
+  } catch (err) {
+    alert("Erro ao marcar como pago: " + err.message);
+  }
+};
 
 // =====================================================
 // SELEÇÃO MÚLTIPLA — barra flutuante
