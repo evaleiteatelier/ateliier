@@ -354,6 +354,7 @@ async function semanaTemEspaco(segunda, novosItens) {
   const { data: pedidos, error } = await supabase
     .from('pedidos')
     .select('itens, data_pedido, data_entrega') // Buscamos a entrega também para ver o intervalo
+    .eq('status', 'pendente') // Apenas pedidos pendentes ocupam capacidade de produção
     .lte('data_pedido', formatarParaISO(domingo)) // O pedido começou antes de o domingo acabar
     .gte('data_entrega', formatarParaISO(segunda)); // O pedido acaba depois de a segunda começar
 
