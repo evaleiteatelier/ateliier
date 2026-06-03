@@ -463,7 +463,7 @@
                 <h3 style="font-size:1rem; margin:0 0 8px 0; text-align:left; color:#bba68a;">Editar Produto</h3>
                 
                 <label style="font-size:0.8rem; font-weight:bold; color:#555; margin-top:0;">Nome do Item:</label>
-                <input type="text" class="edit-nome-input" value="${p.label}" disabled style="background:#f4f4f4; color:#777; cursor:not-allowed;">
+                <input type="text" class="edit-nome-input" value="${p.label}" style="background:#fff; color:#000;">
                 
                 <label style="font-size:0.8rem; font-weight:bold; color:#555; margin-top:0;">Tempo (dias úteis):</label>
                 <input type="number" class="edit-dias-input" min="0" value="${p.dias}">
@@ -567,6 +567,14 @@
       const card = document.getElementById(`card-${nome.replace(/\s+/g, '-')}`);
       if (!card) return;
 
+      const nomeInput = card.querySelector('.edit-nome-input');
+      const labelNovo = nomeInput.value.trim();
+
+      if (!labelNovo) {
+        await mostrarAviso("Por favor, preencha o Nome do Tipo de Item.", "Campo Obrigatório", "⚠️");
+        return;
+      }
+
       const diasInput = card.querySelector('.edit-dias-input');
       const diasNovosVal = parseInt(diasInput.value);
       const diasNovos = isNaN(diasNovosVal) ? 3 : diasNovosVal;
@@ -577,25 +585,101 @@
       }
 
       const nomeLimpo = nome.toLowerCase().trim();
+      const nomeNovoLimpo = labelNovo.toLowerCase().trim();
+
+      // Se mudou o nome, verifica duplicados
+      if (nomeNovoLimpo !== nomeLimpo) {
+        const jaExiste = produtosEmMemoria.some(p => p.nome === nomeNovoLimpo);
+        if (jaExiste) {
+          await mostrarAviso(`Já existe um produto com o nome "${labelNovo}".`, "Erro", "⚠️");
+          return;
+        }
+      }
+
+      let salvoNoSupabase = false;
 
       // 1. Tentar atualizar no Supabase
-      let salvoNoSupabase = false;
       try {
+        if (nomeNovoLimpo !== nomeLimpo) {
+          // Deleta o registro com o nome antigo
+          await db.from('tipos_itens').delete().eq('nome', nomeLimpo);
+
+          // Busca todos os pedidos para atualizar o nome antigo no JSON de itens
+          const { data: pedidos, error: errBusca } = await db
+            .from('pedidos')
+            .select('id, itens');
+
+          if (!errBusca && pedidos) {
+            const updatesPedidos = [];
+            for (const pedido of pedidos) {
+              let itensList = [];
+              let alterado = false;
+              try {
+                if (typeof pedido.itens === 'object' && pedido.itens !== null) {
+                  itensList = pedido.itens;
+                } else if (typeof pedido.itens === 'string') {
+                  itensList = JSON.parse(pedido.itens);
+                }
+              } catch(e) {}
+
+              if (Array.isArray(itensList)) {
+                itensList.forEach(item => {
+                  if (item.subtipo && item.subtipo.toLowerCase().trim() === nomeLimpo) {
+                    item.subtipo = nomeNovoLimpo; // Atualiza o nome para o novo valor
+                    alterado = true;
+                    // Atualiza a tipagem se necessário
+                    if (nomeNovoLimpo === 'concerto') item.tipo = 'concerto';
+                    else if (nomeNovoLimpo === 'modificacao') item.tipo = 'modificacao';
+                    else item.tipo = 'criacao';
+                  }
+                });
+              }
+
+              if (alterado) {
+                updatesPedidos.push(
+                  db.from('pedidos')
+                    .update({ itens: JSON.stringify(itensList) })
+                    .eq('id', pedido.id)
+                );
+              }
+            }
+
+            if (updatesPedidos.length > 0) {
+              await Promise.all(updatesPedidos);
+            }
+          }
+        }
+        // Insere/atualiza o novo
         const { error } = await db
           .from('tipos_itens')
-          .upsert({ nome: nomeLimpo, dias: diasNovos }, { onConflict: 'nome' });
+          .upsert({ nome: nomeNovoLimpo, dias: diasNovos }, { onConflict: 'nome' });
 
         if (!error) {
           salvoNoSupabase = true;
         }
-      } catch (err) {}
+      } catch (err) {
+        console.error(err);
+      }
 
       // 2. Atualizar no localStorage
       try {
         let localCustom = JSON.parse(localStorage.getItem("tipos_itens_custom") || "[]");
-        localCustom = localCustom.filter(item => item.nome.toLowerCase().trim() !== nomeLimpo);
-        localCustom.push({ nome: nomeLimpo, dias: diasNovos });
+        // Remove ambos os nomes antigo e novo para evitar duplicados
+        localCustom = localCustom.filter(item => 
+          item.nome.toLowerCase().trim() !== nomeLimpo && 
+          item.nome.toLowerCase().trim() !== nomeNovoLimpo
+        );
+        localCustom.push({ nome: nomeNovoLimpo, dias: diasNovos });
         localStorage.setItem("tipos_itens_custom", JSON.stringify(localCustom));
+
+        // Se o nome antigo era um produto padrão, marca-o como deletado para não reaparecer
+        if (defaultTypes.some(d => d.nome === nomeLimpo)) {
+          let localDeleted = JSON.parse(localStorage.getItem("tipos_itens_deleted") || "[]");
+          if (!localDeleted.includes(nomeLimpo)) {
+            localDeleted.push(nomeLimpo);
+            localStorage.setItem("tipos_itens_deleted", JSON.stringify(localDeleted));
+          }
+        }
       } catch(e) {}
 
       await mostrarAviso(`Produto atualizado com sucesso! ${salvoNoSupabase ? '(Sincronizado na Nuvem)' : '(Guardado Localmente)'}`, "Sucesso", "✅");
