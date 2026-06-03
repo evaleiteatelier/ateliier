@@ -226,18 +226,20 @@ if (document.getElementById('form-pedido')) {
       preco_final = preco_total - (preco_total * desconto_percentagem / 100);
     }
 
+    const isProntoAVestir = itens.length > 0 && itens.every(i => parseInt(i.dias) === 0);
+
     const pedidoObj = {
       nome,
       data_pedido: dataEscolhida.toISOString().split('T')[0],
       data_real: new Date().toISOString().split('T')[0],
       itens: JSON.stringify(itens),
       data_entrega: dataEntrega.toISOString().split('T')[0],
-      status: 'pendente',
+      status: isProntoAVestir ? 'entregue' : 'pendente',
       preco_total: preco_total,
       preco_final: preco_final,
       cupao_codigo: cupao_codigo,
       desconto_percentagem: desconto_percentagem,
-      valor_adiantado: valor_adiantado,
+      valor_adiantado: isProntoAVestir ? preco_final : valor_adiantado,
       email_cliente: email_cliente
     };
 
@@ -254,9 +256,11 @@ if (document.getElementById('form-pedido')) {
         console.error("Erro ao salvar pedido:", error);
         await mostrarAviso("Erro ao salvar pedido: " + error.message, "Erro", "❌");
       } else {
-        // Tenta enviar o email de confirmação
-        const NOVO_TEMPLATE_ID = "template_0uin60y"; // Confirme se este ID está certo no EmailJS
-        await enviarEmailConfirmacao(novoPedido, NOVO_TEMPLATE_ID);
+        // Tenta enviar o email de confirmação se não for pronto-a-vestir
+        if (!isProntoAVestir) {
+          const NOVO_TEMPLATE_ID = "template_0uin60y"; // Confirme se este ID está certo no EmailJS
+          await enviarEmailConfirmacao(novoPedido, NOVO_TEMPLATE_ID);
+        }
 
         // Se há cupão selecionado, marca como utilizado
         const cupaoIdEl = document.getElementById('cupao-id-selecionado');
