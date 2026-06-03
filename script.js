@@ -852,6 +852,12 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
               onclick="concluirEPago('${p.id}', ${Number(p.preco_final || p.preco_total || 0)})"
               title="Marcar como concluído e 100% pago">
               ✅ Concluído &amp; Pago
+            </button>
+            <button class="admin-only btn-concluir-pago-entregue" 
+              onclick="concluirPagoEEntregue('${p.id}', ${Number(p.preco_final || p.preco_total || 0)})"
+              style="background: linear-gradient(135deg, #1565c0, #1e88e5) !important; color: white !important;"
+              title="Marcar como concluído, 100% pago e entregue">
+              📦 Concluído, Pago &amp; Entregue
             </button>` : ''}
           ${botaoAcao ? (
             (filtro === 'concluido' && botaoAcao === 'Entregar') ? (
@@ -942,6 +948,40 @@ async function concluirEPago(id, precoFinal) {
 
   location.reload();
 }
+
+// =====================================================
+// CONCLUIR, PAGO & ENTREGUE — individual
+// =====================================================
+window.concluirPagoEEntregue = async function(id, precoFinal) {
+  const confirmado = await new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:14px;padding:28px 30px;max-width:360px;width:90%;box-shadow:0 10px 30px rgba(0,0,0,.2);text-align:center;">
+        <div style="font-size:2.5rem;margin-bottom:10px;">📦</div>
+        <h3 style="margin:0 0 8px;font-size:1.1rem;">Concluir, Pagar &amp; Entregar?</h3>
+        <p style="color:#666;font-size:0.9rem;margin-bottom:20px;">Este pedido será marcado como <strong>Entregue</strong> e o valor de <strong style="color:#2e7d32;">€${Number(precoFinal).toFixed(2)}</strong> ficará registado como 100% pago.</p>
+        <div style="display:flex;gap:10px;">
+          <button id="btn-conf-ok" style="flex:1;background:#2e7d32;color:#fff;border:none;border-radius:8px;padding:11px;font-size:1rem;cursor:pointer;margin:0;">✅ Confirmar</button>
+          <button id="btn-conf-cancel" style="flex:1;background:#f5f5f5;color:#555;border:1px solid #ddd;border-radius:8px;padding:11px;font-size:1rem;cursor:pointer;margin:0;">Cancelar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.querySelector('#btn-conf-ok').onclick    = () => { document.body.removeChild(overlay); resolve(true); };
+    overlay.querySelector('#btn-conf-cancel').onclick = () => { document.body.removeChild(overlay); resolve(false); };
+  });
+
+  if (!confirmado) return;
+
+  try { await enviarEmailConclusao(id, supabase); } catch(e) { console.warn('Email falhou:', e); }
+
+  await supabase.from('pedidos').update({
+    status: 'entregue',
+    valor_adiantado: precoFinal   // 100% pago
+  }).eq('id', id);
+
+  location.reload();
+};
 
 window.marcarComoPago = async function(id, total) {
   const confirmado = await mostrarConfirmacao(`Deseja marcar este pedido como totalmente pago (€${Number(total).toFixed(2)})?`, "Confirmar Pagamento", "💶");
