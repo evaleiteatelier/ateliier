@@ -174,13 +174,13 @@ if (document.getElementById('form-pedido')) {
     e.preventDefault();
     const nome = document.getElementById('nome').value.trim();
     if (!nome) {
-      alert("Por favor, introduza o Nome da Cliente.");
+      await mostrarAviso("Por favor, introduza o Nome da Cliente.", "Campo Obrigatório", "⚠️");
       return;
     }
     
     const dataInput = document.getElementById('data').value;
     if (!dataInput) {
-      alert("Por favor, introduza a Data desejada para início.");
+      await mostrarAviso("Por favor, introduza a Data desejada para início.", "Campo Obrigatório", "⚠️");
       return;
     }
 
@@ -191,7 +191,7 @@ if (document.getElementById('form-pedido')) {
     const email_cliente = document.getElementById('email_cliente').value;
 
     if (itens.length === 0) {
-      alert("Adicione ao menos um item ao pedido.");
+      await mostrarAviso("Adicione ao menos um item ao pedido.", "Aviso", "⚠️");
       return;
     }
 
@@ -252,7 +252,7 @@ if (document.getElementById('form-pedido')) {
 
       if (error) {
         console.error("Erro ao salvar pedido:", error);
-        alert("Erro ao salvar pedido: " + error.message);
+        await mostrarAviso("Erro ao salvar pedido: " + error.message, "Erro", "❌");
       } else {
         // Tenta enviar o email de confirmação
         const NOVO_TEMPLATE_ID = "template_0uin60y"; // Confirme se este ID está certo no EmailJS
@@ -267,12 +267,12 @@ if (document.getElementById('form-pedido')) {
             .eq('id', cupaoIdEl.value);
         }
         
-        alert("Pedido salvo com sucesso!");
+        await mostrarAviso("Pedido salvado com sucesso!", "Sucesso", "✅");
         location.reload();
       }
     } catch (err) {
       console.error("Erro inesperado:", err);
-      alert("Erro inesperado: " + err.message);
+      await mostrarAviso("Erro inesperado: " + err.message, "Erro", "❌");
     }
   });
 }
@@ -901,7 +901,7 @@ async function mudarStatus(id, novoStatus) {
       await enviarEmailConclusao(id, supabase); 
     } catch (err) {
       console.error("❌ ERRO AO TENTAR ENVIAR EMAIL:", err);
-      alert("O pedido foi marcado como concluído, mas falhou o envio do email de notificação. Verifique a consola.");
+      await mostrarAviso("O pedido foi marcado como concluído, mas falhou o envio do email de notificação. Verifique a consola.", "Aviso", "⚠️");
     }
   }
   
@@ -944,7 +944,7 @@ async function concluirEPago(id, precoFinal) {
 }
 
 window.marcarComoPago = async function(id, total) {
-  const confirmado = confirm(`Deseja marcar este pedido como totalmente pago (€${Number(total).toFixed(2)})?`);
+  const confirmado = await mostrarConfirmacao(`Deseja marcar este pedido como totalmente pago (€${Number(total).toFixed(2)})?`, "Confirmar Pagamento", "💶");
   if (!confirmado) return;
   
   try {
@@ -954,13 +954,13 @@ window.marcarComoPago = async function(id, total) {
       .eq('id', id);
       
     if (error) {
-      alert("Erro ao marcar como pago: " + error.message);
+      await mostrarAviso("Erro ao marcar como pago: " + error.message, "Erro", "❌");
     } else {
-      alert("Pedido marcado como pago com sucesso!");
+      await mostrarAviso("Pedido marcado como pago com sucesso!", "Sucesso", "✅");
       location.reload();
     }
   } catch (err) {
-    alert("Erro ao marcar como pago: " + err.message);
+    await mostrarAviso("Erro ao marcar como pago: " + err.message, "Erro", "❌");
   }
 };
 
@@ -1057,21 +1057,22 @@ async function concluirEPagoMultiplo() {
 }
 
 async function excluirPedido(id) {
-  if (!confirm("Tem a certeza que deseja excluir este pedido? Esta ação não pode ser desfeita.")) {
+  const confirmado = await mostrarConfirmacao("Tem a certeza que deseja excluir este pedido? Esta ação não pode ser desfeita.", "Excluir Pedido", "🗑️");
+  if (!confirmado) {
     return;
   }
   try {
     const { error } = await supabase.from('pedidos').delete().eq('id', id);
     if (error) {
       console.error("Erro ao excluir pedido:", error);
-      alert("Não foi possível excluir o pedido: " + error.message);
+      await mostrarAviso("Não foi possível excluir o pedido: " + error.message, "Erro", "❌");
     } else {
-      alert("Pedido excluído com sucesso!");
+      await mostrarAviso("Pedido excluído com sucesso!", "Sucesso", "✅");
       location.reload();
     }
   } catch (err) {
     console.error("Erro inesperado:", err);
-    alert("Ocorreu um erro inesperado: " + err.message);
+    await mostrarAviso("Ocorreu um erro inesperado: " + err.message, "Erro", "❌");
   }
 }
 
@@ -1420,9 +1421,9 @@ async function abrirEditorPedido(id) {
     }
 
     if (updateError) {
-      alert("Erro ao salvar alterações.");
+      await mostrarAviso("Erro ao salvar alterações.", "Erro", "❌");
     } else {
-      alert("Pedido atualizado com sucesso!");
+      await mostrarAviso("Pedido atualizado com sucesso!", "Sucesso", "✅");
       divEmail.remove(); // Limpeza do DOM
       modal.style.display = "none";
       location.reload();
@@ -1485,8 +1486,7 @@ window.verificarCupaoEditor = async function() {
   const resultadoDiv = document.getElementById('editor-cupao-resultado');
   
   if (!termo) {
-    if (typeof alertaModal !== "undefined") { alertaModal('Aviso', 'Insira o código do cupão ou o nome da cliente.', '⚠️'); }
-    else { alert('Insira o código do cupão ou o nome da cliente.'); }
+    await mostrarAviso('Insira o código do cupão ou o nome da cliente.', 'Aviso', '⚠️');
     return;
   }
   
