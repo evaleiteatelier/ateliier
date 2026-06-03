@@ -885,7 +885,7 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
             </button>` : ''}
           ${filtro === 'entregue' ? `
             <button class="admin-only" style="background-color: #f57c00 !important; color: white !important;" 
-              onclick="mudarStatus('${p.id}', 'concluido')"
+              onclick="mudarStatus('${p.id}', 'concluido', false)"
               title="Mover este pedido de volta para a lista de concluídos">
               ↩️ Desfazer Entrega
             </button>` : ''}
@@ -907,8 +907,8 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
   }, 50);
 }
 
-async function mudarStatus(id, novoStatus) {
-  if (novoStatus === 'concluido') {
+async function mudarStatus(id, novoStatus, enviarEmail = true) {
+  if (novoStatus === 'concluido' && enviarEmail) {
     try {
       await enviarEmailConclusao(id, supabase); 
     } catch (err) {
