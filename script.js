@@ -883,6 +883,12 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
               title="Mover este pedido de volta para a lista de espera">
               ↩️ Reabrir Pedido
             </button>` : ''}
+          ${filtro === 'entregue' ? `
+            <button class="admin-only" style="background-color: #f57c00 !important; color: white !important;" 
+              onclick="mudarStatus('${p.id}', 'concluido')"
+              title="Mover este pedido de volta para a lista de concluídos">
+              ↩️ Desfazer Entrega
+            </button>` : ''}
           ${filtro === 'pendente' ? `
             <button class="admin-only btn-editar" onclick="abrirEditorPedido('${p.id}')">Editar</button>
             <button class="admin-only btn-excluir" onclick="excluirPedido('${p.id}')">Excluir</button>
