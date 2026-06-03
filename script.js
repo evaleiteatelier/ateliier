@@ -1332,17 +1332,18 @@ async function abrirEditorPedido(id) {
     diferenca.style.color = dif > 0 ? "green" : (dif < 0 ? "red" : "black");
 
     // Evento: Botão Adicionar Item
-    document.getElementById("btn-add-item").onclick = () => {
-      const select = document.getElementById("novo-subtipo");
+    document.getElementById("btn-add-item").onclick = async () => {
+      const select = divAdd.querySelector("#novo-subtipo");
       const subtipo = select.value;
-      const preco = parseFloat(document.getElementById("novo-preco").value) || 0;
-      const quantidade = parseInt(document.getElementById("novo-quantidade").value) || 1;
-      const descricao = document.getElementById("novo-descricao").value.trim() || "";
+      const preco = parseFloat(divAdd.querySelector("#novo-preco").value) || 0;
+      const quantidade = parseInt(divAdd.querySelector("#novo-quantidade").value) || 1;
+      const descricao = divAdd.querySelector("#novo-descricao").value.trim() || "";
+      const selectedOpt = select.selectedOptions && select.selectedOptions[0];
       const val = selectedOpt ? parseInt(selectedOpt.dataset.dias) : NaN;
       const dias = isNaN(val) ? 3 : val;
 
       if (preco <= 0) {
-        alert("Insira um preço válido.");
+        await mostrarAviso("Insira um preço válido.", "Aviso", "⚠️");
         return;
       }
 
