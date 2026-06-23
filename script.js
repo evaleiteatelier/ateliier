@@ -228,9 +228,19 @@ if (document.getElementById('form-pedido')) {
 
     const isProntoAVestir = itens.length > 0 && itens.every(i => parseInt(i.dias) === 0);
 
+    // Constrói array de pagamentos com data
+    const dataInicialPgmt = document.getElementById('data_pagamento_inicial');
+    const dataHoje = new Date().toISOString().split('T')[0];
+    const valorFinalAdiantado = isProntoAVestir ? preco_final : valor_adiantado;
+    const pagamentosInicial = valorFinalAdiantado > 0 ? [{
+      valor: valorFinalAdiantado,
+      data: (dataInicialPgmt && dataInicialPgmt.value) ? dataInicialPgmt.value : dataHoje,
+      nota: isProntoAVestir ? 'Pagamento total (pronto a vestir)' : 'Pagamento inicial'
+    }] : [];
+
     const pedidoObj = {
       nome,
-      data_pedido: dataEscolhida.toISOString().split('T')[0],
+      data_pedido: dataInicioReal.toISOString().split('T')[0],
       data_real: new Date().toISOString().split('T')[0],
       itens: JSON.stringify(itens),
       data_entrega: dataEntrega.toISOString().split('T')[0],
@@ -239,7 +249,8 @@ if (document.getElementById('form-pedido')) {
       preco_final: preco_final,
       cupao_codigo: cupao_codigo,
       desconto_percentagem: desconto_percentagem,
-      valor_adiantado: isProntoAVestir ? preco_final : valor_adiantado,
+      valor_adiantado: valorFinalAdiantado,
+      pagamentos: JSON.stringify(pagamentosInicial),
       email_cliente: email_cliente
     };
 
@@ -347,16 +358,22 @@ function calcularDataEntrega(inicio, dias) {
   return entrega;
 }
 
-async function semanaTemEspaco(segunda, novosItens) {
+async function semanaTemEspaco(segunda, novosItens, excluirPedidoId = null) {
   const domingo = new Date(segunda);
   domingo.setDate(domingo.getDate() + 6);
 
-  const { data: pedidos, error } = await supabase
+  let query = supabase
     .from('pedidos')
     .select('itens, data_pedido, data_entrega') // Buscamos a entrega também para ver o intervalo
     .eq('status', 'pendente') // Apenas pedidos pendentes ocupam capacidade de produção
     .lte('data_pedido', formatarParaISO(domingo)) // O pedido começou antes de o domingo acabar
     .gte('data_entrega', formatarParaISO(segunda)); // O pedido acaba depois de a segunda começar
+
+  if (excluirPedidoId) {
+    query = query.neq('id', excluirPedidoId);
+  }
+
+  const { data: pedidos, error } = await query;
 
   if (error) {
     console.error("Erro ao buscar pedidos da semana:", error);
@@ -725,6 +742,67 @@ function adicionarItem() {
 // 3. LISTAGEM E GERENCIAMENTO DE PEDIDOS
 // ==========================================
 
+async function corrigirAgendamentosRetroativos(pedidosPendentes) {
+  // Exibe um aviso visual para o usuário
+  await mostrarAviso(
+    "Detetámos que existem pedidos agendados incorretamente para o próximo ano devido a um conflito de capacidade. Vamos recalcular os agendamentos automaticamente agora. Por favor, aguarde...",
+    "Correção Automática",
+    "⚙️"
+  );
+
+  // 1. Temporariamente define a data_entrega de todos os pedidos pendentes para a sua data_pedido
+  // para evitar que um bloqueie o outro durante o recálculo
+  for (const p of pedidosPendentes) {
+    await supabase
+      .from('pedidos')
+      .update({ data_entrega: p.data_pedido })
+      .eq('id', p.id);
+  }
+
+  // 2. Ordena os pedidos por data_pedido original de forma cronológica
+  const ordenados = [...pedidosPendentes].sort((a, b) => a.data_pedido.localeCompare(b.data_pedido));
+
+  // 3. Recalcula as datas de agendamento de cada um e atualiza no banco
+  for (const p of ordenados) {
+    let itens = [];
+    try {
+      itens = typeof p.itens === 'string' ? JSON.parse(p.itens) : p.itens;
+    } catch (e) {
+      console.error("Erro ao fazer parse dos itens do pedido no recálculo:", e);
+      continue;
+    }
+
+    if (!itens || itens.length === 0) continue;
+
+    let semanaData = ajustarParaSegunda(new Date(p.data_pedido));
+    let diasTotais = itens.reduce((acc, i) => acc + (i.dias * i.quantidade), 0);
+
+    // Encontra a primeira semana com espaço
+    let limiteSeguranca = 0;
+    while (!(await semanaTemEspaco(semanaData, [itens[0]], p.id)) && limiteSeguranca < 52) {
+      semanaData.setDate(semanaData.getDate() + 7);
+      limiteSeguranca++;
+    }
+
+    let dataInicioReal = new Date(p.data_pedido);
+    if (dataInicioReal < semanaData) dataInicioReal = new Date(semanaData);
+
+    const dataEntrega = calcularDataEntrega(dataInicioReal, diasTotais);
+
+    // Salva no banco com as datas corrigidas
+    await supabase
+      .from('pedidos')
+      .update({
+        data_pedido: dataInicioReal.toISOString().split('T')[0],
+        data_entrega: dataEntrega.toISOString().split('T')[0]
+      })
+      .eq('id', p.id);
+  }
+
+  await mostrarAviso("Todos os agendamentos foram recalculados e corrigidos com sucesso!", "Sucesso", "✅");
+  location.reload();
+}
+
 // Substitua a função carregarPedidos no seu script.js por esta:
 
 async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
@@ -741,6 +819,21 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
   if (error) {
     container.innerHTML = `<p style="color:red; text-align:center;">Erro ao carregar: ${error.message}</p>`;
     return;
+  }
+
+  // --- TRIGGER DE CORREÇÃO RETROATIVA AUTOMÁTICA ---
+  if (filtro === 'pendente' && data && data.length > 0) {
+    const temPedidoBugado = data.some(p => {
+      if (!p.data_pedido || !p.data_entrega) return false;
+      const diffTime = Math.abs(new Date(p.data_entrega) - new Date(p.data_pedido));
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays > 90;
+    });
+
+    if (temPedidoBugado) {
+      await corrigirAgendamentosRetroativos(data);
+      return;
+    }
   }
 
   // --- SE A LISTA ESTIVER VAZIA (O SEU CASO) ---
@@ -952,11 +1045,7 @@ async function concluirEPago(id, precoFinal) {
 
   try { await enviarEmailConclusao(id, supabase); } catch (e) { console.warn('Email falhou:', e); }
 
-  await supabase.from('pedidos').update({
-    status: 'concluido',
-    valor_adiantado: precoFinal   // 100% pago
-  }).eq('id', id);
-
+  await registarPagamentoFinal(id, precoFinal, 'concluido');
   location.reload();
 }
 
@@ -986,12 +1075,57 @@ window.concluirPagoEEntregue = async function (id, precoFinal) {
 
   try { await enviarEmailConclusao(id, supabase); } catch (e) { console.warn('Email falhou:', e); }
 
-  await supabase.from('pedidos').update({
-    status: 'entregue',
-    valor_adiantado: precoFinal   // 100% pago
-  }).eq('id', id);
-
+  await registarPagamentoFinal(id, precoFinal, 'entregue');
   location.reload();
+};
+
+// Regista o pagamento final (100%) preservando histórico de pagamentos anteriores
+async function registarPagamentoFinal(id, precoFinal, novoStatus) {
+  const { data: p } = await supabase.from('pedidos').select('pagamentos, valor_adiantado').eq('id', id).single();
+  let pgmts = [];
+  try { pgmts = p && p.pagamentos ? (typeof p.pagamentos === 'string' ? JSON.parse(p.pagamentos) : p.pagamentos) : []; } catch(e) {}
+  const jaAdiantado = pgmts.reduce((s, x) => s + (parseFloat(x.valor) || 0), 0);
+  const restante = Number(precoFinal) - jaAdiantado;
+  if (restante > 0.01) {
+    pgmts.push({ valor: restante, data: new Date().toISOString().split('T')[0], nota: 'Pagamento final' });
+  }
+  await supabase.from('pedidos').update({
+    status: novoStatus,
+    valor_adiantado: precoFinal,
+    pagamentos: JSON.stringify(pgmts)
+  }).eq('id', id);
+}
+
+// Funções UI de pagamentos no modal de edição
+window.adicionarLinhaPagamento = function(valor = '', data = '', nota = '') {
+  const lista = document.getElementById('editor-pagamentos-lista');
+  if (!lista) return;
+  const hoje = new Date().toISOString().split('T')[0];
+  const div = document.createElement('div');
+  div.className = 'pgmt-linha';
+  div.style.cssText = 'display:flex; gap:6px; align-items:center;';
+  div.innerHTML = `
+    <input type="number" class="pgmt-valor" placeholder="€ Valor" value="${valor}" min="0" step="0.01"
+      style="flex:1; padding:7px; border:1px solid #a5d6a7; border-radius:5px; font-size:0.9rem;"
+      oninput="atualizarTotalPago()">
+    <input type="date" class="pgmt-data" value="${data || hoje}"
+      style="flex:1; padding:7px; border:1px solid #a5d6a7; border-radius:5px; font-size:0.9rem;">
+    <input type="text" class="pgmt-nota" placeholder="Nota (opcional)" value="${nota}"
+      style="flex:1.5; padding:7px; border:1px solid #ddd; border-radius:5px; font-size:0.9rem;">
+    <button type="button" onclick="this.closest('.pgmt-linha').remove(); atualizarTotalPago();"
+      style="background:none; border:none; cursor:pointer; color:#ccc; font-size:1.2rem; padding:0 4px; line-height:1;">×</button>`;
+  lista.appendChild(div);
+  atualizarTotalPago();
+};
+
+window.atualizarTotalPago = function() {
+  const linhas = document.querySelectorAll('#editor-pagamentos-lista .pgmt-linha');
+  let total = 0;
+  linhas.forEach(l => total += parseFloat(l.querySelector('.pgmt-valor').value) || 0);
+  const el = document.getElementById('editor-total-pago');
+  if (el) el.textContent = '€ ' + total.toFixed(2);
+  const hidden = document.getElementById('editor-valor-adiantado');
+  if (hidden) hidden.value = total;
 };
 
 window.marcarComoPago = async function (id, total) {
@@ -1300,10 +1434,28 @@ async function abrirEditorPedido(id) {
   precoNovo.textContent = precoOriginal.toFixed(2);
   diferenca.textContent = "0.00";
 
-  // Preenche o adiantamento existente
-  const editorAdiantamento = document.getElementById("editor-valor-adiantado");
-  if (editorAdiantamento) {
-    editorAdiantamento.value = pedido.valor_adiantado ? Number(pedido.valor_adiantado).toFixed(2) : '';
+  // Preenche a lista de pagamentos existentes
+  const listaPgmt = document.getElementById("editor-pagamentos-lista");
+  if (listaPgmt) {
+    listaPgmt.innerHTML = '';
+    let pgmtsExistentes = [];
+    try {
+      pgmtsExistentes = pedido.pagamentos
+        ? (typeof pedido.pagamentos === 'string' ? JSON.parse(pedido.pagamentos) : pedido.pagamentos)
+        : [];
+    } catch(e) { pgmtsExistentes = []; }
+
+    // Se não há array mas há valor_adiantado, migra para o novo formato na UI
+    if (pgmtsExistentes.length === 0 && pedido.valor_adiantado && Number(pedido.valor_adiantado) > 0) {
+      pgmtsExistentes = [{
+        valor: Number(pedido.valor_adiantado).toFixed(2),
+        data: pedido.data_real || pedido.data_pedido || '',
+        nota: 'Pagamento inicial'
+      }];
+    }
+
+    pgmtsExistentes.forEach(p => adicionarLinhaPagamento(p.valor, p.data, p.nota));
+    atualizarTotalPago();
   }
 
   // --- NOVA ÁREA: EDIÇÃO DE EMAIL ---
@@ -1506,8 +1658,17 @@ async function abrirEditorPedido(id) {
       novoPrecoFinal = novoSubtotal - (novoSubtotal * desconto / 100);
     }
     const emailFinal = document.getElementById("editor-email-cliente").value;
-    const adiantadoInput = document.getElementById("editor-valor-adiantado");
-    const novoAdiantado = (adiantadoInput && adiantadoInput.value) ? parseFloat(adiantadoInput.value) : 0;
+
+    // Recolhe lista de pagamentos da UI
+    const linhas = document.querySelectorAll('#editor-pagamentos-lista .pgmt-linha');
+    const novosPagamentos = [];
+    let novoAdiantado = 0;
+    linhas.forEach(linha => {
+      const v = parseFloat(linha.querySelector('.pgmt-valor').value) || 0;
+      const d = linha.querySelector('.pgmt-data').value || '';
+      const n = linha.querySelector('.pgmt-nota').value || '';
+      if (v > 0) { novosPagamentos.push({ valor: v, data: d, nota: n }); novoAdiantado += v; }
+    });
 
     const { error: updateError } = await supabase
       .from("pedidos")
@@ -1518,6 +1679,7 @@ async function abrirEditorPedido(id) {
         cupao_codigo: codigo,
         desconto_percentagem: desconto > 0 ? desconto : null,
         valor_adiantado: novoAdiantado,
+        pagamentos: JSON.stringify(novosPagamentos),
         email_cliente: emailFinal
       })
       .eq("id", id);

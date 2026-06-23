@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contas - Eva Leite Atelier</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="navbar.js" defer></script>
+
+  <style>
+    :root {
+      --gold: #d4af37;
+      --gold-light: #f5e6a3;
+      --dark: #1a1a2e;
+      --card-bg: #ffffff;
+      --text: #2d2d2d;
+      --text-muted: #888;
+      --green: #2e7d32;
+      --green-light: #e8f5e9;
+      --red: #c62828;
+      --red-light: #fce8e6;
+      --orange: #e65100;
+      --orange-light: #fff3e0;
+      --bg: #f5f1ea;
+      --radius: 14px;
+      --shadow: 0 4px 20px rgba(0,0,0,.08);
+    }
+
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
+    .contas-wrapper { max-width: 1100px; margin: 0 auto; padding: 30px 20px 60px; }
+
+    /* ── CABEÇALHO ── */
+    .contas-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 14px; }
+    .contas-header h1 { margin: 0; font-size: 1.9rem; color: var(--dark); }
+    .mes-selector { display: flex; align-items: center; gap: 10px; position: relative; }
+    .mes-selector label { font-size: 0.82rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .6px; }
+
+    /* botão que abre o picker */
+    .btn-mes-abrir {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 14px; border: 1px solid #ddd; border-radius: 8px;
+      background: #fff; cursor: pointer; font-family: 'Inter', sans-serif;
+      font-size: 0.92rem; font-weight: 600; color: var(--dark);
+      transition: border-color .2s; white-space: nowrap;
+    }
+    .btn-mes-abrir:hover, .btn-mes-abrir.aberto { border-color: var(--gold); color: var(--gold); }
+    .btn-mes-abrir svg { transition: transform .2s; }
+    .btn-mes-abrir.aberto svg { transform: rotate(180deg); }
+
+    /* popup do picker */
+    .mes-picker-popup {
+      display: none; position: absolute; top: calc(100% + 8px); right: 0;
+      background: #fff; border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,.15);
+      padding: 18px; z-index: 5000; min-width: 260px;
+      animation: popIn .15s ease-out;
+    }
+    .mes-picker-popup.visivel { display: block; }
+    @keyframes popIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+
+    /* cabeçalho do picker: setas + ano */
+    .picker-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .picker-ano { font-size: 1rem; font-weight: 700; color: var(--dark); }
+    .picker-nav {
+      background: none; border: 1px solid #eee; border-radius: 6px;
+      width: 30px; height: 30px; cursor: pointer; font-size: 1.1rem;
+      color: var(--text-muted); transition: all .2s; display: flex;
+      align-items: center; justify-content: center; line-height: 1;
+    }
+    .picker-nav:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* grid de meses */
+    .picker-meses {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+    }
+    .picker-mes-btn {
+      padding: 8px 4px; border: 1px solid #eee; border-radius: 8px;
+      background: none; cursor: pointer; font-family: 'Inter', sans-serif;
+      font-size: 0.82rem; color: var(--text); transition: all .2s; text-align: center;
+    }
+    .picker-mes-btn:hover { border-color: var(--gold); color: var(--gold); background: #fffbee; }
+    .picker-mes-btn.selecionado { background: var(--dark); color: var(--gold); border-color: var(--dark); font-weight: 700; }
+    .picker-mes-btn.hoje { border-color: var(--gold); color: var(--gold); }
+
+    /* ── ABAS PRINCIPAIS ── */
+    .tabs-main { display: flex; gap: 6px; margin-bottom: 24px; border-bottom: 2px solid #e8e0d0; }
+    .tab-btn { padding: 10px 22px; border: none; background: none; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.88rem; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -2px; transition: color .2s, border-color .2s; text-transform: uppercase; letter-spacing: .6px; }
+    .tab-btn:hover { color: var(--dark); }
+    .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── SEMANAS ── */
+    .semanas-tabs { display: flex; gap: 6px; margin-bottom: 20px; }
+    .semana-btn { padding: 8px 18px; border: 1px solid #ddd; background: #fff; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.82rem; font-weight: 600; color: var(--text-muted); border-radius: 8px; transition: all .2s; }
+    .semana-btn:hover { border-color: var(--gold); color: var(--dark); }
+    .semana-btn.active { background: var(--dark); color: var(--gold); border-color: var(--dark); }
+
+    /* ── GRID CARDS ── */
+    .semana-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 700px) { .semana-grid { grid-template-columns: 1fr; } }
+    .card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 22px 24px; }
+    .card-title { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--text-muted); margin: 0 0 16px; }
+    .card-full { grid-column: 1 / -1; }
+
+    /* ── DISTRIBUIÇÃO ── */
+    .dist-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .dist-row label { flex: 1; font-size: 0.88rem; color: var(--text); }
+    .dist-input { width: 70px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; font-family: 'Inter', sans-serif; text-align: right; outline: none; }
+    .dist-input:focus { border-color: var(--gold); }
+    .dist-row span { font-size: 0.82rem; color: var(--text-muted); width: 14px; }
+    .dist-total-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #f0ead8; }
+    .dist-total-row label { flex: 1; font-size: 0.88rem; font-weight: 700; color: var(--dark); }
+    .dist-total-val { font-size: 0.9rem; font-weight: 700; width: 70px; text-align: right; }
+
+    /* ── ENCOMENDAS ── */
+    .enc-list { list-style: none; margin: 0 0 12px; padding: 0; max-height: 280px; overflow-y: auto; }
+    .enc-item { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .enc-nome { flex: 1; padding: 7px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.88rem; font-family: 'Inter', sans-serif; outline: none; }
+    .enc-nome:focus { border-color: var(--gold); }
+    .enc-valor { width: 88px; padding: 7px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.88rem; font-family: 'Inter', sans-serif; text-align: right; outline: none; }
+    .enc-valor:focus { border-color: var(--gold); }
+    .btn-remover { background: none; border: none; cursor: pointer; color: #ccc; font-size: 1.1rem; padding: 4px; line-height: 1; transition: color .2s; }
+    .btn-remover:hover { color: var(--red); }
+    .btn-add-enc { display: flex; align-items: center; gap: 6px; background: none; border: 1px dashed #ccc; border-radius: 6px; padding: 7px 14px; cursor: pointer; font-size: 0.82rem; font-family: 'Inter', sans-serif; color: var(--text-muted); transition: all .2s; width: 100%; box-sizing: border-box; }
+    .btn-add-enc:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* ── BÔNUS ── */
+    .bonus-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .bonus-row label { flex: 1; font-size: 0.88rem; color: var(--text); }
+    .bonus-input { width: 80px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; font-family: 'Inter', sans-serif; text-align: right; outline: none; }
+    .bonus-input:focus { border-color: var(--gold); }
+    .bonus-label-small { font-size: 0.75rem; color: var(--text-muted); min-width: 30px; }
+
+    /* ── PAGAMENTOS DÍVIDA (semanal) ── */
+    .pdiv-list { list-style: none; margin: 0 0 12px; padding: 0; max-height: 220px; overflow-y: auto; }
+    .pdiv-item { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .pdiv-desc { flex: 1; padding: 7px 10px; border: 1px solid #ffc5c5; border-radius: 6px; font-size: 0.88rem; font-family: 'Inter', sans-serif; outline: none; background: #fff9f9; }
+    .pdiv-desc:focus { border-color: var(--red); }
+    .pdiv-val { width: 88px; padding: 7px 10px; border: 1px solid #ffc5c5; border-radius: 6px; font-size: 0.88rem; font-family: 'Inter', sans-serif; text-align: right; outline: none; background: #fff9f9; }
+    .pdiv-val:focus { border-color: var(--red); }
+    .btn-add-pdiv { display: flex; align-items: center; gap: 6px; background: none; border: 1px dashed #ffaaaa; border-radius: 6px; padding: 7px 14px; cursor: pointer; font-size: 0.82rem; font-family: 'Inter', sans-serif; color: var(--red); transition: all .2s; width: 100%; box-sizing: border-box; }
+    .btn-add-pdiv:hover { border-color: var(--red); background: var(--red-light); }
+
+    /* ── RESULTADOS ── */
+    .result-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f5f0e8; }
+    .result-row:last-child { border-bottom: none; }
+    .result-row .r-label { font-size: 0.88rem; color: var(--text-muted); }
+    .result-row .r-val { font-size: 0.95rem; font-weight: 700; color: var(--dark); }
+    .result-row.highlight .r-label { font-weight: 700; color: var(--dark); }
+    .result-row.highlight .r-val { color: var(--gold); font-size: 1.05rem; }
+    .r-val.positivo { color: var(--green) !important; }
+    .r-val.negativo { color: var(--red) !important; }
+    .r-val.alerta   { color: var(--orange) !important; }
+
+    /* ── MENSAL ── */
+    .mensal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 700px) { .mensal-grid { grid-template-columns: 1fr; } }
+    .mensal-semanas-list { list-style: none; margin: 0 0 14px; padding: 0; }
+    .mensal-semana-item { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #f5f0e8; font-size: 0.9rem; }
+    .mensal-semana-item .ms-label { color: var(--text-muted); }
+    .mensal-semana-item .ms-val { font-weight: 600; color: var(--dark); }
+    .gasto-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .gasto-row label { flex: 1; font-size: 0.88rem; color: var(--text); }
+    .gasto-input { width: 100px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; font-family: 'Inter', sans-serif; text-align: right; outline: none; }
+    .gasto-input:focus { border-color: var(--gold); }
+    .gasto-nota { width: 100%; margin-top: 2px; padding: 5px 10px; border: 1px solid #eee; border-radius: 6px; font-size: 0.78rem; font-family: 'Inter', sans-serif; color: var(--text-muted); outline: none; resize: none; box-sizing: border-box; }
+    .gasto-nota:focus { border-color: var(--gold); }
+    .lucro-badge { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 0.9rem; font-weight: 700; }
+    .lucro-badge.pos { background: var(--green-light); color: var(--green); }
+    .lucro-badge.neg { background: var(--red-light); color: var(--red); }
+
+    /* ── RESUMO SEMANAS (mensal) ── */
+    .resumo-semanas-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    @media (max-width: 700px) { .resumo-semanas-grid { grid-template-columns: 1fr 1fr; } }
+    .resumo-semana-card { background: #fff; border-radius: 10px; padding: 14px 16px; box-shadow: var(--shadow); text-align: center; }
+    .resumo-semana-card .rs-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+    .resumo-semana-card .rs-val { font-size: 1.1rem; font-weight: 700; color: var(--dark); margin-top: 4px; }
+
+    /* ── DÍVIDAS TAB ── */
+    .dividas-resumo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+    @media (max-width: 600px) { .dividas-resumo { grid-template-columns: 1fr; } }
+    .divida-stat { background: #fff; border-radius: 12px; padding: 18px 20px; box-shadow: var(--shadow); }
+    .divida-stat .ds-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: .6px; color: var(--text-muted); margin-bottom: 6px; }
+    .divida-stat .ds-val { font-size: 1.5rem; font-weight: 800; }
+    .divida-stat.total .ds-val { color: var(--red); }
+    .divida-stat.pago .ds-val { color: var(--green); }
+    .divida-stat.restante .ds-val { color: var(--orange); }
+
+    .divida-list-wrap { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 22px 24px; }
+    .divida-list { list-style: none; margin: 0 0 16px; padding: 0; }
+    .divida-item { display: grid; grid-template-columns: 1fr 100px 100px 28px; gap: 8px; align-items: center; margin-bottom: 10px; }
+    @media (max-width: 600px) { .divida-item { grid-template-columns: 1fr 80px 80px 24px; } }
+    .divida-credor { padding: 7px 10px; border: 1px solid #ffcdd2; border-radius: 6px; font-size: 0.88rem; font-family: 'Inter', sans-serif; outline: none; background: #fff9f9; }
+    .divida-credor:focus { border-color: var(--red); }
+    .divida-total-inp { padding: 7px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.88rem; font-family: 'Inter', sans-serif; text-align: right; outline: none; }
+    .divida-total-inp:focus { border-color: var(--gold); }
+    .divida-pago-inp { padding: 7px 10px; border: 1px solid #c8e6c9; border-radius: 6px; font-size: 0.88rem; font-family: 'Inter', sans-serif; text-align: right; outline: none; background: #f9fff9; }
+    .divida-pago-inp:focus { border-color: var(--green); }
+    .divida-item-header { display: grid; grid-template-columns: 1fr 100px 100px 28px; gap: 8px; margin-bottom: 6px; }
+    @media (max-width: 600px) { .divida-item-header { grid-template-columns: 1fr 80px 80px 24px; } }
+    .divida-item-header span { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); font-weight: 700; padding: 0 10px; }
+    .divida-nota-row { grid-column: 1 / -1; margin-top: -4px; margin-bottom: 6px; }
+    .divida-nota-inp { width: 100%; padding: 5px 10px; border: 1px solid #eee; border-radius: 6px; font-size: 0.78rem; font-family: 'Inter', sans-serif; color: var(--text-muted); outline: none; box-sizing: border-box; }
+    .divida-nota-inp:focus { border-color: var(--gold); }
+    .btn-add-divida { display: flex; align-items: center; gap: 6px; background: none; border: 1px dashed #ffaaaa; border-radius: 6px; padding: 8px 16px; cursor: pointer; font-size: 0.82rem; font-family: 'Inter', sans-serif; color: var(--red); transition: all .2s; }
+    .btn-add-divida:hover { background: var(--red-light); }
+
+    /* ── NOTAS ── */
+    .nota-area { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 0.88rem; resize: vertical; outline: none; min-height: 60px; color: var(--text); box-sizing: border-box; }
+    .nota-area:focus { border-color: var(--gold); }
+
+    /* ── BOTÃO GUARDAR ── */
+    .btn-guardar { display: flex; align-items: center; gap: 8px; background: var(--dark); color: var(--gold); border: none; border-radius: 10px; padding: 11px 22px; font-family: 'Inter', sans-serif; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: background .2s; letter-spacing: .4px; }
+    .btn-guardar:hover { background: #2e2e4e; }
+    .save-row { display: flex; justify-content: flex-end; margin-top: 22px; }
+
+    /* ── TOAST ── */
+    #toast { position: fixed; bottom: 30px; right: 30px; background: var(--dark); color: var(--gold); padding: 12px 22px; border-radius: 10px; font-size: 0.88rem; font-weight: 600; box-shadow: 0 4px 20px rgba(0,0,0,.2); opacity: 0; transform: translateY(10px); transition: all .3s; z-index: 9999; pointer-events: none; }
+    #toast.show { opacity: 1; transform: translateY(0); }
+
+    /* ── SEPARADOR ── */
+    .sec-divider { height: 1px; background: #f0ead8; margin: 14px 0; }
+
+    /* ── DATA NAS ENCOMENDAS ── */
+    .enc-data { width: 126px; padding: 7px 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.82rem; font-family: 'Inter', sans-serif; outline: none; color: var(--text-muted); }
+    .enc-data:focus { border-color: var(--gold); }
+    .enc-auto { background: #fffdf5 !important; }
+    .enc-sync-tag { font-size: 0.75rem; color: #bbb; flex-shrink: 0; cursor: default; user-select: none; title-attr: "Importado da loja"; }
+
+    /* ── BOTÃO SYNC ── */
+    .btn-sync { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border: 1px solid #ddd; border-radius: 8px; background: #fff; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.82rem; font-weight: 600; color: var(--text-muted); transition: all .2s; white-space: nowrap; }
+    .btn-sync:hover { border-color: var(--gold); color: var(--gold); }
+    .btn-sync.loading { opacity: .55; pointer-events: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .btn-sync.loading .sync-icon { display: inline-block; animation: spin .8s linear infinite; }
+  </style>
+</head>
+<body>
+
+<div class="contas-wrapper">
+
+  <!-- CABEÇALHO -->
+  <div class="contas-header">
+    <h1>Contas do Atelier</h1>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <button class="btn-sync" id="btn-sync" onclick="sincronizarComLoja()" title="Importar pagamentos registados na loja para as semanas correctas">
+        <span class="sync-icon">↻</span> Sincronizar com Loja
+      </button>
+    </div>
+    <div class="mes-selector">
+      <label>Mês</label>
+      <button class="btn-mes-abrir" id="btn-mes-abrir" onclick="togglePicker()">
+        <span id="mes-label-display">—</span>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="mes-picker-popup" id="mes-picker-popup">
+        <div class="picker-header">
+          <button class="picker-nav" onclick="mudarAno(-1)">&#8249;</button>
+          <span class="picker-ano" id="picker-ano">2026</span>
+          <button class="picker-nav" onclick="mudarAno(1)">&#8250;</button>
+        </div>
+        <div class="picker-meses" id="picker-meses"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABAS PRINCIPAIS -->
+  <div class="tabs-main">
+    <button class="tab-btn active" onclick="mudarTab('semanal', this)">Semanal</button>
+    <button class="tab-btn" onclick="mudarTab('mensal', this)">Mensal</button>
+    <button class="tab-btn" onclick="mudarTab('dividas', this)">Dívidas</button>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       ABA SEMANAL
+  ══════════════════════════════════════ -->
+  <div id="tab-semanal" class="tab-content active">
+
+    <div class="semanas-tabs">
+      <button class="semana-btn active" onclick="mudarSemana(1, this)">Semana 1</button>
+      <button class="semana-btn" onclick="mudarSemana(2, this)">Semana 2</button>
+      <button class="semana-btn" onclick="mudarSemana(3, this)">Semana 3</button>
+      <button class="semana-btn" onclick="mudarSemana(4, this)">Semana 4</button>
+    </div>
+
+    <div class="semana-grid">
+
+      <!-- DISTRIBUIÇÃO -->
+      <div class="card">
+        <p class="card-title">Distribuição do Lucro</p>
+        <div class="dist-row">
+          <label>Atelier</label>
+          <input type="number" id="pct-atelier" class="dist-input" value="75" min="0" max="100" step="0.01" oninput="recalcular()">
+          <span>%</span>
+        </div>
+        <div class="dist-row">
+          <label>Salário</label>
+          <input type="number" id="pct-salario" class="dist-input" value="15" min="0" max="100" step="0.01" oninput="recalcular()">
+          <span>%</span>
+        </div>
+        <div class="dist-row">
+          <label>Empregados</label>
+          <input type="number" id="pct-empregados" class="dist-input" value="10" min="0" max="100" step="0.01" oninput="recalcular()">
+          <span>%</span>
+        </div>
+        <div class="dist-total-row">
+          <label>Total</label>
+          <span id="dist-total-val" class="dist-total-val">100%</span>
+        </div>
+      </div>
+
+      <!-- BÔNUS DE ENCOMENDAS -->
+      <div class="card">
+        <p class="card-title">Bônus de Encomendas</p>
+        <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 14px;">Valor pago a Weza e Rodrigo por encomendas angariadas.</p>
+        <div class="bonus-row">
+          <label>Weza</label>
+          <input type="number" id="bonus-weza" class="bonus-input" value="25" min="0" step="0.01" oninput="recalcular()">
+          <span class="bonus-label-small">€</span>
+        </div>
+        <div class="bonus-row">
+          <label>Rodrigo</label>
+          <input type="number" id="bonus-rodrigo" class="bonus-input" value="25" min="0" step="0.01" oninput="recalcular()">
+          <span class="bonus-label-small">€</span>
+        </div>
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid #f0ead8;">
+          <div class="result-row">
+            <span class="r-label">Total Bônus</span>
+            <span class="r-val" id="bonus-total">50,00 €</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ENCOMENDAS DA SEMANA -->
+      <div class="card card-full">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <p class="card-title" style="margin:0;">Encomendas da Semana</p>
+          <input type="text" id="enc-pesquisa" placeholder="Pesquisar cliente..."
+            oninput="filtrarEncomendas(this.value)"
+            style="padding:6px 12px;border:1px solid #ddd;border-radius:6px;font-size:0.83rem;font-family:'Inter',sans-serif;outline:none;width:200px;transition:border-color .2s;"
+            onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='#ddd'">
+        </div>
+        <ul class="enc-list" id="enc-list"></ul>
+        <button class="btn-add-enc" onclick="adicionarEncomenda()">
+          <span style="font-size:1.1rem;">+</span> Adicionar Encomenda
+        </button>
+      </div>
+
+      <!-- PAGAMENTOS DE DÍVIDA (SEMANAL) -->
+      <div class="card card-full" style="border-left: 3px solid var(--red);">
+        <p class="card-title" style="color:var(--red);">Pagamentos de Dívida desta Semana</p>
+        <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 14px;">Regista aqui os valores pagos a credores nesta semana.</p>
+        <ul class="pdiv-list" id="pdiv-list"></ul>
+        <button class="btn-add-pdiv" onclick="adicionarPagDivida()">
+          <span style="font-size:1.1rem;">+</span> Adicionar Pagamento de Dívida
+        </button>
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid #ffe0e0;">
+          <div class="result-row">
+            <span class="r-label">Total pago em dívidas esta semana</span>
+            <span class="r-val negativo" id="res-pdiv-total">0,00 €</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESULTADOS DA SEMANA -->
+      <div class="card card-full">
+        <p class="card-title">Resultados da Semana</p>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+          <div style="background:#fafaf8;border-radius:10px;padding:14px 16px;">
+            <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:6px;">Total Encomendas</div>
+            <div id="res-total" style="font-size:1.3rem;font-weight:800;color:var(--dark);">0,00 €</div>
+          </div>
+          <div style="background:#fafaf8;border-radius:10px;padding:14px 16px;">
+            <div class="r-label" id="lbl-atelier" style="margin-bottom:6px;font-size:0.8rem;">Atelier (75%)</div>
+            <div id="res-atelier" style="font-size:1.1rem;font-weight:700;color:var(--dark);">0,00 €</div>
+          </div>
+          <div style="background:#fafaf8;border-radius:10px;padding:14px 16px;">
+            <div class="r-label" id="lbl-salario" style="margin-bottom:6px;font-size:0.8rem;">Salário (15%)</div>
+            <div id="res-salario" style="font-size:1.1rem;font-weight:700;color:var(--dark);">0,00 €</div>
+          </div>
+          <div style="background:#fafaf8;border-radius:10px;padding:14px 16px;">
+            <div class="r-label" id="lbl-empregados" style="margin-bottom:6px;font-size:0.8rem;">Empregados (10%)</div>
+            <div id="res-empregados" style="font-size:1.1rem;font-weight:700;color:var(--dark);">0,00 €</div>
+          </div>
+        </div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid #f0ead8;">
+          <div class="result-row highlight">
+            <span class="r-label">Lucro Líquido (após bônus)</span>
+            <span class="r-val" id="res-liquido">0,00 €</span>
+          </div>
+          <div class="result-row" id="row-pdiv-result" style="display:none;">
+            <span class="r-label" style="color:var(--red);">− Pagamentos de dívida</span>
+            <span class="r-val negativo" id="res-liquido-pdiv">0,00 €</span>
+          </div>
+          <div class="result-row highlight" id="row-liquido-final" style="display:none;">
+            <span class="r-label">Saldo Final (após dívidas)</span>
+            <span class="r-val" id="res-liquido-final">0,00 €</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOTAS -->
+      <div class="card card-full">
+        <p class="card-title">Notas da Semana</p>
+        <textarea class="nota-area" id="nota-semana" placeholder="Observações, detalhes extras..."></textarea>
+      </div>
+
+    </div><!-- /semana-grid -->
+
+    <div class="save-row">
+      <button class="btn-guardar" onclick="guardarSemana()">&#10003; Guardar Semana</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       ABA MENSAL
+  ══════════════════════════════════════ -->
+  <div id="tab-mensal" class="tab-content">
+
+    <!-- Resumo rápido das 4 semanas -->
+    <div class="resumo-semanas-grid" id="resumo-semanas"></div>
+
+    <div class="mensal-grid">
+
+      <!-- ATELIER POR SEMANA -->
+      <div class="card">
+        <p class="card-title">Atelier — Por Semana</p>
+        <ul class="mensal-semanas-list" id="mensal-atelier-list"></ul>
+        <div class="result-row highlight">
+          <span class="r-label">Total Atelier</span>
+          <span class="r-val" id="mensal-atelier-total">0,00 €</span>
+        </div>
+      </div>
+
+      <!-- GASTOS FIXOS -->
+      <div class="card">
+        <p class="card-title">Gastos Fixos</p>
+        <div class="gasto-row">
+          <label>Contabilista + dívida espaço</label>
+          <input type="number" id="gasto-contabilista" class="gasto-input" value="50" min="0" step="0.01" oninput="recalcularMensal()">
+        </div>
+        <div class="gasto-row">
+          <label>Renda</label>
+          <input type="number" id="gasto-renda" class="gasto-input" value="500" min="0" step="0.01" oninput="recalcularMensal()">
+        </div>
+        <div class="gasto-row">
+          <label>Transporte + seg. social</label>
+          <input type="number" id="gasto-transporte" class="gasto-input" value="60" min="0" step="0.01" oninput="recalcularMensal()">
+        </div>
+        <div class="gasto-row" style="align-items:flex-start;flex-direction:column;gap:4px;">
+          <div style="display:flex;align-items:center;gap:8px;width:100%;">
+            <label style="flex:1;">Loja online e domínio</label>
+            <input type="number" id="gasto-loja" class="gasto-input" value="2.50" min="0" step="0.01" oninput="recalcularMensal()">
+          </div>
+          <textarea id="gasto-loja-nota" class="gasto-nota" rows="1" placeholder="Ex: 2.50 domínio, 27 Shopify..."></textarea>
+        </div>
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid #f0ead8;">
+          <div class="result-row highlight">
+            <span class="r-label">Total Gastos Fixos</span>
+            <span class="r-val" id="mensal-gastos-total">612,50 €</span>
+          </div>
+          <div style="font-size:0.78rem;color:var(--text-muted);margin-top:6px;" id="mensal-gastos-semana">≈ 153 €/semana</div>
+        </div>
+      </div>
+
+      <!-- LUCRO ESSENCIAL -->
+      <div class="card">
+        <p class="card-title">Lucro Essencial</p>
+        <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 16px;">Total Atelier − Gastos Fixos</p>
+        <div style="text-align:center;padding:16px 0;">
+          <span id="mensal-lucro-badge" class="lucro-badge neg">0,00 €</span>
+        </div>
+        <div class="result-row" style="margin-top:12px;">
+          <span class="r-label">Total Atelier</span>
+          <span class="r-val" id="mensal-lucro-atelier">0,00 €</span>
+        </div>
+        <div class="result-row">
+          <span class="r-label">− Gastos Fixos</span>
+          <span class="r-val" id="mensal-lucro-gastos">612,50 €</span>
+        </div>
+      </div>
+
+      <!-- SALÁRIOS -->
+      <div class="card">
+        <p class="card-title">Salário</p>
+        <ul class="mensal-semanas-list" id="mensal-salario-list"></ul>
+        <div class="result-row highlight">
+          <span class="r-label">Total Salário</span>
+          <span class="r-val" id="mensal-salario-total">0,00 €</span>
+        </div>
+      </div>
+
+      <!-- EMPREGADOS -->
+      <div class="card">
+        <p class="card-title">Empregados</p>
+        <ul class="mensal-semanas-list" id="mensal-empregados-list"></ul>
+        <div class="result-row highlight">
+          <span class="r-label">Total Empregados</span>
+          <span class="r-val" id="mensal-empregados-total">0,00 €</span>
+        </div>
+      </div>
+
+      <!-- DÍVIDAS DO MÊS -->
+      <div class="card" style="border-left:3px solid var(--red);">
+        <p class="card-title" style="color:var(--red);">Dívidas — Resumo do Mês</p>
+        <ul class="mensal-semanas-list" id="mensal-dividas-list"></ul>
+        <div style="margin-top:4px;padding-top:12px;border-top:1px solid #ffe0e0;">
+          <div class="result-row">
+            <span class="r-label">Total pago em dívidas este mês</span>
+            <span class="r-val negativo" id="mensal-pdiv-total">0,00 €</span>
+          </div>
+          <div class="result-row highlight">
+            <span class="r-label">Dívida total registada</span>
+            <span class="r-val negativo" id="mensal-divida-restante">0,00 €</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOTAS MENSAIS -->
+      <div class="card card-full">
+        <p class="card-title">Notas do Mês</p>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;">
+          <div style="flex:2;min-width:260px;">
+            <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:6px;">Observações</label>
+            <textarea class="nota-area" id="nota-mensal" style="min-height:50px;" placeholder="Notas gerais do mês..."></textarea>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /mensal-grid -->
+
+    <div class="save-row">
+      <button class="btn-guardar" onclick="guardarMensal()">&#10003; Guardar Mês</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       ABA DÍVIDAS
+  ══════════════════════════════════════ -->
+  <div id="tab-dividas" class="tab-content">
+
+    <!-- Resumo estatístico -->
+    <div class="dividas-resumo">
+      <div class="divida-stat total">
+        <div class="ds-label">Total em Dívida</div>
+        <div class="ds-val" id="div-stat-total">0,00 €</div>
+      </div>
+      <div class="divida-stat pago">
+        <div class="ds-label">Total Pago</div>
+        <div class="ds-val" id="div-stat-pago">0,00 €</div>
+      </div>
+      <div class="divida-stat restante">
+        <div class="ds-label">Ainda em Falta</div>
+        <div class="ds-val" id="div-stat-restante">0,00 €</div>
+      </div>
+    </div>
+
+    <!-- Lista de dívidas -->
+    <div class="divida-list-wrap">
+      <p class="card-title">Registo de Dívidas</p>
+      <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 16px;">Regista aqui todas as dívidas do atelier. O campo "Pago" atualiza o valor restante automaticamente.</p>
+
+      <div class="divida-item-header">
+        <span>Credor / Descrição</span>
+        <span style="text-align:right;">Total Dívida</span>
+        <span style="text-align:right;">Já Pago</span>
+        <span></span>
+      </div>
+
+      <ul class="divida-list" id="divida-list"></ul>
+
+      <button class="btn-add-divida" onclick="adicionarDivida()">
+        <span style="font-size:1.1rem;">+</span> Adicionar Dívida
+      </button>
+
+      <div class="sec-divider" style="margin-top:20px;"></div>
+
+      <div class="result-row highlight" style="margin-top:8px;">
+        <span class="r-label">Total Dívida Original</span>
+        <span class="r-val negativo" id="div-total-original">0,00 €</span>
+      </div>
+      <div class="result-row">
+        <span class="r-label">Total Pago</span>
+        <span class="r-val positivo" id="div-total-pago">0,00 €</span>
+      </div>
+      <div class="result-row highlight">
+        <span class="r-label">Restante a Pagar</span>
+        <span class="r-val alerta" id="div-total-restante">0,00 €</span>
+      </div>
+    </div>
+
+    <div class="save-row">
+      <button class="btn-guardar" onclick="guardarDividas()">&#10003; Guardar Dívidas</button>
+    </div>
+  </div>
+
+</div><!-- /contas-wrapper -->
+
+<!-- TOAST -->
+<div id="toast">Guardado!</div>
+
+<script>
+// ═══════════════════════════════════════════
+// ESTADO GLOBAL
+// ═══════════════════════════════════════════
+let mesAtual = '';
+let semanaAtual = 1;
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  // Inicializa cliente Supabase para contas
+  if (window.supabase && !window.supabaseClient) {
+    window.supabaseClient = window.supabase.createClient(
+      "https://cixjmwfkfmeedajpmzmp.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeGptd2ZrZm1lZWRhanBtem1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MzM5ODIsImV4cCI6MjA2OTEwOTk4Mn0.vFvgRMK_oabG19FNauNaBu_CoQTL8QRSXcptyfY6rbM"
+    );
+  }
+  popularMeses();
+  carregarSemana(1);
+  carregarMensal();
+  carregarDividas();
+  sincronizarComLoja();
+});
+
+const NOMES_MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                     'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+let pickerAno = new Date().getFullYear();
+
+function keyParaLabel(key) {
+  const [ano, mes] = key.split('-');
+  return `${NOMES_MESES[parseInt(mes) - 1]} ${ano}`;
+}
+
+function popularMeses() {
+  const hoje = new Date();
+  const mesGuardado = localStorage.getItem('contas_mes_atual');
+  mesAtual = mesGuardado || `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}`;
+  pickerAno = parseInt(mesAtual.split('-')[0]);
+  atualizarBotaoMes();
+  renderizarPicker();
+
+  // Fechar picker ao clicar fora
+  document.addEventListener('click', e => {
+    const popup  = document.getElementById('mes-picker-popup');
+    const botao  = document.getElementById('btn-mes-abrir');
+    if (!popup.contains(e.target) && !botao.contains(e.target)) {
+      fecharPicker();
+    }
+  });
+}
+
+function atualizarBotaoMes() {
+  document.getElementById('mes-label-display').textContent = keyParaLabel(mesAtual);
+}
+
+function togglePicker() {
+  const popup = document.getElementById('mes-picker-popup');
+  const btn   = document.getElementById('btn-mes-abrir');
+  const aberto = popup.classList.toggle('visivel');
+  btn.classList.toggle('aberto', aberto);
+  if (aberto) renderizarPicker();
+}
+
+function fecharPicker() {
+  document.getElementById('mes-picker-popup').classList.remove('visivel');
+  document.getElementById('btn-mes-abrir').classList.remove('aberto');
+}
+
+function mudarAno(delta) {
+  pickerAno += delta;
+  renderizarPicker();
+}
+
+function renderizarPicker() {
+  const hoje = new Date();
+  const hojeMes = hoje.getMonth() + 1;
+  const hojeAno = hoje.getFullYear();
+  const [selAno, selMes] = mesAtual.split('-').map(Number);
+
+  document.getElementById('picker-ano').textContent = pickerAno;
+
+  const grid = document.getElementById('picker-meses');
+  grid.innerHTML = '';
+  NOMES_MESES.forEach((nome, i) => {
+    const mes = i + 1;
+    const key = `${pickerAno}-${String(mes).padStart(2,'0')}`;
+    const btn = document.createElement('button');
+    btn.className = 'picker-mes-btn';
+    btn.textContent = nome.substring(0, 3); // abreviatura: Jan, Fev...
+    if (mes === selMes && pickerAno === selAno) btn.classList.add('selecionado');
+    if (mes === hojeMes && pickerAno === hojeAno) btn.classList.add('hoje');
+    btn.onclick = () => selecionarMes(key);
+    grid.appendChild(btn);
+  });
+}
+
+function selecionarMes(key) {
+  guardarEstadoAtual();
+  mesAtual = key;
+  localStorage.setItem('contas_mes_atual', mesAtual);
+  atualizarBotaoMes();
+  fecharPicker();
+  carregarSemana(semanaAtual);
+  carregarMensal();
+  sincronizarComLoja();
+}
+
+// ═══════════════════════════════════════════
+// NAVEGAÇÃO ABAS
+// ═══════════════════════════════════════════
+function mudarTab(tab, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'mensal')  carregarMensal();
+  if (tab === 'dividas') carregarDividas();
+}
+
+function mudarSemana(n, btn) {
+  guardarEstadoAtual();
+  document.querySelectorAll('.semana-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  semanaAtual = n;
+  carregarSemana(n);
+}
+
+// ═══════════════════════════════════════════
+// CHAVES STORAGE
+// ═══════════════════════════════════════════
+function chaveSemana(n) { return `contas_${mesAtual}_s${n}`; }
+function chaveMensal()  { return `contas_${mesAtual}_mensal`; }
+const CHAVE_DIVIDAS = 'contas_dividas_global';
+
+// ═══════════════════════════════════════════
+// ENCOMENDAS
+// ═══════════════════════════════════════════
+function filtrarEncomendas(termo) {
+  const t = termo.toLowerCase().trim();
+  document.querySelectorAll('#enc-list .enc-item').forEach(item => {
+    const nome = (item.querySelector('.enc-nome')?.value || '').toLowerCase();
+    item.style.display = (!t || nome.includes(t)) ? '' : 'none';
+  });
+}
+function adicionarEncomenda(nome = '', valor = '', data = '', autoSync = false) {
+  const li = document.createElement('li');
+  li.className = 'enc-item' + (autoSync ? ' enc-auto' : '');
+  if (autoSync) li.dataset.autoSync = '1';
+  li.innerHTML = `
+    <input type="text"   class="enc-nome"  placeholder="Nome do cliente" value="${esc(nome)}" oninput="recalcular()">
+    <input type="date"   class="enc-data"  value="${data}">
+    <input type="number" class="enc-valor" placeholder="0,00" value="${valor}" min="0" step="0.01" oninput="recalcular()">
+    ${autoSync ? '<span class="enc-sync-tag" title="Importado da loja">🔗</span>' : ''}
+    <button class="btn-remover" onclick="this.closest(\'.enc-item\').remove();recalcular()" title="Remover">×</button>`;
+  document.getElementById('enc-list').appendChild(li);
+  recalcular();
+}
+
+// ═══════════════════════════════════════════
+// PAGAMENTOS DE DÍVIDA (semanal)
+// ═══════════════════════════════════════════
+function adicionarPagDivida(desc = '', val = '') {
+  const li = document.createElement('li');
+  li.className = 'pdiv-item';
+  li.innerHTML = `
+    <input type="text"   class="pdiv-desc" placeholder="Ex: Renda Março, Contabilista..." value="${esc(desc)}" oninput="recalcular()">
+    <input type="number" class="pdiv-val"  placeholder="0,00" value="${val}" min="0" step="0.01" oninput="recalcular()">
+    <button class="btn-remover" onclick="this.closest('.pdiv-item').remove();recalcular()" title="Remover">×</button>`;
+  document.getElementById('pdiv-list').appendChild(li);
+  recalcular();
+}
+
+// ═══════════════════════════════════════════
+// RECALCULAR SEMANAL
+// ═══════════════════════════════════════════
+function recalcular() {
+  const pctA = parseFloat(document.getElementById('pct-atelier').value)    || 0;
+  const pctS = parseFloat(document.getElementById('pct-salario').value)    || 0;
+  const pctE = parseFloat(document.getElementById('pct-empregados').value) || 0;
+
+  const totalPct = pctA + pctS + pctE;
+  const dtv = document.getElementById('dist-total-val');
+  dtv.textContent = totalPct.toFixed(2).replace('.',',') + '%';
+  dtv.style.color = Math.abs(totalPct - 100) < 0.01 ? 'var(--green)' : 'var(--red)';
+
+  let totalEnc = 0;
+  document.querySelectorAll('.enc-valor').forEach(i => totalEnc += parseFloat(i.value) || 0);
+
+  const bW = parseFloat(document.getElementById('bonus-weza').value)    || 0;
+  const bR = parseFloat(document.getElementById('bonus-rodrigo').value) || 0;
+  const totalBonus = bW + bR;
+
+  const atelierV    = totalEnc * pctA / 100;
+  const salarioV    = totalEnc * pctS / 100;
+  const empregadosV = totalEnc * pctE / 100;
+  const liquido     = atelierV - totalBonus;
+
+  // Pagamentos de dívida
+  let totalPDiv = 0;
+  document.querySelectorAll('.pdiv-val').forEach(i => totalPDiv += parseFloat(i.value) || 0);
+
+  document.getElementById('bonus-total').textContent    = fmt(totalBonus);
+  document.getElementById('res-total').textContent      = fmt(totalEnc);
+  document.getElementById('res-atelier').textContent    = fmt(atelierV);
+  document.getElementById('res-salario').textContent    = fmt(salarioV);
+  document.getElementById('res-empregados').textContent = fmt(empregadosV);
+  document.getElementById('lbl-atelier').textContent    = `Atelier (${pctA}%)`;
+  document.getElementById('lbl-salario').textContent    = `Salário (${pctS}%)`;
+  document.getElementById('lbl-empregados').textContent = `Empregados (${pctE}%)`;
+
+  const liqEl = document.getElementById('res-liquido');
+  liqEl.textContent = fmt(liquido);
+  liqEl.className   = 'r-val ' + (liquido >= 0 ? 'positivo' : 'negativo');
+
+  document.getElementById('res-pdiv-total').textContent = fmt(totalPDiv);
+
+  const hasPDiv = totalPDiv > 0;
+  document.getElementById('row-pdiv-result').style.display   = hasPDiv ? '' : 'none';
+  document.getElementById('row-liquido-final').style.display = hasPDiv ? '' : 'none';
+
+  if (hasPDiv) {
+    const final = liquido - totalPDiv;
+    document.getElementById('res-liquido-pdiv').textContent = fmt(totalPDiv);
+    const fEl = document.getElementById('res-liquido-final');
+    fEl.textContent = fmt(final);
+    fEl.className   = 'r-val ' + (final >= 0 ? 'positivo' : 'negativo');
+  }
+}
+
+// ═══════════════════════════════════════════
+// RECALCULAR MENSAL
+// ═══════════════════════════════════════════
+function recalcularMensal() {
+  const c = parseFloat(document.getElementById('gasto-contabilista').value) || 0;
+  const r = parseFloat(document.getElementById('gasto-renda').value)        || 0;
+  const t = parseFloat(document.getElementById('gasto-transporte').value)   || 0;
+  const l = parseFloat(document.getElementById('gasto-loja').value)         || 0;
+  const totalGastos = c + r + t + l;
+
+  document.getElementById('mensal-gastos-total').textContent  = fmt(totalGastos);
+  document.getElementById('mensal-gastos-semana').textContent = `≈ ${fmt(totalGastos / 4)}/semana`;
+  document.getElementById('mensal-lucro-gastos').textContent  = fmt(totalGastos);
+
+  let totalAtelier = 0, totalSalario = 0, totalEmpregados = 0, totalPDivMes = 0;
+
+  const aL = document.getElementById('mensal-atelier-list');
+  const sL = document.getElementById('mensal-salario-list');
+  const eL = document.getElementById('mensal-empregados-list');
+  const dL = document.getElementById('mensal-dividas-list');
+  const rs = document.getElementById('resumo-semanas');
+  aL.innerHTML = sL.innerHTML = eL.innerHTML = dL.innerHTML = rs.innerHTML = '';
+
+  for (let i = 1; i <= 4; i++) {
+    const raw = localStorage.getItem(chaveSemana(i));
+    let aV = 0, sV = 0, eV = 0, pdivV = 0;
+
+    if (raw) {
+      const d = JSON.parse(raw);
+      const pA = d.pctAtelier || 75, pS = d.pctSalario || 15, pE = d.pctEmpregados || 10;
+      const tot = (d.encomendas || []).reduce((s, e) => s + (parseFloat(e.valor) || 0), 0);
+      aV = tot * pA / 100;
+      sV = tot * pS / 100;
+      eV = tot * pE / 100;
+      pdivV = (d.pagamentosDivida || []).reduce((s, p) => s + (parseFloat(p.valor) || 0), 0);
+    }
+
+    totalAtelier += aV; totalSalario += sV; totalEmpregados += eV; totalPDivMes += pdivV;
+
+    const li = (lbl, val) => {
+      const el = document.createElement('li');
+      el.className = 'mensal-semana-item';
+      el.innerHTML = `<span class="ms-label">${lbl}</span><span class="ms-val">${fmt(val)}</span>`;
+      return el;
+    };
+    aL.appendChild(li(`${i}ª Semana`, aV));
+    sL.appendChild(li(`${i}ª Semana`, sV));
+    eL.appendChild(li(`${i}ª Semana`, eV));
+
+    if (pdivV > 0) {
+      const d2 = document.createElement('li');
+      d2.className = 'mensal-semana-item';
+      d2.innerHTML = `<span class="ms-label" style="color:var(--red)">${i}ª Semana (pago)</span><span class="ms-val" style="color:var(--red)">− ${fmt(pdivV)}</span>`;
+      dL.appendChild(d2);
+    }
+
+    const card = document.createElement('div');
+    card.className = 'resumo-semana-card';
+    card.innerHTML = `<div class="rs-label">${i}ª Semana</div><div class="rs-val">${fmt(aV)}</div>`;
+    rs.appendChild(card);
+  }
+
+  document.getElementById('mensal-atelier-total').textContent    = fmt(totalAtelier);
+  document.getElementById('mensal-salario-total').textContent    = fmt(totalSalario);
+  document.getElementById('mensal-empregados-total').textContent = fmt(totalEmpregados);
+  document.getElementById('mensal-lucro-atelier').textContent    = fmt(totalAtelier);
+  document.getElementById('mensal-pdiv-total').textContent       = fmt(totalPDivMes);
+
+  const lucro = totalAtelier - totalGastos;
+  const badge = document.getElementById('mensal-lucro-badge');
+  badge.textContent = fmt(lucro);
+  badge.className   = 'lucro-badge ' + (lucro >= 0 ? 'pos' : 'neg');
+
+  // Dívida total restante das dívidas globais
+  const divRaw = localStorage.getItem(CHAVE_DIVIDAS);
+  let totalRestante = 0;
+  if (divRaw) {
+    const divs = JSON.parse(divRaw);
+    divs.forEach(d => {
+      const rest = (parseFloat(d.total) || 0) - (parseFloat(d.pago) || 0);
+      totalRestante += Math.max(rest, 0);
+    });
+  }
+  document.getElementById('mensal-divida-restante').textContent = fmt(totalRestante);
+}
+
+// ═══════════════════════════════════════════
+// DÍVIDAS GLOBAIS (aba Dívidas)
+// ═══════════════════════════════════════════
+function adicionarDivida(credor = '', total = '', pago = '', nota = '') {
+  const li = document.createElement('li');
+  li.className = 'divida-item';
+  li.style.display = 'block';
+
+  const row = document.createElement('div');
+  row.style.cssText = 'display:grid;grid-template-columns:1fr 100px 100px 28px;gap:8px;align-items:center;margin-bottom:4px;';
+  row.innerHTML = `
+    <input type="text"   class="divida-credor"    placeholder="Quem se deve / Descrição" value="${esc(credor)}" oninput="recalcularDividas()">
+    <input type="number" class="divida-total-inp" placeholder="0,00" value="${total}" min="0" step="0.01" oninput="recalcularDividas()">
+    <input type="number" class="divida-pago-inp"  placeholder="0,00" value="${pago}"  min="0" step="0.01" oninput="recalcularDividas()">
+    <button class="btn-remover" onclick="this.closest('li').remove();recalcularDividas()" title="Remover">×</button>`;
+
+  const notaRow = document.createElement('div');
+  notaRow.style.marginBottom = '10px';
+  notaRow.innerHTML = `<input type="text" class="divida-nota-inp" placeholder="Nota (opcional)..." value="${esc(nota)}">`;
+
+  li.appendChild(row);
+  li.appendChild(notaRow);
+  document.getElementById('divida-list').appendChild(li);
+  recalcularDividas();
+}
+
+function recalcularDividas() {
+  let totalOrig = 0, totalPago = 0;
+  document.querySelectorAll('#divida-list li').forEach(li => {
+    const tot  = parseFloat(li.querySelector('.divida-total-inp').value) || 0;
+    const pago = parseFloat(li.querySelector('.divida-pago-inp').value)  || 0;
+    totalOrig += tot;
+    totalPago += pago;
+  });
+  const restante = Math.max(totalOrig - totalPago, 0);
+  document.getElementById('div-stat-total').textContent    = fmt(totalOrig);
+  document.getElementById('div-stat-pago').textContent     = fmt(totalPago);
+  document.getElementById('div-stat-restante').textContent = fmt(restante);
+  document.getElementById('div-total-original').textContent = fmt(totalOrig);
+  document.getElementById('div-total-pago').textContent     = fmt(totalPago);
+  document.getElementById('div-total-restante').textContent = fmt(restante);
+}
+
+function guardarDividas() {
+  const divs = [];
+  document.querySelectorAll('#divida-list li').forEach(li => {
+    divs.push({
+      credor: li.querySelector('.divida-credor').value,
+      total:  li.querySelector('.divida-total-inp').value,
+      pago:   li.querySelector('.divida-pago-inp').value,
+      nota:   li.querySelector('.divida-nota-inp').value,
+    });
+  });
+  localStorage.setItem(CHAVE_DIVIDAS, JSON.stringify(divs));
+  mostrarToast('Dívidas guardadas!');
+}
+
+function carregarDividas() {
+  document.getElementById('divida-list').innerHTML = '';
+  const raw = localStorage.getItem(CHAVE_DIVIDAS);
+  if (raw) {
+    JSON.parse(raw).forEach(d => adicionarDivida(d.credor, d.total, d.pago, d.nota));
+  }
+  recalcularDividas();
+}
+
+// ═══════════════════════════════════════════
+// GUARDAR / CARREGAR SEMANA
+// ═══════════════════════════════════════════
+function dadosSemanaAtual() {
+  const encomendas = [];
+  document.querySelectorAll('#enc-list .enc-item').forEach(item => {
+    encomendas.push({
+      nome:      item.querySelector('.enc-nome').value,
+      valor:     item.querySelector('.enc-valor').value,
+      data:      item.querySelector('.enc-data') ? item.querySelector('.enc-data').value : '',
+      autoSync:  item.dataset.autoSync === '1',
+    });
+  });
+  const pagamentosDivida = [];
+  document.querySelectorAll('#pdiv-list .pdiv-item').forEach(item => {
+    pagamentosDivida.push({ descricao: item.querySelector('.pdiv-desc').value, valor: item.querySelector('.pdiv-val').value });
+  });
+  return {
+    pctAtelier:    parseFloat(document.getElementById('pct-atelier').value)    || 75,
+    pctSalario:    parseFloat(document.getElementById('pct-salario').value)    || 15,
+    pctEmpregados: parseFloat(document.getElementById('pct-empregados').value) || 10,
+    bonusWeza:     parseFloat(document.getElementById('bonus-weza').value)     || 0,
+    bonusRodrigo:  parseFloat(document.getElementById('bonus-rodrigo').value)  || 0,
+    encomendas,
+    pagamentosDivida,
+    nota: document.getElementById('nota-semana').value,
+  };
+}
+
+function guardarEstadoAtual() {
+  localStorage.setItem(chaveSemana(semanaAtual), JSON.stringify(dadosSemanaAtual()));
+}
+
+function guardarSemana() {
+  guardarEstadoAtual();
+  mostrarToast('Semana guardada!');
+}
+
+function carregarSemana(n) {
+  document.getElementById('enc-list').innerHTML  = '';
+  document.getElementById('pdiv-list').innerHTML = '';
+  const pesq = document.getElementById('enc-pesquisa');
+  if (pesq) pesq.value = '';
+  const raw = localStorage.getItem(chaveSemana(n));
+  if (raw) {
+    const d = JSON.parse(raw);
+    document.getElementById('pct-atelier').value    = d.pctAtelier    ?? 75;
+    document.getElementById('pct-salario').value    = d.pctSalario    ?? 15;
+    document.getElementById('pct-empregados').value = d.pctEmpregados ?? 10;
+    document.getElementById('bonus-weza').value     = d.bonusWeza     ?? 25;
+    document.getElementById('bonus-rodrigo').value  = d.bonusRodrigo  ?? 25;
+    document.getElementById('nota-semana').value    = d.nota          || '';
+    (d.encomendas       || []).forEach(e => adicionarEncomenda(e.nome, e.valor, e.data || '', e.autoSync || false));
+    (d.pagamentosDivida || []).forEach(p => adicionarPagDivida(p.descricao, p.valor));
+  } else {
+    document.getElementById('pct-atelier').value    = 75;
+    document.getElementById('pct-salario').value    = 15;
+    document.getElementById('pct-empregados').value = 10;
+    document.getElementById('bonus-weza').value     = 25;
+    document.getElementById('bonus-rodrigo').value  = 25;
+    document.getElementById('nota-semana').value    = '';
+    adicionarEncomenda();
+  }
+  recalcular();
+}
+
+// ═══════════════════════════════════════════
+// GUARDAR / CARREGAR MENSAL
+// ═══════════════════════════════════════════
+function guardarMensal() {
+  const dados = {
+    gastoContabilista: parseFloat(document.getElementById('gasto-contabilista').value) || 0,
+    gastoRenda:        parseFloat(document.getElementById('gasto-renda').value)        || 0,
+    gastoTransporte:   parseFloat(document.getElementById('gasto-transporte').value)   || 0,
+    gastoLoja:         parseFloat(document.getElementById('gasto-loja').value)         || 0,
+    gastoLojaNota:     document.getElementById('gasto-loja-nota').value,
+    nota:              document.getElementById('nota-mensal').value,
+  };
+  localStorage.setItem(chaveMensal(), JSON.stringify(dados));
+  mostrarToast('Mês guardado!');
+}
+
+function carregarMensal() {
+  const raw = localStorage.getItem(chaveMensal());
+  if (raw) {
+    const d = JSON.parse(raw);
+    document.getElementById('gasto-contabilista').value = d.gastoContabilista ?? 50;
+    document.getElementById('gasto-renda').value        = d.gastoRenda        ?? 500;
+    document.getElementById('gasto-transporte').value   = d.gastoTransporte   ?? 60;
+    document.getElementById('gasto-loja').value         = d.gastoLoja         ?? 2.50;
+    document.getElementById('gasto-loja-nota').value    = d.gastoLojaNota     || '';
+    document.getElementById('nota-mensal').value        = d.nota              || '';
+  } else {
+    document.getElementById('gasto-contabilista').value = 50;
+    document.getElementById('gasto-renda').value        = 500;
+    document.getElementById('gasto-transporte').value   = 60;
+    document.getElementById('gasto-loja').value         = 2.50;
+  }
+  recalcularMensal();
+}
+
+// ═══════════════════════════════════════════
+// UTILITÁRIOS
+// ═══════════════════════════════════════════
+function fmt(val) {
+  return val.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' });
+}
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function mostrarToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ═══════════════════════════════════════════
+// SINCRONIZAÇÃO COM SUPABASE
+// Semana 1: dias 1-7 | Semana 2: 8-14 | Semana 3: 15-21 | Semana 4: 22-fim
+// ═══════════════════════════════════════════
+async function sincronizarComLoja() {
+  const db = window.supabaseClient;
+  if (!db) return;
+
+  const btn = document.getElementById('btn-sync');
+  if (btn) btn.classList.add('loading');
+
+  try {
+    const [ano, mes] = mesAtual.split('-').map(Number);
+
+    const { data: pedidos, error } = await db
+      .from('pedidos')
+      .select('nome, pagamentos, valor_adiantado, data_real, data_pedido');
+
+    if (error) throw error;
+
+    // Agrupa pagamentos por semana do mês seleccionado
+    const semanas = { 1: [], 2: [], 3: [], 4: [] };
+
+    pedidos.forEach(p => {
+      let pgmts = [];
+      try {
+        pgmts = p.pagamentos
+          ? (typeof p.pagamentos === 'string' ? JSON.parse(p.pagamentos) : p.pagamentos)
+          : [];
+      } catch(e) { pgmts = []; }
+
+      pgmts.forEach(pag => {
+        if (!pag.data) return;
+        const partes = pag.data.split('-').map(Number);
+        if (partes[0] !== ano || partes[1] !== mes) return;
+        const dia = partes[2];
+        const s = dia <= 7 ? 1 : dia <= 14 ? 2 : dia <= 21 ? 3 : 4;
+        semanas[s].push({
+          nome:     p.nome + (pag.nota ? ` (${pag.nota})` : ''),
+          valor:    pag.valor,
+          data:     pag.data,
+          autoSync: true,
+        });
+      });
+    });
+
+    // Salva cada semana preservando entradas manuais
+    for (let s = 1; s <= 4; s++) {
+      const chave = chaveSemana(s);
+      let d = {};
+      try { d = JSON.parse(localStorage.getItem(chave)) || {}; } catch(e) {}
+      const manuais = (d.encomendas || []).filter(e => !e.autoSync);
+      d.encomendas = [...semanas[s], ...manuais];
+      localStorage.setItem(chave, JSON.stringify(d));
+    }
+
+    carregarSemana(semanaAtual);
+    mostrarToast('Sincronizado!');
+  } catch(err) {
+    console.error('Erro na sincronização:', err);
+    mostrarToast('Erro ao sincronizar.');
+  } finally {
+    if (btn) btn.classList.remove('loading');
+  }
+}
+</script>
+</body>
+</html>
