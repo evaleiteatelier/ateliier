@@ -6,6 +6,7 @@
   <title>Contas - Eva Leite Atelier</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="auth-guard.js"></script>
   <script src="navbar.js" defer></script>
 
@@ -238,6 +239,40 @@
     .btn-sync.loading { opacity: .55; pointer-events: none; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .btn-sync.loading .sync-icon { display: inline-block; animation: spin .8s linear infinite; }
+
+    /* ── GRÁFICO ── */
+    .grafico-ano-row { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+    .grafico-ano-row label { font-size: 0.82rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .6px; }
+    .ano-nav { background: none; border: 1px solid #eee; border-radius: 6px; width: 30px; height: 30px; cursor: pointer; font-size: 1.1rem; color: var(--text-muted); display: flex; align-items: center; justify-content: center; transition: all .2s; }
+    .ano-nav:hover { border-color: var(--gold); color: var(--gold); }
+    .ano-val { font-size: 1rem; font-weight: 700; color: var(--dark); min-width: 44px; text-align: center; }
+
+    .metas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    @media (max-width: 600px) { .metas-grid { grid-template-columns: 1fr; } }
+    .meta-card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 22px; display: flex; align-items: center; gap: 16px; }
+    .meta-icon { font-size: 1.6rem; flex-shrink: 0; }
+    .meta-info { flex: 1; }
+    .meta-info label { display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: .6px; color: var(--text-muted); margin-bottom: 4px; }
+    .meta-inp-row { display: flex; align-items: center; gap: 6px; }
+    .meta-inp { width: 110px; padding: 7px 10px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 1rem; font-weight: 700; font-family: 'Inter', sans-serif; color: var(--dark); outline: none; text-align: right; }
+    .meta-inp:focus { border-color: var(--gold); }
+    .meta-badge { font-size: 0.78rem; color: var(--text-muted); }
+
+    .chart-card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 22px 24px; margin-bottom: 20px; }
+    .chart-card canvas { max-height: 300px; }
+
+    .pontos-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 24px; }
+    @media (max-width: 700px) { .pontos-grid { grid-template-columns: repeat(3, 1fr); } }
+    .ponto-card { background: #fff; border-radius: 10px; box-shadow: var(--shadow); padding: 12px 10px; text-align: center; }
+    .ponto-mes { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-bottom: 6px; }
+    .ponto-anel { position: relative; width: 56px; height: 56px; margin: 0 auto 6px; }
+    .ponto-anel svg { transform: rotate(-90deg); }
+    .ponto-anel .anel-bg  { fill: none; stroke: #f0ead8; stroke-width: 5; }
+    .ponto-anel .anel-val { fill: none; stroke-width: 5; stroke-linecap: round; transition: stroke-dashoffset .5s ease; }
+    .ponto-pct { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; color: var(--dark); }
+    .ponto-vals { font-size: 0.7rem; color: var(--text-muted); }
+    .ponto-vals span { display: block; }
+    .ponto-vals .pv-real { font-weight: 600; color: var(--dark); font-size: 0.78rem; }
   </style>
 </head>
 <body>
@@ -276,6 +311,7 @@
     <button class="tab-btn active" onclick="mudarTab('semanal', this)">Semanal</button>
     <button class="tab-btn" onclick="mudarTab('mensal', this)">Mensal</button>
     <button class="tab-btn" onclick="mudarTab('dividas', this)">Dívidas</button>
+    <button class="tab-btn" onclick="mudarTab('grafico', this)">Gráfico</button>
   </div>
 
   <!-- ══════════════════════════════════════
@@ -601,6 +637,55 @@
     </div>
   </div>
 
+  <!-- ══════════════════════════════════════
+       ABA GRÁFICO
+  ══════════════════════════════════════ -->
+  <div id="tab-grafico" class="tab-content">
+
+    <!-- Seletor de ano -->
+    <div class="grafico-ano-row">
+      <label>Ano</label>
+      <button class="ano-nav" onclick="mudarAnoGrafico(-1)">&#8249;</button>
+      <span class="ano-val" id="grafico-ano-label">2026</span>
+      <button class="ano-nav" onclick="mudarAnoGrafico(1)">&#8250;</button>
+    </div>
+
+    <!-- Metas editáveis -->
+    <div class="metas-grid">
+      <div class="meta-card">
+        <div class="meta-icon">🏛️</div>
+        <div class="meta-info">
+          <label>Meta Mensal — Atelier</label>
+          <div class="meta-inp-row">
+            <input type="number" id="meta-atelier" class="meta-inp" value="3000" min="0" step="1" oninput="guardarMetasERenderizar()">
+            <span class="meta-badge">€ / mês</span>
+          </div>
+        </div>
+      </div>
+      <div class="meta-card">
+        <div class="meta-icon">💼</div>
+        <div class="meta-info">
+          <label>Meta Mensal — Salário</label>
+          <div class="meta-inp-row">
+            <input type="number" id="meta-salario" class="meta-inp" value="1000" min="0" step="1" oninput="guardarMetasERenderizar()">
+            <span class="meta-badge">€ / mês</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráfico principal -->
+    <div class="chart-card">
+      <p class="card-title" style="margin-bottom:16px;">Evolução Anual vs Meta</p>
+      <canvas id="grafico-evolucao"></canvas>
+    </div>
+
+    <!-- Pontos mensais -->
+    <p class="card-title" style="margin-bottom:14px;">Progresso por Mês</p>
+    <div class="pontos-grid" id="pontos-grid"></div>
+
+  </div>
+
 </div><!-- /contas-wrapper -->
 
 <!-- TOAST -->
@@ -725,6 +810,7 @@ function mudarTab(tab, btn) {
   document.getElementById('tab-' + tab).classList.add('active');
   if (tab === 'mensal')  carregarMensal();
   if (tab === 'dividas') carregarDividas();
+  if (tab === 'grafico') { carregarMetas(); graficoAno = parseInt(mesAtual.split('-')[0]); document.getElementById('grafico-ano-label').textContent = graficoAno; renderizarGrafico(); }
 }
 
 function mudarSemana(n, btn) {
@@ -1104,6 +1190,181 @@ function mostrarToast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ═══════════════════════════════════════════
+// GRÁFICO DE CRESCIMENTO
+// ═══════════════════════════════════════════
+const NOMES_MESES_ABREV = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+let graficoAno = new Date().getFullYear();
+let chartInstance = null;
+
+function mudarAnoGrafico(delta) {
+  graficoAno += delta;
+  document.getElementById('grafico-ano-label').textContent = graficoAno;
+  renderizarGrafico();
+}
+
+function guardarMetasERenderizar() {
+  const metas = {
+    atelier: parseFloat(document.getElementById('meta-atelier').value) || 3000,
+    salario: parseFloat(document.getElementById('meta-salario').value) || 1000,
+  };
+  localStorage.setItem('contas_metas', JSON.stringify(metas));
+  renderizarGrafico();
+}
+
+function carregarMetas() {
+  const raw = localStorage.getItem('contas_metas');
+  if (raw) {
+    const m = JSON.parse(raw);
+    document.getElementById('meta-atelier').value = m.atelier ?? 3000;
+    document.getElementById('meta-salario').value = m.salario ?? 1000;
+  }
+}
+
+// Lê os totais mensais (Atelier e Salário) de um dado ano-mês a partir do localStorage semanal
+function lerTotaisMes(ano, mes) {
+  const key = `${ano}-${String(mes).padStart(2,'0')}`;
+  let totalAtelier = 0, totalSalario = 0;
+  for (let s = 1; s <= 4; s++) {
+    const raw = localStorage.getItem(`contas_${key}_s${s}`);
+    if (!raw) continue;
+    const d = JSON.parse(raw);
+    const pA = d.pctAtelier || 75, pS = d.pctSalario || 15;
+    const tot = (d.encomendas || []).reduce((acc, e) => acc + (parseFloat(e.valor) || 0), 0);
+    totalAtelier += tot * pA / 100;
+    totalSalario += tot * pS / 100;
+  }
+  return { atelier: totalAtelier, salario: totalSalario };
+}
+
+function renderizarGrafico() {
+  const metaAtelier = parseFloat(document.getElementById('meta-atelier').value) || 3000;
+  const metaSalario = parseFloat(document.getElementById('meta-salario').value) || 1000;
+
+  const dadosAtelier = [], dadosSalario = [];
+  for (let m = 1; m <= 12; m++) {
+    const t = lerTotaisMes(graficoAno, m);
+    dadosAtelier.push(parseFloat(t.atelier.toFixed(2)));
+    dadosSalario.push(parseFloat(t.salario.toFixed(2)));
+  }
+
+  // ── Gráfico Chart.js ──
+  const ctx = document.getElementById('grafico-evolucao').getContext('2d');
+  if (chartInstance) chartInstance.destroy();
+
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: NOMES_MESES_ABREV,
+      datasets: [
+        {
+          label: 'Atelier (real)',
+          data: dadosAtelier,
+          borderColor: '#d4af37',
+          backgroundColor: 'rgba(212,175,55,.12)',
+          borderWidth: 2.5,
+          pointRadius: 5,
+          pointBackgroundColor: '#d4af37',
+          tension: 0.35,
+          fill: true,
+          order: 2,
+        },
+        {
+          label: 'Salário (real)',
+          data: dadosSalario,
+          borderColor: '#2e7d32',
+          backgroundColor: 'rgba(46,125,50,.08)',
+          borderWidth: 2.5,
+          pointRadius: 5,
+          pointBackgroundColor: '#2e7d32',
+          tension: 0.35,
+          fill: true,
+          order: 3,
+        },
+        {
+          label: `Meta Atelier (${metaAtelier}€)`,
+          data: Array(12).fill(metaAtelier),
+          borderColor: '#d4af37',
+          borderWidth: 1.5,
+          borderDash: [6, 4],
+          pointRadius: 0,
+          fill: false,
+          tension: 0,
+          order: 1,
+        },
+        {
+          label: `Meta Salário (${metaSalario}€)`,
+          data: Array(12).fill(metaSalario),
+          borderColor: '#2e7d32',
+          borderWidth: 1.5,
+          borderDash: [6, 4],
+          pointRadius: 0,
+          fill: false,
+          tension: 0,
+          order: 0,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { font: { family: 'Inter', size: 12 }, boxWidth: 14 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString('pt-PT', { style:'currency', currency:'EUR' })}`,
+          },
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: v => v.toLocaleString('pt-PT', { style:'currency', currency:'EUR', maximumFractionDigits: 0 }),
+            font: { family: 'Inter', size: 11 },
+          },
+          grid: { color: '#f0ead8' },
+        },
+        x: { ticks: { font: { family: 'Inter', size: 12 } }, grid: { display: false } },
+      },
+    },
+  });
+
+  // ── Pontos mensais (anéis) ──
+  const grid = document.getElementById('pontos-grid');
+  grid.innerHTML = '';
+
+  for (let m = 1; m <= 12; m++) {
+    const rA = dadosAtelier[m-1];
+    const pctA = metaAtelier > 0 ? Math.min(Math.round(rA / metaAtelier * 100), 100) : 0;
+
+    // Cor do anel consoante progresso
+    const cor = pctA >= 100 ? '#2e7d32' : pctA >= 60 ? '#d4af37' : pctA > 0 ? '#e65100' : '#e0d5c1';
+    const circum = 2 * Math.PI * 22; // r=22
+    const offset = circum - (pctA / 100) * circum;
+
+    const card = document.createElement('div');
+    card.className = 'ponto-card';
+    card.innerHTML = `
+      <div class="ponto-mes">${NOMES_MESES_ABREV[m-1]}</div>
+      <div class="ponto-anel">
+        <svg width="56" height="56" viewBox="0 0 56 56">
+          <circle class="anel-bg"  cx="28" cy="28" r="22"/>
+          <circle class="anel-val" cx="28" cy="28" r="22"
+            stroke="${cor}"
+            stroke-dasharray="${circum}"
+            stroke-dashoffset="${offset}"/>
+        </svg>
+        <div class="ponto-pct">${pctA}%</div>
+      </div>
+      <div class="ponto-vals">
+        <span class="pv-real">${rA > 0 ? rA.toLocaleString('pt-PT',{style:'currency',currency:'EUR',maximumFractionDigits:0}) : '—'}</span>
+        <span>meta ${metaAtelier.toLocaleString('pt-PT',{style:'currency',currency:'EUR',maximumFractionDigits:0})}</span>
+      </div>`;
+    grid.appendChild(card);
+  }
 }
 
 // ═══════════════════════════════════════════

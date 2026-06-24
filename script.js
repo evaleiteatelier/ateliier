@@ -869,7 +869,7 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
     div.setAttribute('data-nome', p.nome ? p.nome.toLowerCase() : ""); // Proteção contra nome vazio
 
     // Formata datas para o padrão PT (Dia/Mês/Ano) - Protegido contra fuso horário
-    const dataPedidoF = formatarDataParaExibir(p.data_pedido);
+    const dataPedidoF = formatarDataParaExibir(p.data_real || p.data_pedido);
     const dataEntregaF = formatarDataParaExibir(p.data_entrega);
 
     const precoOriginal = p.preco_total ? Number(p.preco_total).toFixed(2) : '0.00';
