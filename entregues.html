@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Pedidos Entregues - Eva Leite Atelier</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  
+  <h1>Pedidos Entregues (Histórico)</h1>
+  
+  <div style="max-width: 600px; margin: 0 auto 20px auto;">
+    <label for="pesquisa">Pesquisar Cliente:</label>
+    <input type="text" id="pesquisa" placeholder="Digite o nome da cliente..." onkeyup="filtrarPedidos()">
+  </div>
+  
+  <div id="lista-entregues">
+      <p>A carregar histórico...</p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  
+  <script src="navbar.js"></script>
+  
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Pedidos Concluídos - Eva Leite Atelier</title>
+  <link rel="stylesheet" href="style.css">
+  
+  <script>
+    const tipoUsuario = localStorage.getItem("tipoUsuario");
+    // Se não tiver login ou for cliente, redireciona (ajuste conforme sua regra)
+    if (!tipoUsuario || tipoUsuario === "cliente") {
+        // Opcional: window.location.href = "index.html"; 
+    }
+  </script>
+</head>
+<body>
+
+  <h1>Pedidos Concluídos</h1>
+  
+  <div style="max-width: 600px; margin: 0 auto 20px auto;">
+    <label for="pesquisa">Pesquisar Cliente:</label>
+    <input type="text" id="pesquisa" placeholder="Digite o nome da cliente..." onkeyup="filtrarPedidos()">
+  </div>
+  
+  <div id="lista-concluidos">
+      <p>Carregando pedidos...</p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  
+  <script src="navbar.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

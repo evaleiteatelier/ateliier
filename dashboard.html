@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Eva Leite Atelier</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --gold: #d4af37;
+      --gold-light: #f5e6a3;
+      --dark: #1a1a2e;
+      --card-bg: #ffffff;
+      --text: #2d2d2d;
+      --text-muted: #888;
+      --green: #2e7d32;
+      --green-light: #e8f5e9;
+      --red: #c62828;
+      --red-light: #fce8e6;
+      --blue: #1565c0;
+      --blue-light: #e3f2fd;
+      --bg: #f5f1ea;
+      --radius: 14px;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+    }
+
+    .dash-wrapper {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 30px 20px 60px;
+    }
+
+    /* ---- PAGE HEADER ---- */
+    .dash-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .dash-header h1 {
+      margin: 0;
+      font-size: 2rem;
+      text-align: left;
+      color: var(--dark);
+    }
+
+    .dash-header h1 span {
+      color: var(--gold);
+    }
+
+    .month-picker {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      border: 2px solid var(--gold);
+      border-radius: 30px;
+      padding: 10px 20px;
+      font-size: 0.85rem;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-weight: 500;
+      color: var(--text-muted);
+      white-space: nowrap;
+      /* ← impede quebra de linha */
+      flex-shrink: 0;
+    }
+
+    .month-picker select {
+      border: none;
+      background: transparent;
+      font-size: 0.9rem;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-weight: 600;
+      color: var(--dark);
+      cursor: pointer;
+      outline: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    /* ---- KPI GRID ---- */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+      margin-bottom: 30px;
+    }
+
+    .kpi-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      box-shadow: var(--shadow);
+      border-left: 5px solid var(--gold);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-3px);
+    }
+
+    .kpi-card.green {
+      border-color: var(--green);
+    }
+
+    .kpi-card.blue {
+      border-color: var(--blue);
+    }
+
+    .kpi-card.red {
+      border-color: var(--red);
+    }
+
+    .kpi-icon {
+      font-size: 2rem;
+      margin-bottom: 4px;
+    }
+
+    .kpi-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .kpi-value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--dark);
+      line-height: 1;
+    }
+
+    .kpi-value.gold {
+      color: var(--gold);
+    }
+
+    .kpi-value.green {
+      color: var(--green);
+    }
+
+    .kpi-value.red {
+      color: var(--red);
+    }
+
+    .kpi-value.blue {
+      color: var(--blue);
+    }
+
+    .kpi-sub {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .kpi-badge {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      font-size: 0.72rem;
+      font-weight: bold;
+      padding: 3px 8px;
+      border-radius: 20px;
+      background: var(--green-light);
+      color: var(--green);
+    }
+
+    .kpi-badge.neg {
+      background: var(--red-light);
+      color: var(--red);
+    }
+
+    /* ---- CHARTS GRID ---- */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .chart-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .chart-title {
+      font-size: 1rem;
+      font-weight: bold;
+      color: var(--dark);
+      margin: 0 0 18px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .chart-title span {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: normal;
+    }
+
+    .canvas-wrap {
+      position: relative;
+      height: 260px;
+    }
+
+    /* ---- SECOND ROW ---- */
+    .second-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 700px) {
+      .second-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ---- RECENT ORDERS TABLE ---- */
+    .table-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+      overflow-x: auto;
+    }
+
+    .recent-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    .recent-table th {
+      text-align: left;
+      padding: 10px 14px;
+      color: var(--text-muted);
+      font-weight: normal;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .recent-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #f7f7f7;
+      vertical-align: middle;
+    }
+
+    .recent-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .recent-table tr:hover td {
+      background: #fafafa;
+    }
+
+    .status-pill {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+
+    .pill-pendente {
+      background: #fff3e0;
+      color: #e65100;
+    }
+
+    .pill-concluido {
+      background: var(--blue-light);
+      color: var(--blue);
+    }
+
+    .pill-entregue {
+      background: var(--green-light);
+      color: var(--green);
+    }
+
+    /* ---- TOP ITEMS ---- */
+    .item-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .item-bar-label {
+      font-size: 0.85rem;
+      min-width: 110px;
+      color: var(--text);
+      text-transform: capitalize;
+    }
+
+    .item-bar-track {
+      flex: 1;
+      height: 8px;
+      background: #f0f0f0;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .item-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, var(--gold), #f5c842);
+      transition: width 0.8s ease;
+    }
+
+    .item-bar-count {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      min-width: 30px;
+      text-align: right;
+    }
+
+    /* ---- LOADING ---- */
+    .loading-spinner {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+
+    .loading-spinner::before {
+      content: "⏳";
+      display: block;
+      font-size: 2rem;
+      margin-bottom: 10px;
+      animation: spin 1.5s linear infinite;
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* ---- UTIL ---- */
+    .section-divider {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      margin: 10px 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e0e0e0;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 30px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+
+<body>
+  <script>
+    if (localStorage.getItem("tipoUsuario") === "cliente") {
+      window.location.href = "lista-espera.html";
+    }
+  </script>
+
+  <div class="dash-wrapper">
+
+    <!-- HEADER -->
+    <div class="dash-header">
+      <h1>Dashboard</h1>
+      <div class="month-picker">
+        📅
+        <select id="sel-mes" onchange="carregarDashboard()"></select>
+        <select id="sel-ano" onchange="carregarDashboard()"></select>
+      </div>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div class="kpi-grid">
+      <div class="kpi-card gold">
+        <div class="kpi-icon">💰</div>
+        <div class="kpi-label">Receita Total do Mês</div>
+        <div class="kpi-value gold" id="kpi-receita">—</div>
+        <div class="kpi-sub" id="kpi-receita-sub">a carregar...</div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-icon">✅</div>
+        <div class="kpi-label">Pedidos Concluídos</div>
+        <div class="kpi-value green" id="kpi-concluidos">—</div>
+        <div class="kpi-sub" id="kpi-concluidos-sub">a carregar...</div>
+      </div>
+      <div class="kpi-card blue">
+        <div class="kpi-icon">⏳</div>
+        <div class="kpi-label">Pedidos em Espera</div>
+        <div class="kpi-value blue" id="kpi-espera">—</div>
+        <div class="kpi-sub" id="kpi-espera-sub">a carregar...</div>
+      </div>
+      <div class="kpi-card red">
+        <div class="kpi-icon">📦</div>
+        <div class="kpi-label">Pedidos Entregues</div>
+        <div class="kpi-value" id="kpi-entregues">—</div>
+        <div class="kpi-sub" id="kpi-entregues-sub">a carregar...</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">💶</div>
+        <div class="kpi-label">Já Recebido (Adiantamentos)</div>
+        <div class="kpi-value green" id="kpi-adiantado">—</div>
+        <div class="kpi-sub" id="kpi-adiantado-sub">a carregar...</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">🎟️</div>
+        <div class="kpi-label">Vouchers Utilizados</div>
+        <div class="kpi-value gold" id="kpi-vouchers">—</div>
+        <div class="kpi-sub" id="kpi-vouchers-sub">a carregar...</div>
+      </div>
+    </div>
+
+    <!-- MAIN CHARTS -->
+    <div class="section-divider">Análise Financeira</div>
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">📈 Receita Diária <span>— últimos 30 dias</span></div>
+        <div class="canvas-wrap">
+          <canvas id="chart-receita-diaria"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">🍩 Status dos Pedidos <span>este mês</span></div>
+        <div class="canvas-wrap">
+          <canvas id="chart-status"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECOND ROW -->
+    <div class="section-divider">Produção e Serviços</div>
+    <div class="second-row">
+      <div class="chart-card">
+        <div class="chart-title">🏆 Itens Mais Encomendados</div>
+        <div id="top-itens-list">
+          <div class="loading-spinner"></div>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">💰 Faturação por Tipo de Item</div>
+        <div id="faturacao-itens-list">
+          <div class="loading-spinner"></div>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">📊 Pedidos por Mês <span>— últimos 6 meses</span></div>
+        <div class="canvas-wrap">
+          <canvas id="chart-mensal"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">💰 Receita vs Recebido</div>
+        <div class="canvas-wrap">
+          <canvas id="chart-pago-falta"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- UPCOMING DELIVERIES -->
+    <div class="section-divider">Entregas Próximas</div>
+    <div class="table-card">
+      <div class="chart-title">📅 Próximas Entregas (próximos 14 dias)</div>
+      <table class="recent-table" id="tabela-entregas">
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Itens</th>
+            <th>Data de Entrega</th>
+            <th>Total</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-entregas">
+          <tr>
+            <td colspan="5">
+              <div class="loading-spinner"></div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- RECENT ORDERS -->
+    <div class="section-divider">Pedidos Recentes</div>
+    <div class="table-card">
+      <div class="chart-title">🕐 Pedidos Registados Este Mês</div>
+      <table class="recent-table">
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Pedido em</th>
+            <th>Entrega</th>
+            <th>Itens</th>
+            <th>Total</th>
+            <th>Pago</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-recentes">
+          <tr>
+            <td colspan="7">
+              <div class="loading-spinner"></div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /dash-wrapper -->
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="auth-guard.js"></script>
+  <script src="navbar.js"></script>
+
+  <script>
+    // ============================================================
+    // CONFIGURAÇÃO
+    // ============================================================
+    const SUPABASE_URL = "https://cixjmwfkfmeedajpmzmp.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeGptd2ZrZm1lZWRhanBtem1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MzM5ODIsImV4cCI6MjA2OTEwOTk4Mn0.vFvgRMK_oabG19FNauNaBu_CoQTL8QRSXcptyfY6rbM";
+
+    if (!window.supabaseClient) {
+      window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+    const db = window.supabaseClient;
+
+    // chart instances (para destruir antes de recriar)
+    let chartReceitaDiaria, chartStatus, chartMensal, chartPagoFalta;
+
+    const MESES_PT = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+
+    // ============================================================
+    // PREENCHER SELECTS DE MÊS/ANO
+    // ============================================================
+    function preencherSelects() {
+      const hoje = new Date();
+      const selMes = document.getElementById('sel-mes');
+      const selAno = document.getElementById('sel-ano');
+
+      MESES_PT.forEach((m, i) => {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = m;
+        if (i === hoje.getMonth()) opt.selected = true;
+        selMes.appendChild(opt);
+      });
+
+      for (let y = hoje.getFullYear(); y >= hoje.getFullYear() - 3; y--) {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y;
+        if (y === hoje.getFullYear()) opt.selected = true;
+        selAno.appendChild(opt);
+      }
+    }
+
+    function getMesAnoSelecionado() {
+      const mes = parseInt(document.getElementById('sel-mes').value);
+      const ano = parseInt(document.getElementById('sel-ano').value);
+      return { mes, ano };
+    }
+
+    // ============================================================
+    // HELPERS
+    // ============================================================
+    function fmt(val) {
+      return '€' + Number(val || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function fmtData(str) {
+      if (!str) return '—';
+      const [y, m, d] = str.split('-');
+      return `${d}/${m}/${y}`;
+    }
+
+    function destroyChart(ref) {
+      if (ref) { try { ref.destroy(); } catch (e) { } }
+    }
+
+    function getItensDoPedido(p) {
+      try {
+        if (typeof p.itens === 'object' && p.itens !== null) return p.itens;
+        return JSON.parse(p.itens || '[]');
+      } catch { return []; }
+    }
+
+    // ============================================================
+    // CARREGAR TUDO
+    // ============================================================
+    async function carregarDashboard() {
+      const { mes, ano } = getMesAnoSelecionado();
+
+      const inicio = `${ano}-${String(mes + 1).padStart(2, '0')}-01`;
+      const fimDate = new Date(ano, mes + 1, 0);
+      const fim = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(fimDate.getDate()).padStart(2, '0')}`;
+
+      // Busca pedidos do mês selecionado (por data_pedido)
+      const [{ data: pedidosMes }, { data: todosPendentes }, { data: vouchersUsados }] = await Promise.all([
+        db.from('pedidos').select('*').gte('data_pedido', inicio).lte('data_pedido', fim),
+        db.from('pedidos').select('id, nome, preco_total, preco_final, valor_adiantado, data_entrega, status, itens').eq('status', 'pendente'),
+        db.from('vouchers').select('id').eq('estado', 'utilizado')
+      ]);
+
+      const pedidos = pedidosMes || [];
+
+      // ---- KPIs ----
+      const concluidos = pedidos.filter(p => p.status === 'concluido' || p.status === 'entregue');
+      const emEspera = todosPendentes || [];
+      const entregues = pedidos.filter(p => p.status === 'entregue');
+
+      const receitaTotal = pedidos.reduce((s, p) => s + Number(p.preco_final || p.preco_total || 0), 0);
+      const adiantadoTotal = pedidos.reduce((s, p) => s + Number(p.valor_adiantado || 0), 0);
+      const faltaTotal = receitaTotal - adiantadoTotal;
+
+      document.getElementById('kpi-receita').textContent = fmt(receitaTotal);
+      document.getElementById('kpi-receita-sub').textContent = `${pedidos.length} pedido(s) registados`;
+      document.getElementById('kpi-concluidos').textContent = concluidos.length;
+      document.getElementById('kpi-concluidos-sub').textContent = `${fmt(concluidos.reduce((s, p) => s + Number(p.preco_final || p.preco_total || 0), 0))} em valor`;
+      document.getElementById('kpi-espera').textContent = emEspera.length;
+      document.getElementById('kpi-espera-sub').textContent = `${fmt(emEspera.reduce((s, p) => s + Number(p.preco_final || p.preco_total || 0), 0))} em valor`;
+      document.getElementById('kpi-entregues').textContent = entregues.length;
+      document.getElementById('kpi-entregues-sub').textContent = `finalizados e entregues`;
+      document.getElementById('kpi-adiantado').textContent = fmt(adiantadoTotal);
+      document.getElementById('kpi-adiantado-sub').textContent = `Falta receber: ${fmt(Math.max(0, faltaTotal))}`;
+      document.getElementById('kpi-vouchers').textContent = (vouchersUsados || []).length;
+      document.getElementById('kpi-vouchers-sub').textContent = `cupões utilizados no total`;
+
+      // ---- CHART: Receita dos últimos 30 dias ----
+      renderChartReceitaDiaria(pedidos, mes, ano);
+
+      // ---- CHART: Status Donut ----
+      renderChartStatus(pedidos);
+
+      // ---- CHART: Pedidos por mês (ultimos 6) ----
+      await renderChartMensal(mes, ano);
+
+      // ---- CHART: Pago vs Falta ----
+      renderChartPagoFalta(adiantadoTotal, faltaTotal, receitaTotal);
+
+      // ---- TOP ITENS ----
+      renderTopItens(pedidos);
+      renderFaturacaoPorItem(pedidos);
+
+      // ---- TABELA PRÓXIMAS ENTREGAS ----
+      renderProximasEntregas(todosPendentes || []);
+
+      // ---- TABELA PEDIDOS RECENTES ----
+      renderPedidosRecentes(pedidos);
+    }
+
+    // ============================================================
+    // CHART: RECEITA DIÁRIA
+    // ============================================================
+    function renderChartReceitaDiaria(pedidos, mes, ano) {
+      const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+      const labels = Array.from({ length: diasNoMes }, (_, i) => `${i + 1}`);
+      const valores = Array(diasNoMes).fill(0);
+
+      pedidos.forEach(p => {
+        const dataUsar = p.data_pedido || p.data_real;
+        if (!dataUsar) return;
+        const dia = parseInt(dataUsar.split('-')[2]) - 1;
+        if (dia >= 0 && dia < diasNoMes) {
+          valores[dia] += Number(p.preco_final || p.preco_total || 0);
+        }
+      });
+
+      destroyChart(chartReceitaDiaria);
+      const ctx = document.getElementById('chart-receita-diaria').getContext('2d');
+
+      const gradient = ctx.createLinearGradient(0, 0, 0, 260);
+      gradient.addColorStop(0, 'rgba(212,175,55,0.4)');
+      gradient.addColorStop(1, 'rgba(212,175,55,0)');
+
+      chartReceitaDiaria = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Receita (€)',
+            data: valores,
+            fill: true,
+            backgroundColor: gradient,
+            borderColor: '#d4af37',
+            borderWidth: 2.5,
+            pointRadius: 3,
+            pointBackgroundColor: '#d4af37',
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { maxTicksLimit: 10 } },
+            y: {
+              grid: { color: '#f0f0f0' },
+              ticks: { callback: v => '€' + v }
+            }
+          }
+        }
+      });
+    }
+
+    // ============================================================
+    // CHART: STATUS DONUT
+    // ============================================================
+    function renderChartStatus(pedidos) {
+      const counts = { pendente: 0, concluido: 0, entregue: 0 };
+      pedidos.forEach(p => { if (counts[p.status] !== undefined) counts[p.status]++; });
+
+      destroyChart(chartStatus);
+      const ctx = document.getElementById('chart-status').getContext('2d');
+      chartStatus = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Em Espera', 'Concluídos', 'Entregues'],
+          datasets: [{
+            data: [counts.pendente, counts.concluido, counts.entregue],
+            backgroundColor: ['#ff9800', '#1565c0', '#2e7d32'],
+            borderWidth: 0,
+            hoverOffset: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '65%',
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { padding: 14, font: { size: 11 } }
+            }
+          }
+        }
+      });
+    }
+
+    // ============================================================
+    // CHART: PEDIDOS POR MÊS (últimos 6)
+    // ============================================================
+    async function renderChartMensal(mesAtual, anoAtual) {
+      const labels = [];
+      const valores = [];
+
+      const promises = [];
+      for (let i = 5; i >= 0; i--) {
+        let m = mesAtual - i;
+        let a = anoAtual;
+        while (m < 0) { m += 12; a--; }
+        const ini = `${a}-${String(m + 1).padStart(2, '0')}-01`;
+        const fim = `${a}-${String(m + 1).padStart(2, '0')}-${new Date(a, m + 1, 0).getDate()}`;
+        labels.push(MESES_PT[m].substring(0, 3));
+        promises.push(db.from('pedidos').select('id', { count: 'exact' }).gte('data_pedido', ini).lte('data_pedido', fim));
+      }
+
+      const results = await Promise.all(promises);
+      results.forEach(r => valores.push(r.count || 0));
+
+      destroyChart(chartMensal);
+      const ctx = document.getElementById('chart-mensal').getContext('2d');
+      chartMensal = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Pedidos',
+            data: valores,
+            backgroundColor: 'rgba(212,175,55,0.75)',
+            borderRadius: 8,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false } },
+            y: { grid: { color: '#f0f0f0' }, ticks: { stepSize: 1 } }
+          }
+        }
+      });
+    }
+
+    // ============================================================
+    // CHART: PAGO VS FALTA
+    // ============================================================
+    function renderChartPagoFalta(adiantado, falta, total) {
+      destroyChart(chartPagoFalta);
+      const ctx = document.getElementById('chart-pago-falta').getContext('2d');
+      chartPagoFalta = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Total Mês'],
+          datasets: [
+            {
+              label: 'Já Recebido',
+              data: [adiantado],
+              backgroundColor: '#2e7d32',
+              borderRadius: 6,
+              borderSkipped: false
+            },
+            {
+              label: 'Por Receber',
+              data: [Math.max(0, falta)],
+              backgroundColor: '#f44336',
+              borderRadius: 6,
+              borderSkipped: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          plugins: {
+            legend: { position: 'bottom', labels: { padding: 14 } },
+            tooltip: {
+              callbacks: { label: ctx => ' ' + fmt(ctx.parsed.x) }
+            }
+          },
+          scales: {
+            x: {
+              stacked: true,
+              grid: { color: '#f0f0f0' },
+              ticks: { callback: v => '€' + v }
+            },
+            y: { stacked: true, grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    // ============================================================
+    // TOP ITENS
+    // ============================================================
+    function renderTopItens(pedidos) {
+      const contagem = {};
+      pedidos.forEach(p => {
+        const itens = getItensDoPedido(p);
+        itens.forEach(i => {
+          const nome = i.subtipo || i.tipo || 'Item';
+          contagem[nome] = (contagem[nome] || 0) + (i.quantidade || 1);
+        });
+      });
+
+      const sorted = Object.entries(contagem).sort((a, b) => b[1] - a[1]).slice(0, 8);
+      const container = document.getElementById('top-itens-list');
+
+      if (sorted.length === 0) {
+        container.innerHTML = '<div class="empty-state">Nenhum item registado este mês.</div>';
+        return;
+      }
+
+      const max = sorted[0][1];
+      container.innerHTML = sorted.map(([nome, qtd]) => `
+        <div class="item-bar">
+          <div class="item-bar-label">${nome}</div>
+          <div class="item-bar-track">
+            <div class="item-bar-fill" style="width:${Math.round((qtd / max) * 100)}%"></div>
+          </div>
+          <div class="item-bar-count">${qtd}x</div>
+        </div>
+      `).join('');
+    }
+
+    // ============================================================
+    // FATURAÇÃO POR TIPO DE ITEM
+    // ============================================================
+    function renderFaturacaoPorItem(pedidos) {
+      const faturacao = {};
+      pedidos.forEach(p => {
+        const itens = getItensDoPedido(p);
+        
+        // Calcular fator de desconto/ajuste proporcional
+        const totalOriginal = itens.reduce((s, i) => s + (i.preco * i.quantidade), 0);
+        const precoFinal = p.preco_final || p.preco_total || 0;
+        const fatorDesconto = totalOriginal > 0 ? (precoFinal / totalOriginal) : 1;
+
+        itens.forEach(i => {
+          const nome = i.subtipo || i.tipo || 'Item';
+          const precoItemEfetivo = (i.preco_total_item || (i.preco * i.quantidade) || 0) * fatorDesconto;
+          faturacao[nome] = (faturacao[nome] || 0) + precoItemEfetivo;
+        });
+      });
+
+      const sorted = Object.entries(faturacao).sort((a, b) => b[1] - a[1]).slice(0, 8);
+      const container = document.getElementById('faturacao-itens-list');
+
+      if (sorted.length === 0) {
+        container.innerHTML = '<div class="empty-state">Nenhum item registado este mês.</div>';
+        return;
+      }
+
+      const max = sorted[0][1];
+      container.innerHTML = sorted.map(([nome, valor]) => `
+        <div class="item-bar">
+          <div class="item-bar-label" style="text-transform: capitalize;">${nome}</div>
+          <div class="item-bar-track">
+            <div class="item-bar-fill" style="width:${max > 0 ? Math.round((valor / max) * 100) : 0}%"></div>
+          </div>
+          <div class="item-bar-count" style="min-width: 80px;">${fmt(valor)}</div>
+        </div>
+      `).join('');
+    }
+
+    // ============================================================
+    // PRÓXIMAS ENTREGAS
+    // ============================================================
+    function renderProximasEntregas(pendentes) {
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      const em14 = new Date(hoje);
+      em14.setDate(em14.getDate() + 14);
+
+      const proximas = pendentes
+        .filter(p => {
+          if (!p.data_entrega) return false;
+          const d = new Date(p.data_entrega + 'T00:00:00');
+          return d >= hoje && d <= em14;
+        })
+        .sort((a, b) => a.data_entrega.localeCompare(b.data_entrega));
+
+      const tbody = document.getElementById('tbody-entregas');
+
+      if (proximas.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state">✅ Sem entregas para os próximos 14 dias.</div></td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = proximas.map(p => {
+        const itens = getItensDoPedido(p);
+        const resumoItens = itens.map(i => `${i.subtipo || i.tipo} (${i.quantidade || 1}x)`).join(', ');
+        const entrega = new Date(p.data_entrega + 'T00:00:00');
+        const diffDias = Math.ceil((entrega - hoje) / (1000 * 60 * 60 * 24));
+        const urgencia = diffDias <= 3
+          ? `<span style="color:#c62828; font-weight:bold;">em ${diffDias}d ⚠️</span>`
+          : `em ${diffDias}d`;
+
+        return `<tr>
+          <td><strong>${p.nome}</strong></td>
+          <td style="font-size:0.8rem; color:#666">${resumoItens}</td>
+          <td>${fmtData(p.data_entrega)} ${urgencia}</td>
+          <td>${fmt(p.preco_final || p.preco_total)}</td>
+          <td><span class="status-pill pill-pendente">Em espera</span></td>
+        </tr>`;
+      }).join('');
+    }
+
+    // ============================================================
+    // PEDIDOS DO MÊS (Tabela)
+    // ============================================================
+    function renderPedidosRecentes(pedidos) {
+      const sorted = [...pedidos].sort((a, b) => (b.data_pedido || b.data_real || '').localeCompare(a.data_pedido || a.data_real || '') || 0);
+      const tbody = document.getElementById('tbody-recentes');
+
+      if (sorted.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">Nenhum pedido registado este mês.</div></td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = sorted.map(p => {
+        const itens = getItensDoPedido(p);
+        const qtdItens = itens.reduce((s, i) => s + (i.quantidade || 1), 0);
+        const adiantado = Number(p.valor_adiantado || 0);
+        const total = Number(p.preco_final || p.preco_total || 0);
+
+        const pillClass = p.status === 'pendente' ? 'pill-pendente' : p.status === 'concluido' ? 'pill-concluido' : 'pill-entregue';
+        const statusLabel = p.status === 'pendente' ? 'Em espera' : p.status === 'concluido' ? 'Concluído' : 'Entregue';
+
+        return `<tr>
+          <td><strong>${p.nome}</strong></td>
+          <td>${fmtData(p.data_pedido || p.data_real)}</td>
+          <td>${fmtData(p.data_entrega)}</td>
+          <td style="font-size:0.8rem; color:#666">${qtdItens} item(s)</td>
+          <td><strong>${fmt(total)}</strong></td>
+          <td style="color:${adiantado > 0 ? '#2e7d32' : '#aaa'}">${fmt(adiantado)}</td>
+          <td><span class="status-pill ${pillClass}">${statusLabel}</span></td>
+        </tr>`;
+      }).join('');
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    preencherSelects();
+    carregarDashboard();
+  </script>
+</body>
+
+</html>

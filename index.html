@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eva Leite Atelier - Acesso</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #f5f1ea;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .login-card {
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 8px 40px rgba(0,0,0,.10);
+      padding: 44px 40px 36px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .login-logo {
+      max-width: 160px;
+      height: auto;
+      margin-bottom: 28px;
+    }
+
+    .login-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 6px;
+    }
+
+    .login-sub {
+      font-size: 0.83rem;
+      color: #999;
+      margin-bottom: 28px;
+    }
+
+    .campo {
+      width: 100%;
+      padding: 13px 16px;
+      border: 1.5px solid #e0dbd0;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      color: #1a1a2e;
+      outline: none;
+      transition: border-color .2s;
+      margin-bottom: 12px;
+      background: #fdfcf9;
+    }
+    .campo:focus { border-color: #d4af37; background: #fff; }
+
+    .btn-entrar {
+      width: 100%;
+      padding: 13px;
+      background: #1a1a2e;
+      color: #d4af37;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.97rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      letter-spacing: .4px;
+      transition: background .2s;
+      margin-top: 4px;
+    }
+    .btn-entrar:hover { background: #2e2e4e; }
+    .btn-entrar:disabled { opacity: .6; pointer-events: none; }
+
+    .erro-msg {
+      display: none;
+      background: #fce8e6;
+      color: #c62828;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      margin-bottom: 14px;
+      text-align: left;
+    }
+    .erro-msg.visivel { display: block; }
+
+    .divisor {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 24px 0 16px;
+      color: #ccc;
+      font-size: 0.78rem;
+    }
+    .divisor::before, .divisor::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #ece8e0;
+    }
+
+    .btn-cliente {
+      width: 100%;
+      padding: 11px;
+      background: transparent;
+      color: #888;
+      border: 1.5px solid #e0dbd0;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-cliente:hover { border-color: #bbb; color: #555; background: #faf9f6; }
+
+    .linha-ouro {
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #d4af37, #f5e6a3, #d4af37, transparent);
+      border-radius: 2px;
+      margin-bottom: 28px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-card">
+    <img src="img/logo.png" alt="Eva Leite Atelier" class="login-logo">
+    <div class="linha-ouro"></div>
+
+    <p class="login-title">Área de Administração</p>
+    <p class="login-sub">Introduz as tuas credenciais para aceder</p>
+
+    <div class="erro-msg" id="erro-msg">Email ou senha incorretos. Tenta novamente.</div>
+
+    <input type="email" id="campo-email" class="campo" placeholder="Email" autocomplete="email" value="evaleiteatelier@gmail.com">
+    <input type="password" id="campo-senha" class="campo" placeholder="Senha" autocomplete="current-password"
+      onkeydown="if(event.key==='Enter') entrarComoAdmin()">
+
+    <button class="btn-entrar" id="btn-entrar" onclick="entrarComoAdmin()">Entrar</button>
+
+    <div class="divisor">ou</div>
+
+    <button class="btn-cliente" onclick="entrarSemSenha()">Entrar sem senha (sem acesso a Dashboard e Contas)</button>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://cixjmwfkfmeedajpmzmp.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeGptd2ZrZm1lZWRhanBtem1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MzM5ODIsImV4cCI6MjA2OTEwOTk4Mn0.vFvgRMK_oabG19FNauNaBu_CoQTL8QRSXcptyfY6rbM";
+
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // Se vier de logout (?logout=1) não faz auto-redirect; caso contrário verifica sessão activa
+    const isLogout = new URLSearchParams(window.location.search).get('logout');
+    if (!isLogout) {
+      (async () => {
+        const { data: { session } } = await db.auth.getSession();
+        if (session) {
+          localStorage.setItem('tipoUsuario', 'admin');
+          window.location.href = 'lista-espera.html';
+        }
+      })();
+    }
+
+    // Acesso com senha (admin completo — Dashboard e Contas incluídos)
+    async function entrarComoAdmin() {
+      const email = document.getElementById('campo-email').value.trim();
+      const senha = document.getElementById('campo-senha').value;
+      const btn   = document.getElementById('btn-entrar');
+      const erro  = document.getElementById('erro-msg');
+
+      if (!email || !senha) {
+        erro.textContent = 'Preenche o email e a senha.';
+        erro.classList.add('visivel');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'A entrar...';
+      erro.classList.remove('visivel');
+
+      const { data, error } = await db.auth.signInWithPassword({ email, password: senha });
+
+      if (error) {
+        erro.textContent = 'Email ou senha incorretos. Tenta novamente.';
+        erro.classList.add('visivel');
+        btn.disabled = false;
+        btn.textContent = 'Entrar';
+        return;
+      }
+
+      localStorage.setItem('tipoUsuario', 'admin');
+      window.location.href = 'lista-espera.html';
+    }
+
+    // Acesso sem senha (admin básico — sem Dashboard nem Contas)
+    function entrarSemSenha() {
+      localStorage.setItem('tipoUsuario', 'admin');
+      window.location.href = 'lista-espera.html';
+    }
+  </script>
+
+</body>
+</html>

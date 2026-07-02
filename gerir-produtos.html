@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerir Produtos - Eva Leite Atelier</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ---- PRINCIPAL LAYOUT ---- */
+    .produtos-layout {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 30px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* CARD DO FORMULÁRIO */
+    .criar-produto-card {
+      background: #fff;
+      border: 2px dashed #bba68a;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+      position: sticky;
+      top: 110px;
+      align-self: start;
+    }
+
+    .criar-produto-card h2 {
+      margin-top: 0;
+      border-bottom: 2px solid #d4af37;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+      font-family: 'Playfair Display', serif;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: bold;
+      font-size: 0.9rem;
+      margin-bottom: 6px;
+      margin-top: 0;
+      color: #444;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+      box-sizing: border-box;
+      background: #fdfdfd;
+      margin-top: 0;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #bba68a;
+      background: #fff;
+    }
+
+    .btn-criar {
+      width: 100%;
+      background: #000;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 6px;
+      letter-spacing: 1px;
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn-criar:hover { background: #bba68a; color: #000; }
+
+    /* LISTA DOS PRODUTOS */
+    .produtos-grid-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      text-align: center;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #d4af37;
+      padding-bottom: 10px;
+    }
+
+    .produtos-lista {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 18px;
+    }
+
+    /* CARD DO PRODUTO */
+    .produto-card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      border: 1px solid #e8e0d5;
+      position: relative;
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .produto-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.13);
+    }
+
+    .produto-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+      gap: 8px;
+    }
+
+    .produto-nome {
+      font-size: 1.15rem;
+      font-weight: bold;
+      color: #222;
+      word-break: break-word;
+    }
+
+    .badge-armazenamento {
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.72rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .badge-nuvem { background: #e8f5e9; color: #2e7d32; }
+    .badge-local { background: #fff8e1; color: #b78103; }
+
+    .produto-dias {
+      font-size: 0.95rem;
+      color: #666;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .produto-footer {
+      display: flex;
+      gap: 8px;
+      margin-top: auto;
+      border-top: 1px solid #f0ebe4;
+      padding-top: 15px;
+    }
+
+    .btn-editar-card, .btn-eliminar-card {
+      flex: 1;
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 0;
+      text-align: center;
+    }
+
+    .btn-editar-card {
+      background: #f5f5f5;
+      color: #555;
+      border: 1px solid #ddd;
+    }
+    .btn-editar-card:hover {
+      background: #eaeaea;
+    }
+
+    .btn-eliminar-card {
+      background: #fce8e6;
+      color: #c62828;
+      border: 1px solid #ef9a9a;
+    }
+    .btn-eliminar-card:hover {
+      background: #ffcdd2;
+    }
+
+    /* FORMULÁRIO DE EDIÇÃO INLINE */
+    .edit-inline-form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+    }
+    .edit-inline-form input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      box-sizing: border-box;
+    }
+    .edit-inline-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 5px;
+    }
+    .btn-edit-confirmar, .btn-edit-cancelar {
+      flex: 1;
+      padding: 8px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 0;
+      border: none;
+    }
+    .btn-edit-confirmar {
+      background: #2e7d32;
+      color: white;
+    }
+    .btn-edit-confirmar:hover { background: #1b5e20; }
+    
+    .btn-edit-cancelar {
+      background: #757575;
+      color: white;
+    }
+    .btn-edit-cancelar:hover { background: #616161; }
+
+    /* RESPONSIVIDADE */
+    @media (max-width: 860px) {
+      .produtos-layout {
+        grid-template-columns: 1fr;
+      }
+      .criar-produto-card {
+        position: static;
+      }
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #999;
+      padding: 40px;
+      grid-column: 1 / -1;
+    }
+    .empty-state p:first-child { font-size: 3rem; }
+  </style>
+
+  <script>
+    // Segurança básica de administrador
+    if (localStorage.getItem("tipoUsuario") === "cliente") {
+      window.location.href = "lista-espera.html";
+    }
+  </script>
+</head>
+<body>
+
+  <h1>Gestão de Produtos / Serviços</h1>
+
+  <div class="produtos-layout">
+    
+    <!-- COLUNA ESQUERDA: Criar Novo Tipo de Item -->
+    <div class="criar-produto-card">
+      <h2>✨ Novo Produto</h2>
+      
+      <div class="form-group">
+        <label for="p-nome">Nome do Tipo de Item:</label>
+        <input type="text" id="p-nome" placeholder="Ex: Vestido comprido, Saia plissada">
+      </div>
+
+      <div class="form-group">
+        <label for="p-dias">Tempo Estimado de Produção (dias úteis):</label>
+        <input type="number" id="p-dias" min="0" value="3" placeholder="Ex: 3, 5, 7">
+      </div>
+
+      <button class="btn-criar" onclick="criarNovoProduto()">✨ Guardar Produto</button>
+    </div>
+
+    <!-- COLUNA DIREITA: Listagem e Sincronização -->
+    <div>
+      <div class="produtos-grid-title">Produtos e Tempos Cadastrados</div>
+      
+      <div class="produtos-lista" id="produtos-lista">
+        <div class="empty-state"><p>⏳</p><p>A carregar produtos...</p></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MODAL DE CONFIRMAÇÃO GENÉRICO -->
+  <div id="modal-confirmar" class="modal-overlay" style="display:none;">
+    <div class="modal-conteudo" style="max-width:380px; text-align:center;">
+      <div id="modal-confirmar-icone" style="font-size:2.5rem; margin-bottom:10px;">⚠️</div>
+      <h2 id="modal-confirmar-titulo" style="font-size:1.15rem; margin-bottom:8px;">Eliminar Produto</h2>
+      <p id="modal-confirmar-texto" style="color:#666; font-size:0.95rem; margin-bottom:24px;"></p>
+      <div style="display:flex; gap:10px; justify-content:center;">
+        <button id="modal-confirmar-ok" style="flex:1; max-width:160px; border:none; border-radius:8px; padding:12px; font-size:1rem; cursor:pointer; font-weight:bold; margin-top:0;">
+          Confirmar
+        </button>
+        <button onclick="fecharModalConfirmar()" style="flex:1; max-width:160px; background:#f5f5f5; color:#555; border:1px solid #ddd; border-radius:8px; padding:12px; font-size:1rem; cursor:pointer; margin-top:0;">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts do Supabase e lógica da página -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="navbar.js"></script>
+  
+  <script>
+    // Inicialização do Supabase usando a mesma configuração global
+    if (!window.supabaseClient) {
+      window.supabaseClient = window.supabase.createClient(
+        "https://cixjmwfkfmeedajpmzmp.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeGptd2ZrZm1lZWRhanBtem1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MzM5ODIsImV4cCI6MjA2OTEwOTk4Mn0.vFvgRMK_oabG19FNauNaBu_CoQTL8QRSXcptyfY6rbM"
+      );
+    }
+    const db = window.supabaseClient;
+
+    let produtosEmMemoria = [];
+    let defaultTypes = [
+      { nome: "macacão", dias: 3, label: "Macacão" },
+      { nome: "vestido normal", dias: 3, label: "Vestido Normal" },
+      { nome: "vestido de festa", dias: 7, label: "Vestido de Festa" },
+      { nome: "pantalona", dias: 3, label: "Pantalona" },
+      { nome: "saia", dias: 3, label: "Saia" },
+      { nome: "kimono", dias: 3, label: "Kimono" },
+      { nome: "fato", dias: 3, label: "Fato" },
+      { nome: "concerto", dias: 3, label: "Concerto" },
+      { nome: "modificacao", dias: 3, label: "Modificação" }
+    ];
+
+    // =========================================
+    // MODAL DE CONFIRMAÇÃO PERSONALIZADO
+    // =========================================
+    function confirmarModal({ icone = '⚠️', titulo, texto, corBotao = '#c62828', textoBotao = 'Confirmar', onConfirm }) {
+      document.getElementById('modal-confirmar-icone').textContent = icone;
+      document.getElementById('modal-confirmar-titulo').textContent = titulo;
+      document.getElementById('modal-confirmar-texto').textContent = texto;
+
+      const okBtn = document.getElementById('modal-confirmar-ok');
+      okBtn.textContent = textoBotao;
+      okBtn.style.background = corBotao;
+      okBtn.style.color = '#fff';
+      okBtn.onclick = () => {
+        fecharModalConfirmar();
+        onConfirm();
+      };
+
+      document.getElementById('modal-confirmar').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function fecharModalConfirmar() {
+      document.getElementById('modal-confirmar').style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+
+    // =========================================
+    // CARREGAR PRODUTOS (SUPABASE + LOCALSTORAGE)
+    // =========================================
+    async function carregarProdutos() {
+      const map = new Map();
+      
+      // 1. Inicializa com os padrões do Atelier
+      defaultTypes.forEach(d => {
+        map.set(d.nome.toLowerCase().trim(), {
+          nome: d.nome.toLowerCase().trim(),
+          dias: d.dias,
+          label: d.label,
+          origem: 'padrão'
+        });
+      });
+
+      // 2. Tenta ler do Supabase
+      try {
+        const { data: dbTypes, error } = await db
+          .from('tipos_itens')
+          .select('*');
+          
+        if (!error && dbTypes) {
+          dbTypes.forEach(t => {
+            const nomeL = t.nome.toLowerCase().trim();
+            map.set(nomeL, {
+              nome: nomeL,
+              dias: parseInt(t.dias),
+              label: t.nome.charAt(0).toUpperCase() + t.nome.slice(1),
+              origem: 'supabase'
+            });
+          });
+        }
+      } catch (err) {
+        console.warn("Base de dados 'tipos_itens' indisponível. Usando local fallbacks.", err);
+      }
+
+      // 3. Fallback localStorage (Produtos customizados guardados localmente)
+      try {
+        const localCustom = JSON.parse(localStorage.getItem("tipos_itens_custom") || "[]");
+        localCustom.forEach(item => {
+          const nomeL = item.nome.toLowerCase().trim();
+          map.set(nomeL, {
+            nome: nomeL,
+            dias: parseInt(item.dias),
+            label: item.nome.charAt(0).toUpperCase() + item.nome.slice(1),
+            origem: 'local'
+          });
+        });
+      } catch(e) {}
+
+      produtosEmMemoria = Array.from(map.values());
+      renderizarProdutos();
+    }
+
+    // =========================================
+    // RENDERIZAR CARDS DOS PRODUTOS
+    // =========================================
+    function renderizarProdutos() {
+      const lista = document.getElementById('produtos-lista');
+      if (produtosEmMemoria.length === 0) {
+        lista.innerHTML = `
+          <div class="empty-state">
+            <p>👗</p>
+            <p>Nenhum produto cadastrado até ao momento.</p>
+          </div>`;
+        return;
+      }
+
+      lista.innerHTML = produtosEmMemoria.map(p => {
+        const isDefault = defaultTypes.some(d => d.nome === p.nome);
+        const badgeClasse = p.origem === 'supabase' ? 'badge-nuvem' : 'badge-local';
+        const badgeLabel = p.origem === 'supabase' ? '☁️ Nuvem' : '💻 Local';
+
+        return `
+          <div class="produto-card" id="card-${p.nome.replace(/\s+/g, '-')}" data-nome="${p.nome}">
+            
+            <!-- Vista Normal -->
+            <div class="view-normal" style="display: block; width: 100%;">
+              <div class="produto-header">
+                <span class="produto-nome">${p.label}</span>
+                <span class="badge-armazenamento ${badgeClasse}">${badgeLabel}</span>
+              </div>
+              <div class="produto-dias">
+                ${p.dias === 0 
+                  ? `<span style="color: #2e7d32; font-weight: bold; display: flex; align-items: center; gap: 4px;">🛍️ Pronto a Vestir (Imediato)</span>`
+                  : `⏱️ <strong>${p.dias} dias úteis</strong> de produção`}
+              </div>
+              <div class="produto-footer">
+                <button class="btn-editar-card" onclick="mostrarFormEdicao('${p.nome}', ${p.dias})">✏️ Editar</button>
+                <button class="btn-eliminar-card" onclick="eliminarProduto('${p.nome}')">🗑️ Eliminar</button>
+              </div>
+            </div>
+
+            <!-- Vista de Edição Inline -->
+            <div class="view-edicao" style="display: none; width: 100%;">
+              <div class="edit-inline-form">
+                <h3 style="font-size:1rem; margin:0 0 8px 0; text-align:left; color:#bba68a;">Editar Produto</h3>
+                
+                <label style="font-size:0.8rem; font-weight:bold; color:#555; margin-top:0;">Nome do Item:</label>
+                <input type="text" class="edit-nome-input" value="${p.label}" style="background:#fff; color:#000;">
+                
+                <label style="font-size:0.8rem; font-weight:bold; color:#555; margin-top:0;">Tempo (dias úteis):</label>
+                <input type="number" class="edit-dias-input" min="0" value="${p.dias}">
+                
+                <div class="edit-inline-actions">
+                  <button class="btn-edit-confirmar" onclick="salvarEdicaoInline('${p.nome}')">Gravar</button>
+                  <button class="btn-edit-cancelar" onclick="cancelarEdicaoInline('${p.nome}')">Cancelar</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        `;
+      }).join('');
+    }
+
+    // =========================================
+    // CRIAR NOVO PRODUTO
+    // =========================================
+    async function criarNovoProduto() {
+      const nomeInput = document.getElementById('p-nome');
+      const diasInput = document.getElementById('p-dias');
+      
+      const nome = nomeInput.value.trim();
+      const diasVal = parseInt(diasInput.value);
+      const dias = isNaN(diasVal) ? 3 : diasVal;
+
+      if (!nome) {
+        await mostrarAviso("Por favor, preencha o Nome do Tipo de Item.", "Campo Obrigatório", "⚠️");
+        return;
+      }
+      if (dias < 0) {
+        await mostrarAviso("O tempo de produção deve ser de pelo menos 0 dias úteis.", "Aviso", "⚠️");
+        return;
+      }
+
+      const nomeLimpo = nome.toLowerCase().trim();
+      const label = nome.charAt(0).toUpperCase() + nome.slice(1);
+
+      const btn = document.querySelector('.btn-criar');
+      btn.textContent = "A guardar...";
+      btn.disabled = true;
+
+      // 1. Tentar salvar no Supabase
+      let salvoNoSupabase = false;
+      try {
+        const { error } = await db
+          .from('tipos_itens')
+          .upsert({ nome: nomeLimpo, dias: dias }, { onConflict: 'nome' });
+
+        if (!error) {
+          salvoNoSupabase = true;
+        } else {
+          console.warn("Não foi possível salvar no Supabase (será guardado localmente):", error.message || error);
+        }
+      } catch (err) {
+        console.warn("Falha de comunicação com o servidor. Salvando localmente.");
+      }
+
+      // 2. Salvar no localStorage de fallback
+      try {
+        let localCustom = JSON.parse(localStorage.getItem("tipos_itens_custom") || "[]");
+        // Remove duplicatas se houver
+        localCustom = localCustom.filter(item => item.nome.toLowerCase().trim() !== nomeLimpo);
+        localCustom.push({ nome: nomeLimpo, dias: dias });
+        localStorage.setItem("tipos_itens_custom", JSON.stringify(localCustom));
+      } catch(e) {}
+
+      // Limpar formulário
+      nomeInput.value = '';
+      diasInput.value = '3';
+
+      btn.textContent = "✨ Guardar Produto";
+      btn.disabled = false;
+
+      await mostrarAviso(`Produto "${label}" guardado com sucesso! ${salvoNoSupabase ? '(Sincronizado na Nuvem)' : '(Guardado Localmente)'}`, "Sucesso", "✅");
+      
+      await carregarProdutos();
+    }
+
+    // =========================================
+    // CONTROLO DE EDIÇÃO INLINE
+    // =========================================
+    function mostrarFormEdicao(nome, dias) {
+      const card = document.getElementById(`card-${nome.replace(/\s+/g, '-')}`);
+      if (card) {
+        card.querySelector('.view-normal').style.display = 'none';
+        card.querySelector('.view-edicao').style.display = 'block';
+      }
+    }
+
+    function cancelarEdicaoInline(nome) {
+      const card = document.getElementById(`card-${nome.replace(/\s+/g, '-')}`);
+      if (card) {
+        card.querySelector('.view-normal').style.display = 'block';
+        card.querySelector('.view-edicao').style.display = 'none';
+      }
+    }
+
+    async function salvarEdicaoInline(nome) {
+      const card = document.getElementById(`card-${nome.replace(/\s+/g, '-')}`);
+      if (!card) return;
+
+      const nomeInput = card.querySelector('.edit-nome-input');
+      const labelNovo = nomeInput.value.trim();
+
+      if (!labelNovo) {
+        await mostrarAviso("Por favor, preencha o Nome do Tipo de Item.", "Campo Obrigatório", "⚠️");
+        return;
+      }
+
+      const diasInput = card.querySelector('.edit-dias-input');
+      const diasNovosVal = parseInt(diasInput.value);
+      const diasNovos = isNaN(diasNovosVal) ? 3 : diasNovosVal;
+
+      if (diasNovos < 0) {
+        await mostrarAviso("O tempo de produção deve ser de pelo menos 0 dias úteis.", "Aviso", "⚠️");
+        return;
+      }
+
+      const nomeLimpo = nome.toLowerCase().trim();
+      const nomeNovoLimpo = labelNovo.toLowerCase().trim();
+
+      // Se mudou o nome, verifica duplicados
+      if (nomeNovoLimpo !== nomeLimpo) {
+        const jaExiste = produtosEmMemoria.some(p => p.nome === nomeNovoLimpo);
+        if (jaExiste) {
+          await mostrarAviso(`Já existe um produto com o nome "${labelNovo}".`, "Erro", "⚠️");
+          return;
+        }
+      }
+
+      let salvoNoSupabase = false;
+
+      // 1. Tentar atualizar no Supabase
+      try {
+        if (nomeNovoLimpo !== nomeLimpo) {
+          // Deleta o registro com o nome antigo
+          await db.from('tipos_itens').delete().eq('nome', nomeLimpo);
+
+          // Busca todos os pedidos para atualizar o nome antigo no JSON de itens
+          const { data: pedidos, error: errBusca } = await db
+            .from('pedidos')
+            .select('id, itens');
+
+          if (!errBusca && pedidos) {
+            const updatesPedidos = [];
+            for (const pedido of pedidos) {
+              let itensList = [];
+              let alterado = false;
+              try {
+                if (typeof pedido.itens === 'object' && pedido.itens !== null) {
+                  itensList = pedido.itens;
+                } else if (typeof pedido.itens === 'string') {
+                  itensList = JSON.parse(pedido.itens);
+                }
+              } catch(e) {}
+
+              if (Array.isArray(itensList)) {
+                itensList.forEach(item => {
+                  if (item.subtipo && item.subtipo.toLowerCase().trim() === nomeLimpo) {
+                    item.subtipo = nomeNovoLimpo; // Atualiza o nome para o novo valor
+                    alterado = true;
+                    // Atualiza a tipagem se necessário
+                    if (nomeNovoLimpo === 'concerto') item.tipo = 'concerto';
+                    else if (nomeNovoLimpo === 'modificacao') item.tipo = 'modificacao';
+                    else item.tipo = 'criacao';
+                  }
+                });
+              }
+
+              if (alterado) {
+                updatesPedidos.push(
+                  db.from('pedidos')
+                    .update({ itens: JSON.stringify(itensList) })
+                    .eq('id', pedido.id)
+                );
+              }
+            }
+
+            if (updatesPedidos.length > 0) {
+              await Promise.all(updatesPedidos);
+            }
+          }
+        }
+        // Insere/atualiza o novo
+        const { error } = await db
+          .from('tipos_itens')
+          .upsert({ nome: nomeNovoLimpo, dias: diasNovos }, { onConflict: 'nome' });
+
+        if (!error) {
+          salvoNoSupabase = true;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+
+      // 2. Atualizar no localStorage
+      try {
+        let localCustom = JSON.parse(localStorage.getItem("tipos_itens_custom") || "[]");
+        // Remove ambos os nomes antigo e novo para evitar duplicados
+        localCustom = localCustom.filter(item => 
+          item.nome.toLowerCase().trim() !== nomeLimpo && 
+          item.nome.toLowerCase().trim() !== nomeNovoLimpo
+        );
+        localCustom.push({ nome: nomeNovoLimpo, dias: diasNovos });
+        localStorage.setItem("tipos_itens_custom", JSON.stringify(localCustom));
+
+        // Se o nome antigo era um produto padrão, marca-o como deletado para não reaparecer
+        if (defaultTypes.some(d => d.nome === nomeLimpo)) {
+          let localDeleted = JSON.parse(localStorage.getItem("tipos_itens_deleted") || "[]");
+          if (!localDeleted.includes(nomeLimpo)) {
+            localDeleted.push(nomeLimpo);
+            localStorage.setItem("tipos_itens_deleted", JSON.stringify(localDeleted));
+          }
+        }
+      } catch(e) {}
+
+      await mostrarAviso(`Produto atualizado com sucesso! ${salvoNoSupabase ? '(Sincronizado na Nuvem)' : '(Guardado Localmente)'}`, "Sucesso", "✅");
+      
+      await carregarProdutos();
+    }
+
+    // =========================================
+    // ELIMINAR PRODUTO
+    // =========================================
+    async function eliminarProduto(nome) {
+      const label = nome.charAt(0).toUpperCase() + nome.slice(1);
+      
+      confirmarModal({
+        icone: '🗑️',
+        titulo: 'Eliminar Produto',
+        texto: `Tem a certeza que deseja eliminar o produto "${label}" permanentemente?`,
+        corBotao: '#c62828',
+        textoBotao: '🗑️ Confirmar Eliminação',
+        onConfirm: async () => {
+          const nomeLimpo = nome.toLowerCase().trim();
+
+          // 1. Eliminar do Supabase
+          let deletadoSupabase = false;
+          try {
+            const { error } = await db
+              .from('tipos_itens')
+              .delete()
+              .eq('nome', nomeLimpo);
+              
+            if (!error) deletadoSupabase = true;
+          } catch(e) {}
+
+          // 2. Eliminar do localStorage
+          try {
+            let localCustom = JSON.parse(localStorage.getItem("tipos_itens_custom") || "[]");
+            localCustom = localCustom.filter(item => item.nome.toLowerCase().trim() !== nomeLimpo);
+            localStorage.setItem("tipos_itens_custom", JSON.stringify(localCustom));
+          } catch(e) {}
+
+          // 3. Se for um produto padrão, guardamos no localStorage a informação de que ele foi "desativado"
+          // (Desta forma não reaparece ao carregar a página novamente)
+          if (defaultTypes.some(d => d.nome === nomeLimpo)) {
+             try {
+                let localDeleted = JSON.parse(localStorage.getItem("tipos_itens_deleted") || "[]");
+                if (!localDeleted.includes(nomeLimpo)) {
+                   localDeleted.push(nomeLimpo);
+                   localStorage.setItem("tipos_itens_deleted", JSON.stringify(localDeleted));
+                }
+             } catch(e) {}
+          }
+
+          // Remover temporariamente da memória para atualização imediata
+          produtosEmMemoria = produtosEmMemoria.filter(p => p.nome !== nomeLimpo);
+          
+          await carregarProdutos();
+        }
+      });
+    }
+
+    // Ao carregar a página
+    document.addEventListener('DOMContentLoaded', () => {
+      // Filtra os produtos excluídos da lista padrão se existirem
+      try {
+         const localDeleted = JSON.parse(localStorage.getItem("tipos_itens_deleted") || "[]");
+         defaultTypes = defaultTypes.filter(d => !localDeleted.includes(d.nome));
+      } catch(e) {}
+
+      carregarProdutos();
+    });
+  </script>
+</body>
+</html>

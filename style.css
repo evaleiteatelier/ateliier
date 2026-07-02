@@ -1,0 +1,489 @@
+/* =========================================
+   FONTE: Inter (local, da pasta /font)
+   ========================================= */
+@font-face {
+    font-family: 'Inter';
+    src: url('font/Inter-VariableFont_opsz,wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Inter';
+    src: url('font/Inter-Italic-VariableFont_opsz,wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Paleta: bege suave (#f5f1ea), branco (#fff), preto (#000) */
+
+body {
+  background-color: #f5f1ea;
+  color: #000;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 16px;
+  margin: 0;
+  padding: 20px;
+  line-height: 1.6;
+}
+
+h1, h2, h3 {
+  color: #000;
+  text-align: center;
+  margin-top: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.container {
+  max-width: 800px;
+  margin: auto;
+  background: #fff;
+  padding: 30px;
+  border: 2px dashed #bba68a; /* efeito de costura */
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+label {
+  display: block;
+  margin-top: 20px;
+  font-weight: bold;
+}
+
+input, select {
+  width: 100%;
+  padding: 10px;
+  font-size: 17px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fdfdfd;
+  box-sizing: border-box;
+}
+
+button {
+  margin-top: 15px;
+  padding: 12px 20px;
+  background-color: #000;
+  color: #fff;
+  border: none;
+  font-size: 17px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #bba68a;
+  color: #000;
+}
+
+.item {
+  margin-bottom: 15px;
+  padding: 10px;
+  border-left: 4px solid #bba68a;
+  background: #fafafa;
+  border-radius: 6px;
+}
+
+hr {
+  border: none;
+  border-top: 1px dotted #bba68a;
+  margin: 20px 0;
+}
+
+nav {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  background: #fff;
+  padding: 15px 0;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+nav a {
+  color: #000;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 18px;
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+
+nav a:hover {
+  background-color: #bba68a;
+  color: #fff;
+}
+
+footer {
+  text-align: center;
+  padding: 20px;
+  font-size: 14px;
+  color: #666;
+}
+
+.logo-container {
+  background-color: #fff;
+  padding: 10px 0;
+  text-align: center;
+  border-bottom: 2px dashed #bba68a;
+  position: sticky;
+  top: 0;
+  z-index: 1100;
+}
+
+.logo {
+  height: 100px;
+  object-fit: contain;
+}
+
+/* =========================================
+   ESTILO DE CARDS (CAIXAS) PARA OS PEDIDOS
+   ========================================= */
+
+/* =========================================
+   ESTILO "PINTEREST" (MASONRY / IRREGULAR)
+   ========================================= */
+
+/* O Container das Listas */
+* {
+    box-sizing: border-box;
+}
+
+/* O Container das Listas (Responsivo c/ Grid e auto-fit para não deixar buracos) */
+#lista-espera, 
+#lista-concluidos, 
+#lista-entregues {
+    display: block;   /* Será controlado pelo Masonry JS! */
+    position: relative; 
+    padding: 10px;
+}
+
+/* O Cartão Individual (.pedido) */
+.pedido {
+    width: 100%;
+    height: max-content; /* O tamanho é regulado pelo conteúdo */
+    
+    /* Estilo Visual */
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    transition: transform 0.2s, top 0.3s ease-out, left 0.3s ease-out; /* Animação suave no Masonry */
+    
+    /* Flex interno apenas para empurrar conteúdo, se necessário */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Força os botões para baixo se o cartão for mais alto */
+.pedido .acoes-pedido {
+    margin-top: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 15px;
+}
+
+/* Estilo para os botões de ação nos cards */
+.acoes-pedido button {
+    padding: 8px 16px;
+    font-size: 0.8rem;
+    border-radius: 25px;
+    margin-top: 0;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    flex: 1;
+    min-width: fit-content;
+}
+
+.acoes-pedido button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.btn-concluir-pago {
+    background: linear-gradient(135deg, #2e7d32, #43a047) !important;
+    color: white !important;
+}
+
+.btn-excluir {
+    background-color: #d32f2f !important;
+}
+
+.btn-editar {
+    background-color: #555 !important;
+}
+
+/* =========================================
+   ESTILO DO MODAL (POP-UP) PROFISSIONAL
+   ========================================= */
+
+/* O Fundo Escuro */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6); /* Um pouco mais escuro para foco */
+    z-index: 2000;
+    
+    /* Centralização perfeita (Flexbox) */
+    display: flex; 
+    align-items: center;     /* Centraliza Verticalmente */
+    justify-content: center; /* Centraliza Horizontalmente */
+    backdrop-filter: blur(3px); /* Efeito de desfoque no fundo (chique!) */
+}
+
+/* A Caixa Branca */
+.modal-conteudo {
+    background: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    
+    /* --- LARGURA AUMENTADA --- */
+    width: 600px;  /* Antes era 400px, agora cabe o email e botão folgado */
+    max-width: 95%; /* No celular ocupa a tela quase toda */
+    
+    /* --- EVITAR CORTES NA VERTICAL --- */
+    max-height: 90vh; /* Ocupa no máximo 90% da altura da tela */
+    overflow-y: auto; /* Cria barra de rolagem interna SE precisar */
+    
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3); /* Sombra 3D */
+    position: relative;
+    animation: aparecerModal 0.3s ease-out; /* Pequena animação de entrada */
+}
+
+/* Animação suave ao abrir */
+@keyframes aparecerModal {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* Ajuste no título do modal */
+.modal-conteudo h2 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 2px solid #d4af37; /* Detalhe dourado */
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+/* =========================================
+   ESTILO DO COMBOBOX DINÂMICO DE ITENS
+   ========================================= */
+
+.combobox-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+/* Wrapper to position the text input and the float + button */
+.combobox-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.filtro-tipo-item {
+    width: 100%;
+    padding: 10px 40px 10px 10px !important; /* Space for the search icon or '+' button */
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fdfdfd;
+    box-sizing: border-box;
+    margin-top: 5px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.filtro-tipo-item:focus {
+    outline: none;
+    border-color: #bba68a;
+    box-shadow: 0 0 0 3px rgba(187, 166, 138, 0.2);
+}
+
+/* Float add button inside input */
+.btn-combobox-add {
+    position: absolute;
+    right: 8px;
+    top: 54%;
+    transform: translateY(-50%);
+    background: #2e7d32;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 1;
+    margin-top: 0 !important;
+    padding: 0;
+    transition: background 0.2s, transform 0.2s;
+    z-index: 5;
+}
+
+.btn-combobox-add:hover {
+    background: #1b5e20;
+    transform: translateY(-50%) scale(1.1);
+    color: #fff;
+}
+
+/* Suggestions Dropdown Container */
+.sugestoes-tipo-item {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    width: 100%;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 9999;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    box-sizing: border-box;
+    animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Individual suggestion item */
+.sugestao-item {
+    padding: 10px 12px;
+    font-size: 15px;
+    cursor: pointer;
+    color: #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f5f5f5;
+    transition: background 0.15s, color 0.15s;
+    text-align: left;
+}
+
+.sugestao-item:last-child {
+    border-bottom: none;
+}
+
+.sugestao-item:hover, .sugestao-item.selected {
+    background-color: #f5f1ea;
+    color: #000;
+}
+
+.sugestao-item .sugestao-dias {
+    font-size: 0.8rem;
+    color: #777;
+    background: #eaeaea;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.sugestao-item-add {
+    background-color: #f4f9f4;
+    color: #2e7d32;
+    font-weight: bold;
+    border-top: 1px dashed #a5d6a7;
+}
+
+.sugestao-item-add:hover {
+    background-color: #e8f5e9;
+    color: #1b5e20;
+}
+
+/* Inline Cadastro de Tempo Box */
+.novo-item-tempo-box {
+    margin-top: 10px;
+    padding: 14px;
+    background: #f4f9f4;
+    border: 2px dashed #a5d6a7;
+    border-radius: 8px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);
+    animation: slideDown 0.2s ease-out;
+    text-align: left;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.novo-item-tempo-box p {
+    margin: 0 0 8px 0 !important;
+    font-size: 14px;
+    color: #2e7d32;
+    font-weight: bold;
+}
+
+.novo-item-tempo-box .form-inline {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.novo-item-tempo-box label {
+    margin-top: 0 !important;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+}
+
+.novo-item-tempo-box input[type="number"] {
+    width: 80px;
+    padding: 6px 8px;
+    font-size: 14px;
+    border: 1px solid #a5d6a7;
+    border-radius: 4px;
+    margin-top: 0 !important;
+    box-sizing: border-box;
+    display: inline-block;
+}
+
+.novo-item-tempo-box button {
+    margin-top: 0 !important;
+    padding: 6px 12px;
+    font-size: 14px;
+    border-radius: 4px;
+    font-weight: 600;
+    display: inline-block;
+    width: auto;
+}
+
+.novo-item-tempo-box .btn-confirmar-novo-item {
+    background-color: #2e7d32;
+    color: #fff;
+}
+
+.novo-item-tempo-box .btn-confirmar-novo-item:hover {
+    background-color: #1b5e20;
+    color: #fff;
+}
+
+.novo-item-tempo-box .btn-cancelar-novo-item {
+    background-color: #777;
+    color: #fff;
+}
+
+.novo-item-tempo-box .btn-cancelar-novo-item:hover {
+    background-color: #555;
+    color: #fff;
+}
+
