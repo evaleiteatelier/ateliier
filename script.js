@@ -185,7 +185,7 @@ if (document.getElementById('form-pedido')) {
     }
 
     const hoje = new Date();
-    const dataEscolhida = new Date(dataInput);
+    const dataEscolhida = new Date(dataInput + 'T12:00:00'); // T12:00 evita desfasamento UTC→WEST
     const itens = coletarItens();
     const preco_total = itens.reduce((acc, i) => acc + i.preco_total_item, 0);
     const email_cliente = document.getElementById('email_cliente').value;
@@ -807,7 +807,7 @@ async function corrigirAgendamentosRetroativos(pedidosPendentes) {
 
     if (!itens || itens.length === 0) continue;
 
-    let semanaData = ajustarParaSegunda(new Date(p.data_pedido));
+    let semanaData = ajustarParaSegunda(new Date(p.data_pedido + 'T12:00:00'));
     let diasTotais = itens.reduce((acc, i) => acc + (i.dias * i.quantidade), 0);
 
     // Encontra a primeira semana com espaço
@@ -817,7 +817,7 @@ async function corrigirAgendamentosRetroativos(pedidosPendentes) {
       limiteSeguranca++;
     }
 
-    let dataInicioReal = new Date(p.data_pedido);
+    let dataInicioReal = new Date(p.data_pedido + 'T12:00:00');
     if (dataInicioReal < semanaData) dataInicioReal = new Date(semanaData);
 
     const dataEntrega = calcularDataEntrega(dataInicioReal, diasTotais);
