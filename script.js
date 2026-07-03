@@ -388,6 +388,7 @@ async function semanaTemEspaco(segunda, novosItens, excluirPedidoId = null) {
     for (const pedido of pedidos) {
       const itensSalvos = typeof pedido.itens === 'string' ? JSON.parse(pedido.itens) : pedido.itens;
       for (const item of itensSalvos) {
+        if (item.concluido) continue; // Itens individualmente concluídos já não ocupam capacidade
         const qtd = parseInt(item.quantidade) || 1;
         if (item.subtipo === 'vestido de festa') temVestidoFesta = true;
         else if (item.tipo === 'criacao') pecasNormais += qtd;
@@ -962,10 +963,12 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
       </div>
       <ul>
         ${Array.isArray(itensList) ? itensList.map(i => `
-          <li>
-            <strong>${i.subtipo || 'Item'}</strong> (${i.quantidade || 1}x)
-            ${parseInt(i.dias) === 0 ? `<span style="background:#e8f5e9; color:#2e7d32; font-size:0.7rem; font-weight:bold; padding:2px 6px; border-radius:10px; margin-left:5px; border: 1px solid #c8e6c9;">🛍️ Pronto a Vestir</span>` : ''}
-            ${i.descricao ? `<br><em>${i.descricao}</em>` : ''}
+          <li style="${i.concluido ? 'opacity:0.55;' : ''}">
+            ${i.concluido ? '<span style="color:#4caf50; font-weight:bold; margin-right:4px;">✓</span>' : ''}
+            <strong style="${i.concluido ? 'text-decoration:line-through;' : ''}">${i.subtipo || 'Item'}</strong> (${i.quantidade || 1}x)
+            ${i.concluido ? '<span style="background:#e8f5e9; color:#2e7d32; font-size:0.7rem; font-weight:bold; padding:2px 6px; border-radius:10px; margin-left:4px; border:1px solid #c8e6c9;">Concluído</span>' : ''}
+            ${!i.concluido && parseInt(i.dias) === 0 ? `<span style="background:#e8f5e9; color:#2e7d32; font-size:0.7rem; font-weight:bold; padding:2px 6px; border-radius:10px; margin-left:5px; border: 1px solid #c8e6c9;">🛍️ Pronto a Vestir</span>` : ''}
+            ${i.descricao ? `<br><em style="${i.concluido ? 'text-decoration:line-through;' : ''}">${i.descricao}</em>` : ''}
           </li>
         `).join('') : '<li>Erro nos itens</li>'}
       </ul>
@@ -1567,18 +1570,63 @@ async function abrirEditorPedido(id) {
     window.renderItensModal = renderItensModal;
     container.innerHTML = ""; // Limpa a lista visual, mas mantemos o divEmail acima pois ele está fora do container
 
+    // Função para recalcular e guardar nova data de entrega após conclusão de item
+    const autoSalvarConclusao = async () => {
+      const itensPendentes = itensEditados.filter(i => !i.concluido);
+      const diasTotais = itensPendentes.reduce((acc, i) => acc + ((i.dias || 0) * (i.quantidade || 1)), 0);
+
+      let novaDataEntrega;
+      if (diasTotais <= 0) {
+        novaDataEntrega = formatarParaISO(new Date());
+      } else {
+        const dataInicio = new Date((pedido.data_pedido || pedido.data_real) + 'T12:00:00');
+        novaDataEntrega = formatarParaISO(calcularDataEntrega(dataInicio, diasTotais));
+      }
+
+      await supabase.from("pedidos").update({
+        itens: JSON.stringify(itensEditados),
+        data_entrega: novaDataEntrega,
+      }).eq("id", id);
+    };
+
     // Lista itens existentes
     itensEditados.forEach((item, index) => {
+      const concluido = item.concluido || false;
       const div = document.createElement("div");
       div.style.marginBottom = "10px";
       div.style.borderBottom = "1px solid #eee";
       div.style.paddingBottom = "10px";
+      div.style.background = concluido ? "#f9fdf9" : "";
+      div.style.borderRadius = "6px";
+      div.style.padding = concluido ? "8px" : "0 0 10px 0";
+
       div.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
-            <span><strong>${item.quantidade}x ${item.subtipo}</strong> - €${item.preco_total_item.toFixed(2)}</span>
-            <button data-index="${index}" class="remover-item" style="background:red; color:white; border:none; padding:2px 5px; cursor:pointer; border-radius:3px;">X</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:6px;">
+            <span style="${concluido ? 'text-decoration:line-through; color:#999;' : ''}">
+              ${concluido ? '<span style="color:#4caf50; font-weight:bold;">✓</span> ' : ''}
+              <strong>${item.quantidade}x ${item.subtipo}</strong>
+              <span style="color:#777;"> — €${item.preco_total_item.toFixed(2)}</span>
+              ${concluido ? '<span style="background:#e8f5e9; color:#2e7d32; font-size:0.7rem; font-weight:bold; padding:2px 7px; border-radius:10px; margin-left:6px; border:1px solid #c8e6c9;">Concluído</span>' : ''}
+            </span>
+            <div style="display:flex; gap:5px; flex-shrink:0;">
+              ${!concluido
+                ? `<button data-index="${index}" class="btn-concluir-item"
+                     style="background:#4CAF50; color:white; border:none; padding:3px 10px; cursor:pointer; border-radius:4px; font-size:0.8rem; white-space:nowrap;">
+                     ✓ Concluir item
+                   </button>`
+                : `<button data-index="${index}" class="btn-reabrir-item"
+                     style="background:#ff9800; color:white; border:none; padding:3px 10px; cursor:pointer; border-radius:4px; font-size:0.8rem; white-space:nowrap;">
+                     ↩ Reabrir
+                   </button>`
+              }
+              <button data-index="${index}" class="remover-item"
+                style="background:red; color:white; border:none; padding:3px 7px; cursor:pointer; border-radius:4px; font-size:0.85rem;">✕</button>
+            </div>
         </div>
-        <textarea data-index="${index}" class="editar-descricao" placeholder="Descrição do item..." style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; box-sizing:border-box; min-height:60px; font-family:inherit; resize:vertical;">${item.descricao || ''}</textarea>
+        <textarea data-index="${index}" class="editar-descricao"
+          placeholder="Descrição do item..."
+          style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; box-sizing:border-box; min-height:55px; font-family:inherit; resize:vertical; ${concluido ? 'opacity:0.45;' : ''}"
+        >${item.descricao || ''}</textarea>
       `;
       container.appendChild(div);
     });
@@ -1657,11 +1705,29 @@ async function abrirEditorPedido(id) {
 
   renderItensModal();
 
-  // Delegação de evento para remover item
-  container.onclick = (e) => {
+  // Delegação de evento para remover / concluir / reabrir item
+  container.onclick = async (e) => {
     if (e.target.classList.contains("remover-item")) {
       const index = parseInt(e.target.dataset.index);
       itensEditados.splice(index, 1);
+      renderItensModal();
+    }
+
+    if (e.target.classList.contains("btn-concluir-item")) {
+      const index = parseInt(e.target.dataset.index);
+      e.target.textContent = "A guardar...";
+      e.target.disabled = true;
+      itensEditados[index].concluido = true;
+      await autoSalvarConclusao();
+      renderItensModal();
+    }
+
+    if (e.target.classList.contains("btn-reabrir-item")) {
+      const index = parseInt(e.target.dataset.index);
+      e.target.textContent = "A guardar...";
+      e.target.disabled = true;
+      itensEditados[index].concluido = false;
+      await autoSalvarConclusao();
       renderItensModal();
     }
   };
