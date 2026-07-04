@@ -976,6 +976,7 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
 
     const adiantadoVal = p.valor_adiantado ? Number(p.valor_adiantado) : 0;
     const estaPago = (finalValueRendered - adiantadoVal) <= 0.01;
+    div.setAttribute('data-pago', estaPago ? 'sim' : 'nao');
     const isProntoAVestir = Array.isArray(itensList) && itensList.length > 0 && itensList.every(i => parseInt(i.dias) === 0);
 
     div.innerHTML = `
@@ -1380,21 +1381,42 @@ async function excluirPedido(id) {
 }
 
 // --- FUNÇÃO DE PESQUISA (ESTAVA FALTANDO) ---
-function filtrarPedidos() {
-  const input = document.getElementById('pesquisa');
-  const termo = input.value.toLowerCase();
-  const pedidos = document.querySelectorAll('.pedido');
+let _filtroPagamento = 'todos'; // 'todos' | 'sim' | 'nao'
 
-  pedidos.forEach(pedido => {
-    const nomeCliente = pedido.getAttribute('data-nome');
-    if (nomeCliente.includes(termo)) {
-      pedido.style.display = "flex"; // Volta o display original para os pedidos
+function definirFiltroPagamento(estado) {
+  _filtroPagamento = estado;
+
+  // Atualiza visual dos botões
+  ['todos', 'sim', 'nao'].forEach(s => {
+    const btn = document.getElementById('filtro-btn-' + s);
+    if (!btn) return;
+    if (s === estado) {
+      btn.style.background = '#bba68a';
+      btn.style.color = '#fff';
+      btn.style.borderColor = '#bba68a';
     } else {
-      pedido.style.display = "none";
+      btn.style.background = '#fff';
+      btn.style.color = '#555';
+      btn.style.borderColor = '#ddd';
     }
   });
 
-  // Reconstrói o mosaico para preencher os buracos das pesquisas
+  filtrarPedidos();
+}
+
+function filtrarPedidos() {
+  const input = document.getElementById('pesquisa');
+  const termo = input ? input.value.toLowerCase() : '';
+  const pedidos = document.querySelectorAll('.pedido');
+
+  pedidos.forEach(pedido => {
+    const nomeOk = pedido.getAttribute('data-nome').includes(termo);
+    const pagoAttr = pedido.getAttribute('data-pago');
+    const pagoOk = _filtroPagamento === 'todos' || pagoAttr === _filtroPagamento;
+
+    pedido.style.display = (nomeOk && pagoOk) ? 'flex' : 'none';
+  });
+
   let filtroPagina = 'pendente';
   if (window.location.pathname.includes('concluidos')) filtroPagina = 'concluido';
   if (window.location.pathname.includes('entregues')) filtroPagina = 'entregue';
