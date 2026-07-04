@@ -285,7 +285,18 @@
     <!-- COLUNA DIREITA: Listagem e Sincronização -->
     <div>
       <div class="produtos-grid-title">Produtos e Tempos Cadastrados</div>
-      
+
+      <div style="margin-bottom:18px;">
+        <input type="text" id="pesquisa-produtos"
+          placeholder="Pesquisar produto..."
+          oninput="renderizarProdutos()"
+          style="width:100%; padding:11px 16px; border:1px solid #ddd; border-radius:8px;
+                 font-size:0.95rem; box-sizing:border-box; outline:none;
+                 transition:border-color .2s; font-family:'Inter',sans-serif;"
+          onfocus="this.style.borderColor='#bba68a'"
+          onblur="this.style.borderColor='#ddd'">
+      </div>
+
       <div class="produtos-lista" id="produtos-lista">
         <div class="empty-state"><p>⏳</p><p>A carregar produtos...</p></div>
       </div>
@@ -423,6 +434,13 @@
     // =========================================
     function renderizarProdutos() {
       const lista = document.getElementById('produtos-lista');
+      const termo = (document.getElementById('pesquisa-produtos')?.value || '').toLowerCase().trim();
+      const filtrados = termo
+        ? produtosEmMemoria.filter(p =>
+            p.label.toLowerCase().includes(termo) ||
+            p.nome.toLowerCase().includes(termo))
+        : produtosEmMemoria;
+
       if (produtosEmMemoria.length === 0) {
         lista.innerHTML = `
           <div class="empty-state">
@@ -432,7 +450,16 @@
         return;
       }
 
-      lista.innerHTML = produtosEmMemoria.map(p => {
+      if (filtrados.length === 0) {
+        lista.innerHTML = `
+          <div class="empty-state">
+            <p>🔍</p>
+            <p>Nenhum produto encontrado para "<strong>${termo}</strong>".</p>
+          </div>`;
+        return;
+      }
+
+      lista.innerHTML = filtrados.map(p => {
         const isDefault = defaultTypes.some(d => d.nome === p.nome);
         const badgeClasse = p.origem === 'supabase' ? 'badge-nuvem' : 'badge-local';
         const badgeLabel = p.origem === 'supabase' ? '☁️ Nuvem' : '💻 Local';
