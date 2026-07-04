@@ -927,7 +927,8 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
 
     const div = document.createElement('div');
     div.className = 'pedido';
-    div.setAttribute('data-nome', p.nome ? p.nome.toLowerCase() : ""); // Proteção contra nome vazio
+    div.setAttribute('data-nome', p.nome ? p.nome.toLowerCase() : "");
+    div.setAttribute('data-data', p.data_pedido || '');
 
     // Formata datas para o padrão PT (Dia/Mês/Ano) - Protegido contra fuso horário
     const dataPedidoF = formatarDataParaExibir(p.data_real || p.data_pedido);
@@ -1407,20 +1408,38 @@ function definirFiltroPagamento(estado) {
 function filtrarPedidos() {
   const input = document.getElementById('pesquisa');
   const termo = input ? input.value.toLowerCase() : '';
-  const pedidos = document.querySelectorAll('.pedido');
+  const ordem = document.getElementById('ordem-pedidos')?.value || 'data-desc';
+
+  // Determina o container correto
+  let containerId = 'lista-espera';
+  if (window.location.pathname.includes('concluidos')) containerId = 'lista-concluidos';
+  if (window.location.pathname.includes('entregues')) containerId = 'lista-entregues';
+  const container = document.getElementById(containerId);
+
+  const pedidos = container ? Array.from(container.querySelectorAll('.pedido')) : [];
 
   pedidos.forEach(pedido => {
     const nomeOk = pedido.getAttribute('data-nome').includes(termo);
     const pagoAttr = pedido.getAttribute('data-pago');
-    const pagoOk = _filtroPagamento === 'todos' || pagoAttr === _filtroPagamento;
-
+    const pagoOk = _filtroPagamento === 'todos' || pagoAttr === _filtroPagamento || !pagoAttr;
     pedido.style.display = (nomeOk && pagoOk) ? 'flex' : 'none';
   });
 
-  let filtroPagina = 'pendente';
-  if (window.location.pathname.includes('concluidos')) filtroPagina = 'concluido';
-  if (window.location.pathname.includes('entregues')) filtroPagina = 'entregue';
-  setTimeout(() => aplicarMasonryUI(filtroPagina), 20);
+  // Ordenação: move elementos no DOM conforme a opção escolhida
+  if (container && ordem) {
+    const visiveis = pedidos.filter(p => p.style.display !== 'none');
+    visiveis.sort((a, b) => {
+      if (ordem === 'nome-az') return (a.getAttribute('data-nome') || '').localeCompare(b.getAttribute('data-nome') || '', 'pt');
+      if (ordem === 'nome-za') return (b.getAttribute('data-nome') || '').localeCompare(a.getAttribute('data-nome') || '', 'pt');
+      const dA = a.getAttribute('data-data') || '';
+      const dB = b.getAttribute('data-data') || '';
+      if (ordem === 'data-asc') return dA.localeCompare(dB);
+      return dB.localeCompare(dA); // data-desc (default)
+    });
+    visiveis.forEach(p => container.appendChild(p));
+  }
+
+  setTimeout(() => aplicarMasonryUI(containerId === 'lista-espera' ? 'pendente' : containerId === 'lista-concluidos' ? 'concluido' : 'entregue'), 20);
 }
 
 // ==========================================

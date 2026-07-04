@@ -286,7 +286,7 @@
     <div>
       <div class="produtos-grid-title">Produtos e Tempos Cadastrados</div>
 
-      <div style="margin-bottom:18px;">
+      <div style="margin-bottom:18px; display:flex; flex-direction:column; gap:10px;">
         <input type="text" id="pesquisa-produtos"
           placeholder="Pesquisar produto..."
           oninput="renderizarProdutos()"
@@ -295,6 +295,15 @@
                  transition:border-color .2s; font-family:'Inter',sans-serif;"
           onfocus="this.style.borderColor='#bba68a'"
           onblur="this.style.borderColor='#ddd'">
+        <div style="display:flex; justify-content:flex-end;">
+          <select id="ordem-produtos" onchange="renderizarProdutos()"
+            style="padding:7px 12px; border-radius:8px; border:1.5px solid #ddd;
+                   font-size:0.83rem; font-family:'Inter',sans-serif; cursor:pointer;
+                   outline:none; background:#fff; color:#555;">
+            <option value="nome-az">A → Z</option>
+            <option value="nome-za">Z → A</option>
+          </select>
+        </div>
       </div>
 
       <div class="produtos-lista" id="produtos-lista">
@@ -435,11 +444,15 @@
     function renderizarProdutos() {
       const lista = document.getElementById('produtos-lista');
       const termo = (document.getElementById('pesquisa-produtos')?.value || '').toLowerCase().trim();
-      const filtrados = termo
+      const ordem = document.getElementById('ordem-produtos')?.value || 'nome-az';
+      let filtrados = termo
         ? produtosEmMemoria.filter(p =>
             p.label.toLowerCase().includes(termo) ||
             p.nome.toLowerCase().includes(termo))
-        : produtosEmMemoria;
+        : [...produtosEmMemoria];
+      filtrados.sort((a, b) => ordem === 'nome-za'
+        ? b.label.localeCompare(a.label, 'pt')
+        : a.label.localeCompare(b.label, 'pt'));
 
       if (produtosEmMemoria.length === 0) {
         lista.innerHTML = `

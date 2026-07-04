@@ -17,9 +17,23 @@
 
   <h1>Pedidos Concluídos</h1>
   
-  <div style="max-width: 600px; margin: 0 auto 20px auto;">
-    <label for="pesquisa">Pesquisar Cliente:</label>
-    <input type="text" id="pesquisa" placeholder="Digite o nome da cliente..." onkeyup="filtrarPedidos()">
+  <div style="max-width:700px; margin:0 auto 24px auto; display:flex; flex-direction:column; gap:12px;">
+    <input type="text" id="pesquisa" placeholder="Pesquisar cliente..." onkeyup="filtrarPedidos()"
+      style="width:100%; padding:10px 14px; border:1px solid #ddd; border-radius:8px;
+             font-size:0.95rem; box-sizing:border-box; outline:none; font-family:inherit;
+             transition:border-color .2s;"
+      onfocus="this.style.borderColor='#bba68a'" onblur="this.style.borderColor='#ddd'">
+    <div style="display:flex; justify-content:flex-end;">
+      <select id="ordem-pedidos" onchange="filtrarPedidos()"
+        style="padding:7px 12px; border-radius:8px; border:1.5px solid #ddd;
+               font-size:0.83rem; font-family:inherit; cursor:pointer; outline:none;
+               background:#fff; color:#555;">
+        <option value="data-desc">Mais recente</option>
+        <option value="data-asc">Mais antigo</option>
+        <option value="nome-az">A → Z</option>
+        <option value="nome-za">Z → A</option>
+      </select>
+    </div>
   </div>
   
   <div id="lista-concluidos">
