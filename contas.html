@@ -397,6 +397,11 @@
           <input type="number" id="pct-salario" class="dist-input" value="15" min="0" max="100" step="0.01" oninput="recalcular()">
           <span>%</span>
         </div>
+        <div class="dist-row">
+          <label>Weza</label>
+          <input type="number" id="pct-weza" class="dist-input" value="10" min="0" max="100" step="0.01" oninput="recalcular()">
+          <span>%</span>
+        </div>
         <div class="dist-total-row">
           <label>Total</label>
           <span id="dist-total-val" class="dist-total-val">100%</span>
@@ -461,7 +466,7 @@
       <!-- RESULTADOS DA SEMANA -->
       <div class="card card-full">
         <p class="card-title">Resultados da Semana</p>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
           <div style="background:#fafaf8;border-radius:10px;padding:14px 16px;">
             <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:6px;">Total Encomendas</div>
             <div id="res-total" style="font-size:1.3rem;font-weight:800;color:var(--dark);">0,00 €</div>
@@ -473,6 +478,10 @@
           <div style="background:#fafaf8;border-radius:10px;padding:14px 16px;">
             <div class="r-label" id="lbl-salario" style="margin-bottom:6px;font-size:0.8rem;">Salário (15%)</div>
             <div id="res-salario" style="font-size:1.1rem;font-weight:700;color:var(--dark);">0,00 €</div>
+          </div>
+          <div style="background:#fafaf8;border-radius:10px;padding:14px 16px;">
+            <div class="r-label" id="lbl-weza" style="margin-bottom:6px;font-size:0.8rem;">Weza (10%)</div>
+            <div id="res-weza" style="font-size:1.1rem;font-weight:700;color:var(--dark);">0,00 €</div>
           </div>
         </div>
         <div style="margin-top:16px;padding-top:16px;border-top:1px solid #f0ead8;">
@@ -1002,8 +1011,9 @@ function adicionarPagDivida(desc = '', val = '', data = '', dividaKey = '', ref 
 function recalcular() {
   const pctA = parseFloat(document.getElementById('pct-atelier').value) || 0;
   const pctS = parseFloat(document.getElementById('pct-salario').value) || 0;
+  const pctW = parseFloat(document.getElementById('pct-weza').value)    || 0;
 
-  const totalPct = pctA + pctS;
+  const totalPct = pctA + pctS + pctW;
   const dtv = document.getElementById('dist-total-val');
   dtv.textContent = totalPct.toFixed(2).replace('.',',') + '%';
   dtv.style.color = Math.abs(totalPct - 100) < 0.01 ? 'var(--green)' : 'var(--red)';
@@ -1013,6 +1023,7 @@ function recalcular() {
 
   const atelierV = totalEnc * pctA / 100;
   const salarioV = totalEnc * pctS / 100;
+  const wezaV    = totalEnc * pctW / 100;
   const liquido  = atelierV;
 
   // Gastos do dia
@@ -1026,8 +1037,10 @@ function recalcular() {
   document.getElementById('res-total').textContent   = fmt(totalEnc);
   document.getElementById('res-atelier').textContent = fmt(atelierV);
   document.getElementById('res-salario').textContent = fmt(salarioV);
+  document.getElementById('res-weza').textContent    = fmt(wezaV);
   document.getElementById('lbl-atelier').textContent = `Atelier (${pctA}%)`;
   document.getElementById('lbl-salario').textContent = `Salário (${pctS}%)`;
+  document.getElementById('lbl-weza').textContent    = `Weza (${pctW}%)`;
 
   const liqEl = document.getElementById('res-liquido');
   liqEl.textContent = fmt(liquido);
@@ -1083,14 +1096,15 @@ function recalcularMensal() {
 
   for (let i = 1; i <= 4; i++) {
     const raw = localStorage.getItem(chaveSemana(i));
-    let aV = 0, sV = 0, eV = 0, pdivV = 0, gastosV = 0;
+    let aV = 0, sV = 0, wV = 0, pdivV = 0, gastosV = 0;
 
     if (raw) {
       const d = JSON.parse(raw);
-      const pA = d.pctAtelier || 75, pS = d.pctSalario || 15;
+      const pA = d.pctAtelier || 75, pS = d.pctSalario || 15, pW = d.pctWeza || 10;
       const tot = (d.encomendas || []).reduce((s, e) => s + (parseFloat(e.valor) || 0), 0);
       aV = tot * pA / 100;
       sV = tot * pS / 100;
+      wV = tot * pW / 100;
       pdivV   = (d.pagamentosDivida || []).reduce((s, p) => s + (parseFloat(p.valor) || 0), 0);
       gastosV = (d.gastos           || []).reduce((s, g) => s + (parseFloat(g.valor) || 0), 0);
     }
@@ -1382,6 +1396,7 @@ function dadosSemanaAtual() {
   return {
     pctAtelier: parseFloat(document.getElementById('pct-atelier').value) || 75,
     pctSalario: parseFloat(document.getElementById('pct-salario').value) || 15,
+    pctWeza:    parseFloat(document.getElementById('pct-weza').value)    || 10,
     encomendas,
     pagamentosDivida,
     gastos,
@@ -1458,6 +1473,7 @@ function carregarSemana(n) {
     const d = JSON.parse(raw);
     document.getElementById('pct-atelier').value = d.pctAtelier ?? 75;
     document.getElementById('pct-salario').value = d.pctSalario ?? 15;
+    document.getElementById('pct-weza').value    = d.pctWeza    ?? 10;
     document.getElementById('nota-semana').value = d.nota       || '';
     (d.encomendas       || []).forEach(e => adicionarEncomenda(e.nome, e.valor, e.data || '', e.autoSync || false));
     (d.pagamentosDivida || []).forEach(p => adicionarPagDivida(p.descricao, p.valor, p.data || '', p.dividaKey || '', p.ref || ''));
@@ -1465,6 +1481,7 @@ function carregarSemana(n) {
   } else {
     document.getElementById('pct-atelier').value = 75;
     document.getElementById('pct-salario').value = 15;
+    document.getElementById('pct-weza').value    = 10;
     document.getElementById('nota-semana').value = '';
     adicionarEncomenda();
   }
