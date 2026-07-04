@@ -170,8 +170,18 @@ carregarTodosTiposItens();
 // ==========================================
 
 if (document.getElementById('form-pedido')) {
+  // Bloqueia Enter em inputs de texto/número para não submeter o form acidentalmente
+  document.getElementById('form-pedido').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'TEXTAREA') {
+      e.preventDefault();
+    }
+  });
+
+  let _submittingPedido = false;
   document.getElementById('form-pedido').addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (_submittingPedido) return;
+
     const nome = document.getElementById('nome').value.trim();
     if (!nome) {
       await mostrarAviso("Por favor, introduza o Nome da Cliente.", "Campo Obrigatório", "⚠️");
@@ -194,6 +204,11 @@ if (document.getElementById('form-pedido')) {
       await mostrarAviso("Adicione ao menos um item ao pedido.", "Aviso", "⚠️");
       return;
     }
+
+    // Bloqueia submissões duplas
+    _submittingPedido = true;
+    const btnSalvar = document.querySelector('#form-pedido [type="submit"]');
+    if (btnSalvar) { btnSalvar.disabled = true; btnSalvar.textContent = 'A guardar...'; }
 
     // --- LÓGICA INTELIGENTE DE AGENDAMENTO ---
     let semanaData = ajustarParaSegunda(dataEscolhida);
@@ -266,6 +281,8 @@ if (document.getElementById('form-pedido')) {
       if (error) {
         console.error("Erro ao salvar pedido:", error);
         await mostrarAviso("Erro ao salvar pedido: " + error.message, "Erro", "❌");
+        _submittingPedido = false;
+        if (btnSalvar) { btnSalvar.disabled = false; btnSalvar.textContent = '✓ Salvar Pedido'; }
       } else {
         // Tenta enviar o email de confirmação se não for pronto-a-vestir
         if (!isProntoAVestir) {
@@ -288,6 +305,8 @@ if (document.getElementById('form-pedido')) {
     } catch (err) {
       console.error("Erro inesperado:", err);
       await mostrarAviso("Erro inesperado: " + err.message, "Erro", "❌");
+      _submittingPedido = false;
+      if (btnSalvar) { btnSalvar.disabled = false; btnSalvar.textContent = '✓ Salvar Pedido'; }
     }
   });
 }
