@@ -243,14 +243,23 @@ if (document.getElementById('form-pedido')) {
 
     const isProntoAVestir = itens.length > 0 && itens.every(i => parseInt(i.dias) === 0);
 
+    // Pronto a vestir: pago = vai para 'entregue'; não pago = vai para 'concluido'
+    const estaPagoTotal = preco_final > 0 && valor_adiantado >= preco_final;
+    const valorFinalAdiantado = isProntoAVestir
+      ? (estaPagoTotal ? preco_final : valor_adiantado)
+      : valor_adiantado;
+
+    const statusInicial = isProntoAVestir
+      ? (estaPagoTotal ? 'entregue' : 'concluido')
+      : 'pendente';
+
     // Constrói array de pagamentos com data
     const dataInicialPgmt = document.getElementById('data_pagamento_inicial');
     const dataHoje = formatarParaISO(new Date());
-    const valorFinalAdiantado = isProntoAVestir ? preco_final : valor_adiantado;
     const pagamentosInicial = valorFinalAdiantado > 0 ? [{
       valor: valorFinalAdiantado,
       data: (dataInicialPgmt && dataInicialPgmt.value) ? dataInicialPgmt.value : dataHoje,
-      nota: isProntoAVestir ? 'Pagamento total (pronto a vestir)' : 'Pagamento inicial'
+      nota: isProntoAVestir ? (estaPagoTotal ? 'Pagamento total (pronto a vestir)' : 'Pagamento parcial (pronto a vestir)') : 'Pagamento inicial'
     }] : [];
 
     const pedidoObj = {
@@ -259,7 +268,7 @@ if (document.getElementById('form-pedido')) {
       data_real: formatarParaISO(new Date()),
       itens: JSON.stringify(itens),
       data_entrega: formatarParaISO(dataEntrega),
-      status: isProntoAVestir ? 'entregue' : 'pendente',
+      status: statusInicial,
       preco_total: preco_total,
       preco_final: preco_final,
       cupao_codigo: cupao_codigo,
