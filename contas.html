@@ -449,16 +449,16 @@
 
       <!-- PAGAMENTOS DE DÍVIDA (SEMANAL) -->
       <div class="card card-full" style="border-left: 3px solid var(--red);">
-        <p class="card-title" style="color:var(--red);">Pagamentos de Dívida desta Semana</p>
-        <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 14px;">Regista aqui os valores pagos a credores nesta semana.</p>
+        <p class="card-title" style="color:var(--green);">Recebimentos de Dívidas desta Semana</p>
+        <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 14px;">Regista aqui os valores recebidos de clientes que têm dívidas com o atelier.</p>
         <ul class="pdiv-list" id="pdiv-list"></ul>
         <button class="btn-add-pdiv" onclick="adicionarPagDivida()">
           <span style="font-size:1.1rem;">+</span> Adicionar Pagamento de Dívida
         </button>
-        <div style="margin-top:14px;padding-top:12px;border-top:1px solid #ffe0e0;">
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid #c8e6c9;">
           <div class="result-row">
-            <span class="r-label">Total pago em dívidas esta semana</span>
-            <span class="r-val negativo" id="res-pdiv-total">0,00 €</span>
+            <span class="r-label">Total recebido de dívidas esta semana</span>
+            <span class="r-val positivo" id="res-pdiv-total">0,00 €</span>
           </div>
         </div>
       </div>
@@ -485,21 +485,21 @@
           </div>
         </div>
         <div style="margin-top:16px;padding-top:16px;border-top:1px solid #f0ead8;">
-          <div class="result-row highlight">
-            <span class="r-label">Lucro Líquido Atelier</span>
-            <span class="r-val" id="res-liquido">0,00 €</span>
+          <div class="result-row" id="row-pdiv-result" style="display:none;">
+            <span class="r-label" style="color:var(--green);">+ Recebimentos de dívidas</span>
+            <span class="r-val positivo" id="res-liquido-pdiv">0,00 €</span>
           </div>
           <div class="result-row" id="row-gastos-result" style="display:none;">
             <span class="r-label" style="color:var(--orange);">− Gastos do dia</span>
             <span class="r-val" style="color:var(--orange);" id="res-gastos-deducao">0,00 €</span>
           </div>
-          <div class="result-row" id="row-pdiv-result" style="display:none;">
-            <span class="r-label" style="color:var(--red);">− Pagamentos de dívida</span>
-            <span class="r-val negativo" id="res-liquido-pdiv">0,00 €</span>
+          <div class="result-row" id="row-liquido-final" style="display:none;">
+            <span class="r-label" style="color:#888;font-size:0.82rem;">= Saldo a distribuir</span>
+            <span class="r-val" id="res-liquido-final" style="font-size:0.95rem;">0,00 €</span>
           </div>
-          <div class="result-row highlight" id="row-liquido-final" style="display:none;">
-            <span class="r-label">Saldo Final</span>
-            <span class="r-val" id="res-liquido-final">0,00 €</span>
+          <div class="result-row highlight" style="margin-top:8px;">
+            <span class="r-label">Lucro Líquido Atelier</span>
+            <span class="r-val" id="res-liquido">0,00 €</span>
           </div>
         </div>
       </div>
@@ -607,17 +607,17 @@
       </div>
 
 
-      <!-- DÍVIDAS DO MÊS -->
-      <div class="card" style="border-left:3px solid var(--red);">
-        <p class="card-title" style="color:var(--red);">Dívidas — Resumo do Mês</p>
+      <!-- RECEBIMENTOS DE DÍVIDAS DO MÊS -->
+      <div class="card" style="border-left:3px solid var(--green);">
+        <p class="card-title" style="color:var(--green);">Dívidas Recebidas — Resumo do Mês</p>
         <ul class="mensal-semanas-list" id="mensal-dividas-list"></ul>
-        <div style="margin-top:4px;padding-top:12px;border-top:1px solid #ffe0e0;">
+        <div style="margin-top:4px;padding-top:12px;border-top:1px solid #c8e6c9;">
           <div class="result-row">
-            <span class="r-label">Total pago em dívidas este mês</span>
-            <span class="r-val negativo" id="mensal-pdiv-total">0,00 €</span>
+            <span class="r-label">Total recebido de dívidas este mês</span>
+            <span class="r-val positivo" id="mensal-pdiv-total">0,00 €</span>
           </div>
           <div class="result-row highlight">
-            <span class="r-label">Dívida total registada</span>
+            <span class="r-label">Dívida total por receber</span>
             <span class="r-val negativo" id="mensal-divida-restante">0,00 €</span>
           </div>
         </div>
@@ -1021,18 +1021,21 @@ function recalcular() {
   let totalEnc = 0;
   document.querySelectorAll('.enc-valor').forEach(i => totalEnc += parseFloat(i.value) || 0);
 
-  const atelierV = totalEnc * pctA / 100;
-  const salarioV = totalEnc * pctS / 100;
-  const wezaV    = totalEnc * pctW / 100;
-  const liquido  = atelierV;
-
   // Gastos do dia
   let totalGastos = 0;
   document.querySelectorAll('.gasto-dia-val').forEach(i => totalGastos += parseFloat(i.value) || 0);
 
-  // Pagamentos de dívida
+  // Recebimentos de dívidas (receita positiva — clientes pagam o que devem ao atelier)
   let totalPDiv = 0;
   document.querySelectorAll('.pdiv-val').forEach(i => totalPDiv += parseFloat(i.value) || 0);
+
+  // Saldo a distribuir = encomendas + recebimentos de dívidas - gastos do dia
+  const saldo = totalEnc + totalPDiv - totalGastos;
+
+  const atelierV = saldo * pctA / 100;
+  const salarioV = saldo * pctS / 100;
+  const wezaV    = saldo * pctW / 100;
+  const liquido  = atelierV;
 
   document.getElementById('res-total').textContent   = fmt(totalEnc);
   document.getElementById('res-atelier').textContent = fmt(atelierV);
@@ -1053,17 +1056,15 @@ function recalcular() {
   const hasPDiv   = totalPDiv > 0;
   const hasFinal  = hasGastos || hasPDiv;
 
+  document.getElementById('row-pdiv-result').style.display   = hasPDiv ? '' : 'none';
+  document.getElementById('res-liquido-pdiv').textContent    = fmt(totalPDiv);
   document.getElementById('row-gastos-result').style.display = hasGastos ? '' : 'none';
   document.getElementById('res-gastos-deducao').textContent  = fmt(totalGastos);
-  document.getElementById('row-pdiv-result').style.display   = hasPDiv ? '' : 'none';
   document.getElementById('row-liquido-final').style.display = hasFinal ? '' : 'none';
-
   if (hasFinal) {
-    const final = liquido - totalGastos - totalPDiv;
-    document.getElementById('res-liquido-pdiv').textContent = fmt(totalPDiv);
     const fEl = document.getElementById('res-liquido-final');
-    fEl.textContent = fmt(final);
-    fEl.className   = 'r-val ' + (final >= 0 ? 'positivo' : 'negativo');
+    fEl.textContent = fmt(saldo);
+    fEl.className   = 'r-val ' + (saldo >= 0 ? 'positivo' : 'negativo');
   }
 }
 
@@ -1102,11 +1103,13 @@ function recalcularMensal() {
       const d = JSON.parse(raw);
       const pA = d.pctAtelier || 75, pS = d.pctSalario || 15, pW = d.pctWeza || 10;
       const tot = (d.encomendas || []).reduce((s, e) => s + (parseFloat(e.valor) || 0), 0);
-      aV = tot * pA / 100;
-      sV = tot * pS / 100;
-      wV = tot * pW / 100;
       pdivV   = (d.pagamentosDivida || []).reduce((s, p) => s + (parseFloat(p.valor) || 0), 0);
       gastosV = (d.gastos           || []).reduce((s, g) => s + (parseFloat(g.valor) || 0), 0);
+      // Saldo = encomendas + recebimentos de dívidas - gastos variáveis
+      const saldoSemana = tot + pdivV - gastosV;
+      aV = saldoSemana * pA / 100;
+      sV = saldoSemana * pS / 100;
+      wV = saldoSemana * pW / 100;
     }
 
     totalAtelier += aV; totalSalario += sV;
@@ -1126,7 +1129,7 @@ function recalcularMensal() {
     if (pdivV > 0) {
       const d2 = document.createElement('li');
       d2.className = 'mensal-semana-item';
-      d2.innerHTML = `<span class="ms-label" style="color:var(--red)">${i}ª Semana (pago)</span><span class="ms-val" style="color:var(--red)">− ${fmt(pdivV)}</span>`;
+      d2.innerHTML = `<span class="ms-label" style="color:var(--green)">${i}ª Semana (recebido)</span><span class="ms-val" style="color:var(--green)">+ ${fmt(pdivV)}</span>`;
       dL.appendChild(d2);
     }
 
