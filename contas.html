@@ -397,11 +397,6 @@
           <input type="number" id="pct-salario" class="dist-input" value="15" min="0" max="100" step="0.01" oninput="recalcular()">
           <span>%</span>
         </div>
-        <div class="dist-row">
-          <label>Empregados</label>
-          <input type="number" id="pct-empregados" class="dist-input" value="10" min="0" max="100" step="0.01" oninput="recalcular()">
-          <span>%</span>
-        </div>
         <div class="dist-total-row">
           <label>Total</label>
           <span id="dist-total-val" class="dist-total-val">100%</span>
@@ -409,26 +404,6 @@
       </div>
 
       <!-- BÔNUS DE ENCOMENDAS -->
-      <div class="card">
-        <p class="card-title">Bônus de Encomendas</p>
-        <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 14px;">Valor pago a Weza e Rodrigo por encomendas angariadas.</p>
-        <div class="bonus-row">
-          <label>Weza</label>
-          <input type="number" id="bonus-weza" class="bonus-input" value="25" min="0" step="0.01" oninput="recalcular()">
-          <span class="bonus-label-small">€</span>
-        </div>
-        <div class="bonus-row">
-          <label>Rodrigo</label>
-          <input type="number" id="bonus-rodrigo" class="bonus-input" value="25" min="0" step="0.01" oninput="recalcular()">
-          <span class="bonus-label-small">€</span>
-        </div>
-        <div style="margin-top:14px;padding-top:12px;border-top:1px solid #f0ead8;">
-          <div class="result-row">
-            <span class="r-label">Total Bônus</span>
-            <span class="r-val" id="bonus-total">50,00 €</span>
-          </div>
-        </div>
-      </div>
 
       <!-- ENCOMENDAS DA SEMANA -->
       <div class="card card-full">
@@ -486,7 +461,7 @@
       <!-- RESULTADOS DA SEMANA -->
       <div class="card card-full">
         <p class="card-title">Resultados da Semana</p>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
           <div style="background:#fafaf8;border-radius:10px;padding:14px 16px;">
             <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:6px;">Total Encomendas</div>
             <div id="res-total" style="font-size:1.3rem;font-weight:800;color:var(--dark);">0,00 €</div>
@@ -499,14 +474,10 @@
             <div class="r-label" id="lbl-salario" style="margin-bottom:6px;font-size:0.8rem;">Salário (15%)</div>
             <div id="res-salario" style="font-size:1.1rem;font-weight:700;color:var(--dark);">0,00 €</div>
           </div>
-          <div style="background:#fafaf8;border-radius:10px;padding:14px 16px;">
-            <div class="r-label" id="lbl-empregados" style="margin-bottom:6px;font-size:0.8rem;">Empregados (10%)</div>
-            <div id="res-empregados" style="font-size:1.1rem;font-weight:700;color:var(--dark);">0,00 €</div>
-          </div>
         </div>
         <div style="margin-top:16px;padding-top:16px;border-top:1px solid #f0ead8;">
           <div class="result-row highlight">
-            <span class="r-label">Lucro Líquido (após bônus)</span>
+            <span class="r-label">Lucro Líquido Atelier</span>
             <span class="r-val" id="res-liquido">0,00 €</span>
           </div>
           <div class="result-row" id="row-gastos-result" style="display:none;">
@@ -579,6 +550,17 @@
           </div>
           <textarea id="gasto-loja-nota" class="gasto-nota" rows="1" placeholder="Ex: 2.50 domínio, 27 Shopify..."></textarea>
         </div>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f0ead8;">
+          <p style="font-size:0.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin:0 0 8px;">Salários Fixos</p>
+          <div class="gasto-row">
+            <label>Elísio</label>
+            <input type="number" id="gasto-elisio" class="gasto-input" value="100" min="0" step="0.01" oninput="recalcularMensal()">
+          </div>
+          <div class="gasto-row">
+            <label>Rodrigo</label>
+            <input type="number" id="gasto-rodrigo" class="gasto-input" value="125" min="0" step="0.01" oninput="recalcularMensal()">
+          </div>
+        </div>
         <div style="margin-top:14px;padding-top:12px;border-top:1px solid #f0ead8;">
           <div class="result-row highlight">
             <span class="r-label">Total Gastos Fixos</span>
@@ -615,15 +597,6 @@
         </div>
       </div>
 
-      <!-- EMPREGADOS -->
-      <div class="card">
-        <p class="card-title">Empregados</p>
-        <ul class="mensal-semanas-list" id="mensal-empregados-list"></ul>
-        <div class="result-row highlight">
-          <span class="r-label">Total Empregados</span>
-          <span class="r-val" id="mensal-empregados-total">0,00 €</span>
-        </div>
-      </div>
 
       <!-- DÍVIDAS DO MÊS -->
       <div class="card" style="border-left:3px solid var(--red);">
@@ -1027,11 +1000,10 @@ function adicionarPagDivida(desc = '', val = '', data = '', dividaKey = '', ref 
 // RECALCULAR SEMANAL
 // ═══════════════════════════════════════════
 function recalcular() {
-  const pctA = parseFloat(document.getElementById('pct-atelier').value)    || 0;
-  const pctS = parseFloat(document.getElementById('pct-salario').value)    || 0;
-  const pctE = parseFloat(document.getElementById('pct-empregados').value) || 0;
+  const pctA = parseFloat(document.getElementById('pct-atelier').value) || 0;
+  const pctS = parseFloat(document.getElementById('pct-salario').value) || 0;
 
-  const totalPct = pctA + pctS + pctE;
+  const totalPct = pctA + pctS;
   const dtv = document.getElementById('dist-total-val');
   dtv.textContent = totalPct.toFixed(2).replace('.',',') + '%';
   dtv.style.color = Math.abs(totalPct - 100) < 0.01 ? 'var(--green)' : 'var(--red)';
@@ -1039,14 +1011,9 @@ function recalcular() {
   let totalEnc = 0;
   document.querySelectorAll('.enc-valor').forEach(i => totalEnc += parseFloat(i.value) || 0);
 
-  const bW = parseFloat(document.getElementById('bonus-weza').value)    || 0;
-  const bR = parseFloat(document.getElementById('bonus-rodrigo').value) || 0;
-  const totalBonus = bW + bR;
-
-  const atelierV    = totalEnc * pctA / 100;
-  const salarioV    = totalEnc * pctS / 100;
-  const empregadosV = totalEnc * pctE / 100;
-  const liquido     = atelierV - totalBonus;
+  const atelierV = totalEnc * pctA / 100;
+  const salarioV = totalEnc * pctS / 100;
+  const liquido  = atelierV;
 
   // Gastos do dia
   let totalGastos = 0;
@@ -1056,14 +1023,11 @@ function recalcular() {
   let totalPDiv = 0;
   document.querySelectorAll('.pdiv-val').forEach(i => totalPDiv += parseFloat(i.value) || 0);
 
-  document.getElementById('bonus-total').textContent    = fmt(totalBonus);
-  document.getElementById('res-total').textContent      = fmt(totalEnc);
-  document.getElementById('res-atelier').textContent    = fmt(atelierV);
-  document.getElementById('res-salario').textContent    = fmt(salarioV);
-  document.getElementById('res-empregados').textContent = fmt(empregadosV);
-  document.getElementById('lbl-atelier').textContent    = `Atelier (${pctA}%)`;
-  document.getElementById('lbl-salario').textContent    = `Salário (${pctS}%)`;
-  document.getElementById('lbl-empregados').textContent = `Empregados (${pctE}%)`;
+  document.getElementById('res-total').textContent   = fmt(totalEnc);
+  document.getElementById('res-atelier').textContent = fmt(atelierV);
+  document.getElementById('res-salario').textContent = fmt(salarioV);
+  document.getElementById('lbl-atelier').textContent = `Atelier (${pctA}%)`;
+  document.getElementById('lbl-salario').textContent = `Salário (${pctS}%)`;
 
   const liqEl = document.getElementById('res-liquido');
   liqEl.textContent = fmt(liquido);
@@ -1094,25 +1058,26 @@ function recalcular() {
 // RECALCULAR MENSAL
 // ═══════════════════════════════════════════
 function recalcularMensal() {
-  const c = parseFloat(document.getElementById('gasto-contabilista').value) || 0;
-  const r = parseFloat(document.getElementById('gasto-renda').value)        || 0;
-  const t = parseFloat(document.getElementById('gasto-transporte').value)   || 0;
-  const l = parseFloat(document.getElementById('gasto-loja').value)         || 0;
-  const totalGastos = c + r + t + l;
+  const c  = parseFloat(document.getElementById('gasto-contabilista').value) || 0;
+  const r  = parseFloat(document.getElementById('gasto-renda').value)        || 0;
+  const t  = parseFloat(document.getElementById('gasto-transporte').value)   || 0;
+  const l  = parseFloat(document.getElementById('gasto-loja').value)         || 0;
+  const el = parseFloat(document.getElementById('gasto-elisio').value)       || 0;
+  const ro = parseFloat(document.getElementById('gasto-rodrigo').value)      || 0;
+  const totalGastos = c + r + t + l + el + ro;
 
   document.getElementById('mensal-gastos-total').textContent  = fmt(totalGastos);
   document.getElementById('mensal-gastos-semana').textContent = `≈ ${fmt(totalGastos / 4)}/semana`;
   document.getElementById('mensal-lucro-gastos').textContent  = fmt(totalGastos);
 
-  let totalAtelier = 0, totalSalario = 0, totalEmpregados = 0, totalPDivMes = 0, totalGastosVarMes = 0;
+  let totalAtelier = 0, totalSalario = 0, totalPDivMes = 0, totalGastosVarMes = 0;
 
   const aL = document.getElementById('mensal-atelier-list');
   const sL = document.getElementById('mensal-salario-list');
-  const eL = document.getElementById('mensal-empregados-list');
   const dL = document.getElementById('mensal-dividas-list');
   const gL = document.getElementById('mensal-gastos-dia-list');
   const rs = document.getElementById('resumo-semanas');
-  aL.innerHTML = sL.innerHTML = eL.innerHTML = dL.innerHTML = gL.innerHTML = rs.innerHTML = '';
+  aL.innerHTML = sL.innerHTML = dL.innerHTML = gL.innerHTML = rs.innerHTML = '';
 
   const receitasPorSemana = [], gastosPorSemana = [];
 
@@ -1122,18 +1087,17 @@ function recalcularMensal() {
 
     if (raw) {
       const d = JSON.parse(raw);
-      const pA = d.pctAtelier || 75, pS = d.pctSalario || 15, pE = d.pctEmpregados || 10;
+      const pA = d.pctAtelier || 75, pS = d.pctSalario || 15;
       const tot = (d.encomendas || []).reduce((s, e) => s + (parseFloat(e.valor) || 0), 0);
       aV = tot * pA / 100;
       sV = tot * pS / 100;
-      eV = tot * pE / 100;
       pdivV   = (d.pagamentosDivida || []).reduce((s, p) => s + (parseFloat(p.valor) || 0), 0);
       gastosV = (d.gastos           || []).reduce((s, g) => s + (parseFloat(g.valor) || 0), 0);
     }
 
-    totalAtelier += aV; totalSalario += sV; totalEmpregados += eV;
+    totalAtelier += aV; totalSalario += sV;
     totalPDivMes += pdivV; totalGastosVarMes += gastosV;
-    receitasPorSemana.push(parseFloat(((aV + sV + eV)).toFixed(2)));
+    receitasPorSemana.push(parseFloat(((aV + sV)).toFixed(2)));
     gastosPorSemana.push(parseFloat(gastosV.toFixed(2)));
 
     const li = (lbl, val) => {
@@ -1144,7 +1108,6 @@ function recalcularMensal() {
     };
     aL.appendChild(li(`${i}ª Semana`, aV));
     sL.appendChild(li(`${i}ª Semana`, sV));
-    eL.appendChild(li(`${i}ª Semana`, eV));
 
     if (pdivV > 0) {
       const d2 = document.createElement('li');
@@ -1164,10 +1127,9 @@ function recalcularMensal() {
     rs.appendChild(card);
   }
 
-  document.getElementById('mensal-atelier-total').textContent      = fmt(totalAtelier);
-  document.getElementById('mensal-salario-total').textContent      = fmt(totalSalario);
-  document.getElementById('mensal-empregados-total').textContent   = fmt(totalEmpregados);
-  document.getElementById('mensal-lucro-atelier').textContent      = fmt(totalAtelier);
+  document.getElementById('mensal-atelier-total').textContent = fmt(totalAtelier);
+  document.getElementById('mensal-salario-total').textContent = fmt(totalSalario);
+  document.getElementById('mensal-lucro-atelier').textContent = fmt(totalAtelier);
   document.getElementById('mensal-pdiv-total').textContent         = fmt(totalPDivMes);
   document.getElementById('mensal-gastos-dia-total').textContent   = fmt(totalGastosVarMes);
 
@@ -1418,11 +1380,8 @@ function dadosSemanaAtual() {
     });
   });
   return {
-    pctAtelier:    parseFloat(document.getElementById('pct-atelier').value)    || 75,
-    pctSalario:    parseFloat(document.getElementById('pct-salario').value)    || 15,
-    pctEmpregados: parseFloat(document.getElementById('pct-empregados').value) || 10,
-    bonusWeza:     parseFloat(document.getElementById('bonus-weza').value)     || 0,
-    bonusRodrigo:  parseFloat(document.getElementById('bonus-rodrigo').value)  || 0,
+    pctAtelier: parseFloat(document.getElementById('pct-atelier').value) || 75,
+    pctSalario: parseFloat(document.getElementById('pct-salario').value) || 15,
     encomendas,
     pagamentosDivida,
     gastos,
@@ -1497,22 +1456,16 @@ function carregarSemana(n) {
   const raw = localStorage.getItem(chaveSemana(n));
   if (raw) {
     const d = JSON.parse(raw);
-    document.getElementById('pct-atelier').value    = d.pctAtelier    ?? 75;
-    document.getElementById('pct-salario').value    = d.pctSalario    ?? 15;
-    document.getElementById('pct-empregados').value = d.pctEmpregados ?? 10;
-    document.getElementById('bonus-weza').value     = d.bonusWeza     ?? 25;
-    document.getElementById('bonus-rodrigo').value  = d.bonusRodrigo  ?? 25;
-    document.getElementById('nota-semana').value    = d.nota          || '';
+    document.getElementById('pct-atelier').value = d.pctAtelier ?? 75;
+    document.getElementById('pct-salario').value = d.pctSalario ?? 15;
+    document.getElementById('nota-semana').value = d.nota       || '';
     (d.encomendas       || []).forEach(e => adicionarEncomenda(e.nome, e.valor, e.data || '', e.autoSync || false));
     (d.pagamentosDivida || []).forEach(p => adicionarPagDivida(p.descricao, p.valor, p.data || '', p.dividaKey || '', p.ref || ''));
     (d.gastos           || []).forEach(g => adicionarGastoDia(g.data, g.descricao, g.valor));
   } else {
-    document.getElementById('pct-atelier').value    = 75;
-    document.getElementById('pct-salario').value    = 15;
-    document.getElementById('pct-empregados').value = 10;
-    document.getElementById('bonus-weza').value     = 25;
-    document.getElementById('bonus-rodrigo').value  = 25;
-    document.getElementById('nota-semana').value    = '';
+    document.getElementById('pct-atelier').value = 75;
+    document.getElementById('pct-salario').value = 15;
+    document.getElementById('nota-semana').value = '';
     adicionarEncomenda();
   }
   recalcular();
@@ -1528,6 +1481,8 @@ function guardarMensal() {
     gastoTransporte:   parseFloat(document.getElementById('gasto-transporte').value)   || 0,
     gastoLoja:         parseFloat(document.getElementById('gasto-loja').value)         || 0,
     gastoLojaNota:     document.getElementById('gasto-loja-nota').value,
+    gastoElisio:       parseFloat(document.getElementById('gasto-elisio').value)       || 0,
+    gastoRodrigo:      parseFloat(document.getElementById('gasto-rodrigo').value)      || 0,
     nota:              document.getElementById('nota-mensal').value,
   };
   localStorage.setItem(chaveMensal(), JSON.stringify(dados));
@@ -1543,12 +1498,16 @@ function carregarMensal() {
     document.getElementById('gasto-transporte').value   = d.gastoTransporte   ?? 60;
     document.getElementById('gasto-loja').value         = d.gastoLoja         ?? 2.50;
     document.getElementById('gasto-loja-nota').value    = d.gastoLojaNota     || '';
+    document.getElementById('gasto-elisio').value       = d.gastoElisio       ?? 100;
+    document.getElementById('gasto-rodrigo').value      = d.gastoRodrigo      ?? 125;
     document.getElementById('nota-mensal').value        = d.nota              || '';
   } else {
     document.getElementById('gasto-contabilista').value = 50;
     document.getElementById('gasto-renda').value        = 500;
     document.getElementById('gasto-transporte').value   = 60;
     document.getElementById('gasto-loja').value         = 2.50;
+    document.getElementById('gasto-elisio').value       = 100;
+    document.getElementById('gasto-rodrigo').value      = 125;
   }
   recalcularMensal();
 }
