@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finanças - Eva Leite Atelier</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="auth-guard.js"></script>
+    <script src="navbar.js" defer></script>
+
+    <style>
+        :root {
+            --gold: #d4af37;
+            --gold-light: #f5e6a3;
+            --dark: #1a1a2e;
+            --card-bg: #ffffff;
+            --text: #2d2d2d;
+            --text-muted: #888;
+            --bg: #f5f1ea;
+            --radius: 14px;
+            --shadow: 0 4px 20px rgba(0,0,0,.08);
+        }
+
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
+        .financas-wrapper { max-width: 1100px; margin: 0 auto; padding: 30px 20px 60px; }
+
+        .financas-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 14px; }
+        .financas-header h1 { margin: 0; font-size: 1.9rem; color: var(--dark); }
+
+        .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+        @media (max-width: 700px) { .card-grid { grid-template-columns: 1fr; } }
+        
+        .card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 22px 24px; }
+        .card-title { font-size: 0.95rem; font-weight: 700; color: var(--dark); margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
+        .card-desc { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.4; }
+        
+        .btn-gold {
+            background: var(--gold);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-gold:hover { background: #b8972e; transform: translateY(-1px); }
+
+        .faturas-list {
+            margin-top: 20px;
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,.05);
+        }
+        
+        .table-custom { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+        .table-custom th { text-align: left; padding: 12px 10px; border-bottom: 2px solid #eee; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; }
+        .table-custom td { padding: 14px 10px; border-bottom: 1px solid #f5f5f5; color: var(--text); }
+        .table-custom tr:last-child td { border-bottom: none; }
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 0.9rem; }
+        
+        .btn-voltar {
+            display: inline-flex; align-items: center; gap: 8px;
+            margin-top: 40px; padding: 12px 24px;
+            background: var(--dark); color: #fff;
+            text-decoration: none; border-radius: 30px;
+            font-size: 0.9rem; font-weight: 600; transition: background 0.2s;
+        }
+        .btn-voltar:hover { background: #0a0a1a; }
+    </style>
+</head>
+<body>
+
+    <div class="financas-wrapper">
+        <div class="financas-header">
+            <div>
+                <h1>Finanças</h1>
+                <span style="color: var(--text-muted); font-size: 0.9rem;">Gestão de Faturas e Clientes Fiscais</span>
+            </div>
+            <button onclick="abrirModalFaturaAntiga()" class="btn-gold" style="display:flex; align-items:center; gap:8px;">
+                + Adicionar Fatura Antiga
+            </button>
+        </div>
+
+        <!-- MEGA CARD ANUAL -->
+        <div style="background: linear-gradient(135deg, #d4af37, #fcf6d6); border-radius: 14px; padding: 25px 30px; margin-bottom: 25px; box-shadow: 0 8px 30px rgba(212,175,55,0.3); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+            <div>
+                <h2 style="margin: 0 0 5px 0; color: #1a1a2e; font-size: 1.5rem;">Faturação Acumulada Anual</h2>
+                <p style="margin: 0; color: #555; font-size: 0.95rem; font-weight: 500;">Total de receitas registadas no ano de <strong id="ano-atual-label">2026</strong></p>
+            </div>
+            <div style="font-size: 2.8rem; font-weight: 900; color: #1a1a2e; letter-spacing: -1px;" id="total-faturado-ano">
+                €0.00
+            </div>
+        </div>
+
+        <!-- ALERTA EMERGÊNCIA (PRAZOS > 4 DIAS) -->
+        <div id="alerta-prazos" style="display:none; background:#ffebee; border:2px solid #ef5350; color:#c62828; padding:15px; border-radius:8px; margin-bottom:25px;">
+            <strong style="display:flex; align-items:center; gap:8px; font-size:1.1rem;">⚠️ AVISO DE PRAZO DE FATURAÇÃO (5 DIAS ÚTEIS)</strong>
+            <p style="margin:5px 0 0 0; font-size:0.9rem;">As seguintes encomendas atingiram ou ultrapassaram os 4 dias úteis e ainda não têm fatura associada:</p>
+            <ul id="lista-atrasados" style="margin:10px 0 0 0; font-size:0.85rem; font-weight:bold;"></ul>
+        </div>
+
+        <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div class="card" style="padding:15px; text-align:center;">
+                <div class="card-desc" style="margin-bottom:5px;">A Declarar (Semana)</div>
+                <div class="card-title" id="metric-a-declarar" style="font-size:1.8rem; justify-content:center;">-</div>
+            </div>
+            <div class="card" style="padding:15px; text-align:center;">
+                <div class="card-desc" style="margin-bottom:5px;">Declaradas (Semana)</div>
+                <div class="card-title" id="metric-declaradas" style="font-size:1.8rem; justify-content:center; color:#2e7d32;">-</div>
+            </div>
+            <div class="card" style="padding:15px; text-align:center;">
+                <div class="card-desc" style="margin-bottom:5px;">Enviadas (Semana)</div>
+                <div class="card-title" id="metric-enviadas" style="font-size:1.8rem; justify-content:center; color:#1565c0;">-</div>
+            </div>
+            <div class="card" style="padding:15px; text-align:center; background:#fff8e1; border:1px solid #ffe082;">
+                <div class="card-desc" style="margin-bottom:5px; color:#f57f17;">Por Enviar / Pendentes</div>
+                <div class="card-title" id="metric-pendentes" style="font-size:1.8rem; justify-content:center; color:#f57f17;">-</div>
+            </div>
+        </div>
+
+        <!-- NOVA SECÇÃO: FATURAS FÍSICAS -->
+        <div class="faturas-list" style="margin-bottom: 30px; border: 2px solid #e0d5c1;">
+            <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--gold); margin-bottom: 16px; display:flex; align-items:center; gap:8px;">
+                📖 Registo de Faturas Físicas
+            </h3>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:-10px; margin-bottom:15px;">Aqui estão listadas todas as encomendas que já têm uma fatura emitida (link guardado). Indique a página do seu livro físico onde a guardou.</p>
+            
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Código Fatura</th>
+                        <th>Tipo / Envio</th>
+                        <th>Nº Página Física</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="faturas-fisicas-tbody">
+                    <tr><td colspan="5" class="empty-state">A procurar faturas emitidas...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="faturas-list" style="margin-bottom: 20px;">
+            <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--dark); margin-bottom: 16px;">Clientes com NIF Registado</h3>
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>Nome do Cliente</th>
+                        <th>Email</th>
+                        <th>NIF</th>
+                    </tr>
+                </thead>
+                <tbody id="clientes-nif-tbody">
+                    <tr><td colspan="3" class="empty-state">A carregar...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="faturas-list" style="border-top: 4px solid #f5f1ea;">
+            <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--text-muted); margin-bottom: 16px;">Consumidor Final (Sem NIF)</h3>
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>Nome do Cliente</th>
+                        <th>Email</th>
+                        <th>NIF Padrão</th>
+                    </tr>
+                </thead>
+                <tbody id="clientes-sem-nif-tbody">
+                    <tr><td colspan="3" class="empty-state">A carregar...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="dashboard.html" class="btn-voltar">
+                Voltar para o Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- MODAL FATURA ANTIGA / AVULSA -->
+    <div class="modal-overlay" id="modal-fatura-antiga" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+        <div style="background:#fff; width:90%; max-width:500px; padding:24px; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
+            <h3 style="margin-top:0; font-size:1.3rem; color:#1a1a2e; border-bottom: 2px solid #eee; padding-bottom:10px;">
+                + Inserir Fatura Antiga
+            </h3>
+            
+            <label style="font-size:0.85rem; font-weight:bold; color:#555;">Nome do Cliente</label>
+            <input type="text" id="fa-nome" placeholder="Ex: Maria Joaquina" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; margin-bottom:12px; box-sizing:border-box;">
+
+            <div style="display:flex; gap:10px; margin-bottom:12px;">
+                <div style="flex:1;">
+                    <label style="font-size:0.85rem; font-weight:bold; color:#555;">NIF</label>
+                    <input type="text" id="fa-nif" placeholder="999999990" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box;">
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:0.85rem; font-weight:bold; color:#555;">Data de Emissão</label>
+                    <input type="date" id="fa-data" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box;">
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-bottom:12px;">
+                <div style="flex:1;">
+                    <label style="font-size:0.85rem; font-weight:bold; color:#555;">Valor Total (€)</label>
+                    <input type="number" id="fa-valor" placeholder="150.00" step="0.01" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box;">
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:0.85rem; font-weight:bold; color:#555;">Código Fatura</label>
+                    <input type="text" id="fa-codigo" placeholder="FT 25/01" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box;">
+                </div>
+            </div>
+
+            <label style="font-size:0.85rem; font-weight:bold; color:#555;">Link Fatura Simplificada</label>
+            <input type="url" id="fa-simples" placeholder="https://..." style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; margin-bottom:12px; box-sizing:border-box;">
+
+            <label style="font-size:0.85rem; font-weight:bold; color:#555;">Link Fatura PDF</label>
+            <input type="url" id="fa-final" placeholder="https://..." style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; margin-bottom:12px; box-sizing:border-box;">
+
+            <label style="font-size:0.85rem; font-weight:bold; color:#555;">Nº Página Livro Físico</label>
+            <input type="text" id="fa-pagina" placeholder="Ex: Pag 12" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; margin-bottom:20px; box-sizing:border-box;">
+
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button onclick="document.getElementById('modal-fatura-antiga').style.display='none'" style="padding:10px 18px; background:#f5f5f5; border:none; border-radius:6px; cursor:pointer; color:#555;">Cancelar</button>
+                <button onclick="salvarFaturaAntiga()" id="btn-salvar-fa" style="padding:10px 18px; background:#d4af37; border:none; border-radius:6px; cursor:pointer; color:#fff; font-weight:bold;">Adicionar Fatura</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function carregarClientesFiscais() {
+            const db = window.supabaseClient;
+            if(!db) return;
+
+            const tbodyNif = document.getElementById('clientes-nif-tbody');
+            const tbodySemNif = document.getElementById('clientes-sem-nif-tbody');
+
+            const { data, error } = await db.from('clientes_financas').select('*').order('criado_em', { ascending: false });
+
+            if (error) {
+                console.error(error);
+                tbodyNif.innerHTML = `<tr><td colspan="3" class="empty-state" style="color:#c62828">Erro ao carregar dados.</td></tr>`;
+                tbodySemNif.innerHTML = `<tr><td colspan="3" class="empty-state" style="color:#c62828">Erro ao carregar dados.</td></tr>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                tbodyNif.innerHTML = `<tr><td colspan="3" class="empty-state">Nenhum cliente registado.</td></tr>`;
+                tbodySemNif.innerHTML = `<tr><td colspan="3" class="empty-state">Nenhum cliente registado.</td></tr>`;
+                return;
+            }
+
+            const comNif = data.filter(c => c.nif && c.nif.trim() !== '' && c.nif.trim() !== '999999990');
+            const semNif = data.filter(c => !c.nif || c.nif.trim() === '' || c.nif.trim() === '999999990');
+
+            if (comNif.length === 0) {
+                tbodyNif.innerHTML = `<tr><td colspan="3" class="empty-state">Nenhum cliente com NIF.</td></tr>`;
+            } else {
+                tbodyNif.innerHTML = comNif.map(c => `
+                    <tr>
+                        <td style="font-weight: 600">${c.nome}</td>
+                        <td>${c.email || '-'}</td>
+                        <td style="font-family: monospace; font-weight: bold; color: #2e7d32;">${c.nif}</td>
+                    </tr>
+                `).join('');
+            }
+
+            if (semNif.length === 0) {
+                tbodySemNif.innerHTML = `<tr><td colspan="3" class="empty-state">Nenhum consumidor final sem NIF.</td></tr>`;
+            } else {
+                // Para não poluir com o nome de cada pessoa que comprou sem NIF, aglomeramos ou mostramos como Consumidor Final
+                tbodySemNif.innerHTML = `
+                    <tr>
+                        <td style="font-weight: 600">Vários (Consumidor Final)</td>
+                        <td>-</td>
+                        <td style="font-family: monospace; font-weight: bold; color: #888;">999999990 <span style="font-size:0.75rem; font-family:sans-serif;">(Padrão)</span></td>
+                    </tr>
+                `;
+            }
+        }
+
+        async function carregarFaturasFisicas() {
+            const db = window.supabaseClient;
+            if(!db) return;
+
+            const tbody = document.getElementById('faturas-fisicas-tbody');
+            tbody.innerHTML = `<tr><td colspan="5" class="empty-state">A carregar...</td></tr>`;
+
+            const { data, error } = await db.from('faturas')
+                                            .select('*')
+                                            .order('data_emissao', { ascending: false });
+
+            if(error) {
+                tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color:#c62828">Erro ao carregar faturas.</td></tr>`;
+                return;
+            }
+
+            const faturasFiltradas = data.filter(f => f.simples_link || f.final_link);
+
+            if(faturasFiltradas.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Nenhuma fatura emitida ainda.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = faturasFiltradas.map(f => {
+                const temSimples = !!f.simples_link;
+                const temFinal = !!f.final_link;
+                
+                let faturaTag = '';
+                if(temSimples && temFinal) faturaTag = '<span style="background:#e8f5e9;color:#2e7d32;padding:4px 8px;border-radius:4px;font-size:0.8rem;font-weight:600;">Completa</span>';
+                else if(temSimples) faturaTag = '<span style="background:#e3f2fd;color:#1565c0;padding:4px 8px;border-radius:4px;font-size:0.8rem;font-weight:600;">Simples</span>';
+                else if(temFinal) faturaTag = '<span style="background:#fff8e1;color:#f57f17;padding:4px 8px;border-radius:4px;font-size:0.8rem;font-weight:600;">Final</span>';
+
+                let envioIcon = '';
+                if(f.status_envio === 'enviado') envioIcon = '<span title="Enviado ao Cliente">✅</span>';
+                else if(f.status_envio === 'pendente') envioIcon = '<span title="Por Enviar">⏳</span>';
+
+                return `
+                    <tr>
+                        <td style="font-weight:600;">${f.nome_cliente || '-'}</td>
+                        <td>${f.fatura_codigo || '-'}</td>
+                        <td>${faturaTag} ${envioIcon}</td>
+                        <td>
+                            <input type="text" 
+                                   value="${f.pagina_fisica || ''}" 
+                                   placeholder="Nº Página" 
+                                   class="inp-pagina"
+                                   onchange="guardarPaginaFisica('${f.id}', this)" />
+                        </td>
+                        <td>
+                            ${temSimples ? `<a href="${f.simples_link}" target="_blank" class="btn-action" title="Ver Fatura Simples">👁️</a>` : ''}
+                            ${temFinal ? `<a href="${f.final_link}" target="_blank" class="btn-action" title="Ver Fatura Final">👁️</a>` : ''}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function carregarDashboardFaturas() {
+            const db = window.supabaseClient;
+            if(!db) return;
+
+            // Busca pedidos para os prazos
+            const { data: pedidos, error: errorP } = await db.from('pedidos').select('id, nome, data_pedido, data_real, status');
+            // Busca faturas para os cartões
+            const { data: faturas, error: errorF } = await db.from('faturas').select('*');
+            if(errorP || errorF) return;
+
+            const agora = new Date();
+            const anoAtual = agora.getFullYear();
+            document.getElementById('ano-atual-label').textContent = anoAtual;
+
+            const umaSemanaAtras = new Date();
+            umaSemanaAtras.setDate(agora.getDate() - 7);
+
+            let aDeclarar = 0;
+            let declaradasSemana = 0;
+            let enviadasSemana = 0;
+            let pendentesEnvio = 0;
+            let totalAnoAcumulado = 0;
+
+            const atrasados = [];
+
+            function getDiasUteis(dataInicial) {
+                let dias = 0;
+                let d = new Date(dataInicial);
+                while(d < agora) {
+                    d.setDate(d.getDate() + 1);
+                    if(d.getDay() !== 0 && d.getDay() !== 6) dias++; // Ignora FDS
+                }
+                return dias;
+            }
+
+            // Métrica: Total Anual e Estado de Envio
+            faturas.forEach(f => {
+                if (f.data_emissao) {
+                    const d = new Date(f.data_emissao);
+                    if (d.getFullYear() === anoAtual && f.valor_total) {
+                        totalAnoAcumulado += Number(f.valor_total);
+                    }
+                    if (d >= umaSemanaAtras) declaradasSemana++;
+                }
+                
+                if (f.status_envio === 'pendente') pendentesEnvio++;
+                if (f.status_envio === 'enviado') {
+                    // Aqui precisaríamos saber quando foi enviado, mas assumimos que se tem data de emissão recente
+                    const d = new Date(f.data_emissao);
+                    if(d >= umaSemanaAtras) enviadasSemana++;
+                }
+            });
+
+            // Analisa pedidos para atrasos e A Declarar
+            pedidos.forEach(p => {
+                const f = faturas.find(fat => fat.pedido_id === p.id);
+                const temFatura = f && (f.simples_link || f.final_link);
+                
+                if (!temFatura && p.status !== 'arquivado') aDeclarar++;
+
+                if (!temFatura && p.data_real && p.status !== 'arquivado') {
+                    const dias = getDiasUteis(p.data_real);
+                    if (dias >= 4) {
+                        atrasados.push({ nome: p.nome, dias });
+                    }
+                }
+            });
+
+            document.getElementById('total-faturado-ano').textContent = `€${totalAnoAcumulado.toFixed(2)}`;
+            document.getElementById('metric-a-declarar').textContent = aDeclarar;
+            document.getElementById('metric-declaradas').textContent = declaradasSemana;
+            document.getElementById('metric-enviadas').textContent = enviadasSemana;
+            document.getElementById('metric-pendentes').textContent = pendentesEnvio;
+
+            const alerta = document.getElementById('alerta-prazos');
+            const listaAtrasados = document.getElementById('lista-atrasados');
+            if(atrasados.length > 0) {
+                alerta.style.display = 'block';
+                listaAtrasados.innerHTML = atrasados.map(a => `<li><b>${a.nome}</b> (Passaram ${a.dias} dias úteis)</li>`).join('');
+            } else {
+                alerta.style.display = 'none';
+            }
+        }
+
+        async function guardarPaginaFisica(faturaId, inputElement) {
+            const novaPagina = inputElement.value.trim();
+            inputElement.style.borderColor = '#d4af37'; // Feedback visual (dourado a guardar)
+            
+            const { error } = await window.supabaseClient.from('faturas')
+                .update({ pagina_fisica: novaPagina || null })
+                .eq('id', faturaId);
+                
+            if (error) {
+                console.error(error);
+                inputElement.style.borderColor = '#c62828'; // Erro
+            } else {
+                inputElement.style.borderColor = '#4caf50'; // Sucesso (Verde)
+                setTimeout(() => { inputElement.style.borderColor = '#ccc'; }, 2000);
+            }
+        }
+
+        // =====================================
+        // FATURAS ANTIGAS / AVULSAS
+        // =====================================
+        function abrirModalFaturaAntiga() {
+            document.getElementById('fa-nome').value = '';
+            document.getElementById('fa-nif').value = '';
+            document.getElementById('fa-data').value = new Date().toISOString().split('T')[0];
+            document.getElementById('fa-valor').value = '';
+            document.getElementById('fa-codigo').value = '';
+            document.getElementById('fa-simples').value = '';
+            document.getElementById('fa-final').value = '';
+            document.getElementById('fa-pagina').value = '';
+            document.getElementById('modal-fatura-antiga').style.display = 'flex';
+        }
+
+        async function salvarFaturaAntiga() {
+            const nome = document.getElementById('fa-nome').value.trim();
+            let nif = document.getElementById('fa-nif').value.trim();
+            const dataEmissao = document.getElementById('fa-data').value;
+            const valor = parseFloat(document.getElementById('fa-valor').value) || 0;
+            const codigo = document.getElementById('fa-codigo').value.trim() || null;
+            const simples = document.getElementById('fa-simples').value.trim() || null;
+            const final = document.getElementById('fa-final').value.trim() || null;
+            const pagina = document.getElementById('fa-pagina').value.trim() || null;
+
+            if(!nome) return alert("O Nome do Cliente é obrigatório.");
+            if(!dataEmissao) return alert("A Data de Emissão é obrigatória.");
+            if(!simples && !final) return alert("Tem de fornecer pelo menos um Link de Fatura.");
+
+            if (!nif) nif = '999999990';
+
+            const btn = document.getElementById('btn-salvar-fa');
+            btn.textContent = "A Guardar...";
+            btn.disabled = true;
+
+            try {
+                // 1. Regista/Atualiza Cliente Finanças via RPC
+                await window.supabaseClient.rpc('registar_cliente_financas', {
+                    p_nome: nome,
+                    p_email: null,
+                    p_nif: nif
+                });
+
+                // 2. Insere na tabela de faturas
+                const payload = {
+                    nome_cliente: nome,
+                    nif: nif,
+                    simples_link: simples,
+                    final_link: final,
+                    pagina_fisica: pagina,
+                    fatura_codigo: codigo,
+                    valor_total: valor,
+                    data_emissao: dataEmissao + "T12:00:00Z"
+                };
+
+                const { error } = await window.supabaseClient.from('faturas').insert([payload]);
+                if (error) throw error;
+
+                document.getElementById('modal-fatura-antiga').style.display = 'none';
+                
+                // Recarrega os dados
+                carregarClientesFiscais();
+                carregarFaturasFisicas();
+                carregarDashboardFaturas();
+
+            } catch (err) {
+                console.error(err);
+                alert("Erro ao adicionar fatura: " + (err.message || JSON.stringify(err)));
+            } finally {
+                btn.textContent = "Adicionar Fatura";
+                btn.disabled = false;
+            }
+        }
+
+        // Função chamada pelo script.js quando o modal da fatura guarda um novo link
+        window.carregarPedidosFaturados = function() {
+            carregarFaturasFisicas();
+            carregarDashboardFaturas();
+        };
+
+        document.addEventListener("DOMContentLoaded", () => {
+            setTimeout(() => {
+                carregarClientesFiscais();
+                carregarFaturasFisicas();
+                carregarDashboardFaturas();
+            }, 500);
+        });
+    </script>
+</body>
+</html>

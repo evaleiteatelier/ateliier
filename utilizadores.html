@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utilizadores - Eva Leite Atelier</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="auth-guard.js"></script>
+    <script src="navbar.js" defer></script>
+
+    <style>
+        :root {
+            --gold: #d4af37;
+            --gold-light: #f5e6a3;
+            --dark: #1a1a2e;
+            --card-bg: #ffffff;
+            --text: #2d2d2d;
+            --text-muted: #888;
+            --bg: #f5f1ea;
+            --radius: 14px;
+            --shadow: 0 4px 20px rgba(0,0,0,.08);
+        }
+
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
+        .wrapper { max-width: 1100px; margin: 0 auto; padding: 30px 20px 60px; }
+
+        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 14px; }
+        .header h1 { margin: 0; font-size: 1.9rem; color: var(--dark); }
+
+        .btn-gold {
+            background: var(--gold); color: #fff; border: none; padding: 10px 20px;
+            border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; font-family: 'Inter', sans-serif; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-gold:hover { background: #b8972e; transform: translateY(-1px); }
+
+        .card-list { margin-top: 20px; background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,.05); }
+        
+        .table-custom { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+        .table-custom th { text-align: left; padding: 12px 10px; border-bottom: 2px solid #eee; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; }
+        .table-custom td { padding: 14px 10px; border-bottom: 1px solid #f5f5f5; color: var(--text); }
+        .table-custom tr:last-child td { border-bottom: none; }
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 0.9rem; }
+        
+        .badge-admin { background: #e8f5e9; color: #2e7d32; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; }
+        .badge-maximo { background: #fce8e6; color: #c62828; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; }
+
+        .btn-acao { background: transparent; border: none; cursor: pointer; font-size: 0.8rem; margin-right: 10px; transition: color 0.2s; font-family: 'Inter'; font-weight: 600; }
+        .btn-editar { color: #1565c0; }
+        .btn-editar:hover { color: #0d47a1; }
+        .btn-apagar { color: #c62828; }
+        .btn-apagar:hover { color: #8e0000; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5);
+            display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px);
+        }
+        .modal-overlay.active { display: flex; animation: fadeIn 0.2s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .modal-card {
+            background: #fff; width: 100%; max-width: 400px; border-radius: var(--radius);
+            padding: 24px; box-shadow: 0 10px 40px rgba(0,0,0,.2);
+        }
+        .modal-title { font-size: 1.2rem; font-weight: bold; margin: 0 0 20px; color: var(--dark); }
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; font-weight: 600; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 10px 12px; border: 1.5px solid #e0dbd0; border-radius: 8px;
+            font-size: 0.95rem; font-family: inherit; color: var(--text); outline: none; transition: border 0.2s; box-sizing: border-box;
+        }
+        .form-group input:focus, .form-group select:focus { border-color: var(--gold); }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
+        .btn-cancelar { background: #f5f5f5; color: #555; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-family: inherit; }
+        .btn-cancelar:hover { background: #e0e0e0; }
+
+    </style>
+</head>
+<body>
+
+    <div class="wrapper">
+        <div class="header">
+            <div>
+                <h1>Gestão de Utilizadores</h1>
+                <span style="color: var(--text-muted); font-size: 0.9rem;">Controlo de acessos à Área de Administração</span>
+            </div>
+            <button class="btn-gold" onclick="abrirModal()">+ Novo Utilizador</button>
+        </div>
+
+        <div class="card-list">
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Tipo de Acesso</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="utilizadores-tbody">
+                    <tr><td colspan="4" class="empty-state">A carregar utilizadores...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Adicionar / Editar -->
+    <div class="modal-overlay" id="modal-user">
+        <div class="modal-card">
+            <h3 class="modal-title" id="modal-titulo">Novo Utilizador</h3>
+            <input type="hidden" id="user-id">
+            
+            <div class="form-group">
+                <label>Nome Completo</label>
+                <input type="text" id="user-nome" placeholder="Ex: Maria Silva">
+            </div>
+            <div class="form-group">
+                <label>Email (Acesso)</label>
+                <input type="email" id="user-email" placeholder="Ex: maria@atelier.com">
+            </div>
+            <div class="form-group">
+                <label>Palavra-Passe <span id="pwd-hint" style="font-weight:normal; font-size:0.75rem; color:#888;"></span></label>
+                <input type="password" id="user-senha" placeholder="*******">
+            </div>
+            <div class="form-group">
+                <label>Tipo de Conta</label>
+                <select id="user-tipo">
+                    <option value="admin">Admin (Normal)</option>
+                    <option value="maximo">Máximo (Total Acesso)</option>
+                </select>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
+                <button class="btn-gold" id="btn-guardar" onclick="guardarUtilizador()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let editando = false;
+
+        async function carregarUtilizadores() {
+            const db = window.supabaseClient;
+            if(!db) return;
+
+            const tbody = document.getElementById('utilizadores-tbody');
+            const { data, error } = await db.from('contas_adm').select('*').order('criado_em', { ascending: true });
+
+            if (error) {
+                console.error(error);
+                tbody.innerHTML = `<tr><td colspan="4" class="empty-state" style="color:#c62828">Erro ao carregar dados.</td></tr>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="empty-state">Nenhum utilizador encontrado.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map(u => {
+                const tipoBadge = u.tipo_utilizador === 'maximo' 
+                    ? `<span class="badge-maximo">MÁXIMO</span>` 
+                    : `<span class="badge-admin">ADMIN</span>`;
+                
+                return `
+                <tr>
+                    <td style="font-weight: 600">${u.nome}</td>
+                    <td>${u.email}</td>
+                    <td>${tipoBadge}</td>
+                    <td>
+                        <button class="btn-acao btn-editar" onclick="prepararEdicao('${u.id}', '${u.nome}', '${u.email}', '${u.tipo_utilizador}')">Editar</button>
+                        <button class="btn-acao btn-apagar" onclick="apagarUtilizador('${u.id}', '${u.nome}')">Apagar</button>
+                    </td>
+                </tr>
+                `;
+            }).join('');
+        }
+
+        function abrirModal() {
+            editando = false;
+            document.getElementById('modal-titulo').innerText = "Novo Utilizador";
+            document.getElementById('user-id').value = "";
+            document.getElementById('user-nome').value = "";
+            document.getElementById('user-email').value = "";
+            document.getElementById('user-senha').value = "";
+            document.getElementById('user-tipo').value = "admin";
+            document.getElementById('pwd-hint').innerText = "(Obrigatório)";
+            document.getElementById('modal-user').classList.add('active');
+        }
+
+        function prepararEdicao(id, nome, email, tipo) {
+            editando = true;
+            document.getElementById('modal-titulo').innerText = "Editar Utilizador";
+            document.getElementById('user-id').value = id;
+            document.getElementById('user-nome').value = nome;
+            document.getElementById('user-email').value = email;
+            document.getElementById('user-senha').value = ""; // Vazio por defeito
+            document.getElementById('user-tipo').value = tipo;
+            document.getElementById('pwd-hint').innerText = "(Deixe em branco para manter a atual)";
+            document.getElementById('modal-user').classList.add('active');
+        }
+
+        function fecharModal() {
+            document.getElementById('modal-user').classList.remove('active');
+        }
+
+        async function guardarUtilizador() {
+            const id = document.getElementById('user-id').value;
+            const nome = document.getElementById('user-nome').value.trim();
+            const email = document.getElementById('user-email').value.trim();
+            const senha = document.getElementById('user-senha').value;
+            const tipo = document.getElementById('user-tipo').value;
+            const btn = document.getElementById('btn-guardar');
+
+            if (!nome || !email || (!editando && !senha)) {
+                if(window.mostrarAviso) window.mostrarAviso("Preencha os campos obrigatórios.");
+                else alert("Preencha os campos obrigatórios.");
+                return;
+            }
+
+            btn.innerText = "A guardar...";
+            btn.disabled = true;
+
+            const db = window.supabaseClient;
+            let resp;
+
+            try {
+                if (editando) {
+                    resp = await db.rpc('atualizar_adm', { p_id: id, p_nome: nome, p_email: email, p_senha: senha, p_tipo: tipo });
+                } else {
+                    resp = await db.rpc('criar_adm', { p_nome: nome, p_email: email, p_senha: senha, p_tipo: tipo });
+                }
+
+                if (resp.error) throw resp.error;
+                
+                const resultado = resp.data;
+                if(resultado && resultado.sucesso) {
+                    fecharModal();
+                    await carregarUtilizadores();
+                    if(window.mostrarAviso) window.mostrarAviso(resultado.mensagem, "Sucesso", "✅");
+                } else {
+                    throw new Error(resultado?.mensagem || "Erro desconhecido");
+                }
+            } catch (err) {
+                console.error(err);
+                if(window.mostrarAviso) window.mostrarAviso("Erro ao guardar: O email já pode existir.", "Erro", "❌");
+                else alert("Erro ao guardar.");
+            } finally {
+                btn.innerText = "Guardar";
+                btn.disabled = false;
+            }
+        }
+
+        async function apagarUtilizador(id, nome) {
+            let confirmado = false;
+            if(window.mostrarConfirmacao) {
+                confirmado = await window.mostrarConfirmacao(`Tem a certeza que deseja apagar o utilizador "${nome}"?`, "Apagar Conta", "🗑️");
+            } else {
+                confirmado = confirm(`Tem a certeza que deseja apagar "${nome}"?`);
+            }
+
+            if (!confirmado) return;
+
+            const db = window.supabaseClient;
+            const { data, error } = await db.rpc('apagar_adm', { p_id: id });
+
+            if (error || (data && !data.sucesso)) {
+                console.error(error || data);
+                if(window.mostrarAviso) window.mostrarAviso("Não foi possível apagar o utilizador.");
+            } else {
+                carregarUtilizadores();
+            }
+        }
+
+        // Iniciar quando carregado
+        document.addEventListener("DOMContentLoaded", () => {
+            setTimeout(() => carregarUtilizadores(), 500); // Aguarda supabase carregar
+        });
+
+    </script>
+</body>
+</html>
