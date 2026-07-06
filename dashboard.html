@@ -401,7 +401,8 @@
 
 <body>
   <script>
-    if (localStorage.getItem("tipoUsuario") === "cliente") {
+    const _tipo = localStorage.getItem("tipoUsuario");
+    if (_tipo === "cliente" || _tipo === "basico" || !_tipo) {
       window.location.href = "lista-espera.html";
     }
   </script>

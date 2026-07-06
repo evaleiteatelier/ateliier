@@ -28,21 +28,21 @@ function configurarBarra() {
         }
     });
 
-    // 3. SEGURANÇA (Esconder menu Admin se for Cliente)
+    // 3. SEGURANÇA — ocultar itens conforme o tipo de utilizador
     const tipoUsuario = localStorage.getItem("tipoUsuario");
     if (tipoUsuario === "cliente") {
-        const adminGroups = document.querySelectorAll(".admin-only-group");
-        adminGroups.forEach(grupo => grupo.style.display = "none");
+        document.querySelectorAll(".admin-only-group").forEach(g => g.style.display = "none");
+    } else if (tipoUsuario === "basico") {
+        // Acesso sem senha: esconde apenas Dashboard e Contas
+        document.querySelectorAll(".full-admin-only").forEach(g => g.style.display = "none");
     }
 }
 
 // 4. FUNÇÃO DE SAIR
-async function sair() {
+function sair() {
     localStorage.removeItem("tipoUsuario");
-    if (window.supabaseClient) {
-        await window.supabaseClient.auth.signOut();
-    }
-    window.location.href = "index.html?logout=1";
+    localStorage.removeItem("adminToken");
+    window.location.href = "index.html";
 }
 
 // ==========================================

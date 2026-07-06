@@ -158,16 +158,8 @@
 
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Se vier de logout (?logout=1) não faz auto-redirect; caso contrário verifica sessão activa
-    const isLogout = new URLSearchParams(window.location.search).get('logout');
-    if (!isLogout) {
-      (async () => {
-        const { data: { session } } = await db.auth.getSession();
-        if (session) {
-          localStorage.setItem('tipoUsuario', 'admin');
-          window.location.href = 'lista-espera.html';
-        }
-      })();
+    if (localStorage.getItem('adminToken')) {
+      window.location.href = 'lista-espera.html';
     }
 
     // Acesso com senha (admin completo — Dashboard e Contas incluídos)
@@ -187,9 +179,9 @@
       btn.textContent = 'A entrar...';
       erro.classList.remove('visivel');
 
-      const { data, error } = await db.auth.signInWithPassword({ email, password: senha });
+      const { data, error } = await db.rpc('login_adm', { p_email: email, p_senha: senha });
 
-      if (error) {
+      if (error || !data || !data.sucesso) {
         erro.textContent = 'Email ou senha incorretos. Tenta novamente.';
         erro.classList.add('visivel');
         btn.disabled = false;
@@ -197,13 +189,14 @@
         return;
       }
 
-      localStorage.setItem('tipoUsuario', 'admin');
+      localStorage.setItem('tipoUsuario', data.tipo);
+      localStorage.setItem('adminToken', data.email);
       window.location.href = 'lista-espera.html';
     }
 
-    // Acesso sem senha (admin básico — sem Dashboard nem Contas)
+    // Acesso sem senha (básico — sem Dashboard nem Contas)
     function entrarSemSenha() {
-      localStorage.setItem('tipoUsuario', 'admin');
+      localStorage.setItem('tipoUsuario', 'basico');
       window.location.href = 'lista-espera.html';
     }
   </script>
