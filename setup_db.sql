@@ -191,6 +191,30 @@ BEGIN
 END;
 $$;
 
+-- A1) Alterar Senha com verificação da senha atual
+CREATE OR REPLACE FUNCTION public.alterar_senha_adm(p_id UUID, p_senha_atual TEXT, p_senha_nova TEXT)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_user public.contas_adm;
+BEGIN
+    SELECT * INTO v_user FROM public.contas_adm
+    WHERE id = p_id AND senha = crypt(p_senha_atual, senha);
+
+    IF v_user.id IS NULL THEN
+        RETURN jsonb_build_object('sucesso', false, 'mensagem', 'Senha atual incorreta');
+    END IF;
+
+    UPDATE public.contas_adm
+    SET senha = crypt(p_senha_nova, gen_salt('bf'))
+    WHERE id = p_id;
+
+    RETURN jsonb_build_object('sucesso', true, 'mensagem', 'Senha alterada com sucesso');
+END;
+$$;
+
 -- A) Criar Utilizador
 CREATE OR REPLACE FUNCTION public.criar_adm(p_nome TEXT, p_email TEXT, p_senha TEXT, p_tipo TEXT)
 RETURNS JSONB

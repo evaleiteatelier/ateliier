@@ -145,6 +145,10 @@
         <p id="senha-user-nome" style="margin:0 0 18px; color:var(--text-muted); font-size:0.88rem;"></p>
 
         <div class="form-group">
+            <label>Senha Atual</label>
+            <input type="password" id="senha-atual" placeholder="••••••••">
+        </div>
+        <div class="form-group">
             <label>Nova Senha</label>
             <input type="password" id="nova-senha" placeholder="••••••••">
         </div>
@@ -245,6 +249,7 @@
     function abrirModalSenha(id, nome) {
         document.getElementById('senha-user-id').value = id;
         document.getElementById('senha-user-nome').textContent = `Utilizador: ${nome}`;
+        document.getElementById('senha-atual').value = "";
         document.getElementById('nova-senha').value = "";
         document.getElementById('confirmar-senha').value = "";
         document.getElementById('modal-senha').classList.add('active');
@@ -294,38 +299,30 @@
 
     async function alterarSenha() {
         const id       = document.getElementById('senha-user-id').value;
+        const atual    = document.getElementById('senha-atual').value;
         const nova     = document.getElementById('nova-senha').value;
         const confirma = document.getElementById('confirmar-senha').value;
         const btn      = document.getElementById('btn-alterar-senha');
 
-        if (!nova) { aviso("Introduz a nova senha."); return; }
+        if (!atual)            { aviso("Introduz a senha atual."); return; }
+        if (!nova)             { aviso("Introduz a nova senha."); return; }
+        if (nova.length < 6)   { aviso("A nova senha deve ter pelo menos 6 caracteres."); return; }
         if (nova !== confirma) { aviso("As senhas não coincidem."); return; }
-        if (nova.length < 6) { aviso("A senha deve ter pelo menos 6 caracteres."); return; }
 
-        btn.textContent = "A alterar...";
+        btn.textContent = "A verificar...";
         btn.disabled = true;
 
         try {
-            const client = getDb();
-            const { data, error } = await client.rpc('atualizar_adm', {
-                p_id: id, p_nome: '', p_email: '', p_senha: nova, p_tipo: ''
+            const { data, error } = await getDb().rpc('alterar_senha_adm', {
+                p_id: id,
+                p_senha_atual: atual,
+                p_senha_nova: nova
             });
 
             if (error) throw error;
-
-            // atualizar_adm com nome/email vazios pode falhar — usa RPC dedicada se existir
-            // Se retornou erro de campos vazios, tenta de outra forma
             if (!data?.sucesso) {
-                // Busca os dados actuais e atualiza só a senha
-                const lista = await client.rpc('listar_adm');
-                const user  = (lista.data || []).find(u => u.id === id);
-                if (!user) throw new Error("Utilizador não encontrado");
-
-                const { data: d2, error: e2 } = await client.rpc('atualizar_adm', {
-                    p_id: id, p_nome: user.nome, p_email: user.email, p_senha: nova, p_tipo: user.tipo_utilizador
-                });
-                if (e2) throw e2;
-                if (!d2?.sucesso) throw new Error(d2?.mensagem);
+                aviso(data?.mensagem || "Senha atual incorreta.", "Erro", "❌");
+                return;
             }
 
             fecharModais();
