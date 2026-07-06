@@ -272,7 +272,7 @@
                 
                 <!-- Dropdown de Gestão -->
                 <div class="nav-dropdown" id="nav-dropdown-admin">
-                    <a href="#" onclick="toggleDropdownAdmin(event)" style="cursor:pointer; user-select:none;">Administração <span class="dropdown-icon">▼</span></a>
+                    <a href="#" style="cursor:pointer; user-select:none;">Administração <span class="dropdown-icon">▼</span></a>
                     <div class="nav-dropdown-content" id="nav-dropdown-content-admin">
                         <a href="gerir-produtos.html" data-page="gerir-produtos.html">Gerir Produtos</a>
                         <a href="dashboard.html" data-page="dashboard.html" class="full-admin-only">Dashboard</a>
@@ -292,21 +292,3 @@
     </div>
 </header>
 
-<script>
-function toggleDropdownAdmin(e) {
-    e.preventDefault();
-    const wrapper = document.getElementById('nav-dropdown-admin');
-    const content = document.getElementById('nav-dropdown-content-admin');
-    const isAberto = wrapper.classList.toggle('aberto');
-    content.classList.toggle('aberto', isAberto);
-}
-
-// Fecha ao clicar fora
-document.addEventListener('click', function(e) {
-    const wrapper = document.getElementById('nav-dropdown-admin');
-    if (wrapper && !wrapper.contains(e.target)) {
-        wrapper.classList.remove('aberto');
-        document.getElementById('nav-dropdown-content-admin').classList.remove('aberto');
-    }
-});
-</script>

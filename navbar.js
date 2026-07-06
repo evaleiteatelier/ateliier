@@ -28,6 +28,23 @@ function configurarBarra() {
         }
     });
 
+    // 2b. DROPDOWN ADMINISTRAÇÃO — toggle por clique
+    const dropdownWrapper = document.getElementById('nav-dropdown-admin');
+    const dropdownContent = document.getElementById('nav-dropdown-content-admin');
+    if (dropdownWrapper && dropdownContent) {
+        dropdownWrapper.querySelector('a').addEventListener('click', function(e) {
+            e.preventDefault();
+            const isAberto = dropdownWrapper.classList.toggle('aberto');
+            dropdownContent.classList.toggle('aberto', isAberto);
+        });
+        document.addEventListener('click', function(e) {
+            if (!dropdownWrapper.contains(e.target)) {
+                dropdownWrapper.classList.remove('aberto');
+                dropdownContent.classList.remove('aberto');
+            }
+        });
+    }
+
     // 3. SEGURANÇA — ocultar itens conforme o tipo de utilizador
     const tipoUsuario = localStorage.getItem("tipoUsuario");
     if (tipoUsuario === "cliente") {
