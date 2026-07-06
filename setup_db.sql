@@ -169,6 +169,28 @@ $$;
 -- 5. FUNÇÕES CRUD PARA GESTÃO DE UTILIZADORES
 -- ==========================================
 
+-- A0) Listar Utilizadores (SECURITY DEFINER para contornar RLS)
+CREATE OR REPLACE FUNCTION public.listar_adm()
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    RETURN (
+        SELECT COALESCE(jsonb_agg(
+            jsonb_build_object(
+                'id', id,
+                'nome', nome,
+                'email', email,
+                'tipo_utilizador', tipo_utilizador,
+                'criado_em', criado_em
+            ) ORDER BY criado_em
+        ), '[]'::jsonb)
+        FROM public.contas_adm
+    );
+END;
+$$;
+
 -- A) Criar Utilizador
 CREATE OR REPLACE FUNCTION public.criar_adm(p_nome TEXT, p_email TEXT, p_senha TEXT, p_tipo TEXT)
 RETURNS JSONB

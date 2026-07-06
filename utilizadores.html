@@ -12,274 +12,376 @@
     <style>
         :root {
             --gold: #d4af37;
-            --gold-light: #f5e6a3;
             --dark: #1a1a2e;
-            --card-bg: #ffffff;
+            --bg: #f5f1ea;
             --text: #2d2d2d;
             --text-muted: #888;
-            --bg: #f5f1ea;
             --radius: 14px;
-            --shadow: 0 4px 20px rgba(0,0,0,.08);
         }
-
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
-        .wrapper { max-width: 1100px; margin: 0 auto; padding: 30px 20px 60px; }
-
-        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 14px; }
-        .header h1 { margin: 0; font-size: 1.9rem; color: var(--dark); }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; }
+        .wrapper { max-width: 900px; margin: 0 auto; padding: 30px 20px 60px; }
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 14px; }
+        .page-header h1 { margin: 0; font-size: 1.8rem; color: var(--dark); }
+        .page-header p { margin: 4px 0 0; color: var(--text-muted); font-size: 0.88rem; }
 
         .btn-gold {
             background: var(--gold); color: #fff; border: none; padding: 10px 20px;
-            border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
-            transition: all 0.2s; font-family: 'Inter', sans-serif; display: inline-flex; align-items: center; gap: 6px;
+            border-radius: 8px; font-size: 0.88rem; font-weight: 600; cursor: pointer;
+            transition: background 0.2s; font-family: inherit;
         }
-        .btn-gold:hover { background: #b8972e; transform: translateY(-1px); }
+        .btn-gold:hover { background: #b8972e; }
 
-        .card-list { margin-top: 20px; background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,.05); }
-        
-        .table-custom { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-        .table-custom th { text-align: left; padding: 12px 10px; border-bottom: 2px solid #eee; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; }
-        .table-custom td { padding: 14px 10px; border-bottom: 1px solid #f5f5f5; color: var(--text); }
-        .table-custom tr:last-child td { border-bottom: none; }
-        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 0.9rem; }
-        
-        .badge-admin { background: #e8f5e9; color: #2e7d32; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; }
-        .badge-maximo { background: #fce8e6; color: #c62828; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; }
+        .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+        table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+        thead th { text-align: left; padding: 10px 12px; border-bottom: 2px solid #eee; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        tbody td { padding: 14px 12px; border-bottom: 1px solid #f5f5f5; }
+        tbody tr:last-child td { border-bottom: none; }
+        .badge { padding: 3px 10px; border-radius: 20px; font-size: 0.73rem; font-weight: 700; display: inline-block; }
+        .badge-maximo { background: #fce8e6; color: #c62828; }
+        .badge-admin  { background: #e8f5e9; color: #2e7d32; }
 
-        .btn-acao { background: transparent; border: none; cursor: pointer; font-size: 0.8rem; margin-right: 10px; transition: color 0.2s; font-family: 'Inter'; font-weight: 600; }
-        .btn-editar { color: #1565c0; }
-        .btn-editar:hover { color: #0d47a1; }
-        .btn-apagar { color: #c62828; }
-        .btn-apagar:hover { color: #8e0000; }
+        .acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn-sm { padding: 5px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 0.78rem; font-weight: 600; font-family: inherit; transition: all 0.2s; }
+        .btn-edit  { background: #e3f0ff; color: #1565c0; }
+        .btn-edit:hover  { background: #bbdefb; }
+        .btn-pwd   { background: #fff8e1; color: #f57f17; }
+        .btn-pwd:hover   { background: #fff3cd; }
+        .btn-del   { background: #fce8e6; color: #c62828; }
+        .btn-del:hover   { background: #ffcdd2; }
 
-        /* Modal */
+        /* MODAL */
         .modal-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5);
-            display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px);
+            position: fixed; inset: 0; background: rgba(0,0,0,.55);
+            display: none; align-items: center; justify-content: center;
+            z-index: 9999; backdrop-filter: blur(4px);
         }
-        .modal-overlay.active { display: flex; animation: fadeIn 0.2s ease-out; }
+        .modal-overlay.active { display: flex; animation: fadeIn .2s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
         .modal-card {
-            background: #fff; width: 100%; max-width: 400px; border-radius: var(--radius);
-            padding: 24px; box-shadow: 0 10px 40px rgba(0,0,0,.2);
+            background: #fff; width: 100%; max-width: 420px; border-radius: var(--radius);
+            padding: 28px 24px; box-shadow: 0 10px 40px rgba(0,0,0,.2); animation: slideUp .25s;
         }
-        .modal-title { font-size: 1.2rem; font-weight: bold; margin: 0 0 20px; color: var(--dark); }
-        .form-group { margin-bottom: 15px; text-align: left; }
-        .form-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; font-weight: 600; }
+        @keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-title { font-size: 1.15rem; font-weight: 700; margin: 0 0 20px; color: var(--dark); }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; }
         .form-group input, .form-group select {
             width: 100%; padding: 10px 12px; border: 1.5px solid #e0dbd0; border-radius: 8px;
-            font-size: 0.95rem; font-family: inherit; color: var(--text); outline: none; transition: border 0.2s; box-sizing: border-box;
+            font-size: 0.93rem; font-family: inherit; outline: none; box-sizing: border-box; transition: border .2s;
         }
         .form-group input:focus, .form-group select:focus { border-color: var(--gold); }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
-        .btn-cancelar { background: #f5f5f5; color: #555; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-family: inherit; }
-        .btn-cancelar:hover { background: #e0e0e0; }
+        .hint { font-size: 0.75rem; color: #aaa; font-weight: normal; margin-left: 4px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+        .btn-cancel { background: #f0f0f0; color: #666; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 600; }
+        .btn-cancel:hover { background: #e0e0e0; }
 
+        .empty { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
-    <div class="wrapper">
-        <div class="header">
-            <div>
-                <h1>Gestão de Utilizadores</h1>
-                <span style="color: var(--text-muted); font-size: 0.9rem;">Controlo de acessos à Área de Administração</span>
-            </div>
-            <button class="btn-gold" onclick="abrirModal()">+ Novo Utilizador</button>
+<div class="wrapper">
+    <div class="page-header">
+        <div>
+            <h1>Gestão de Utilizadores</h1>
+            <p>Controlo de acessos à área de administração</p>
         </div>
-
-        <div class="card-list">
-            <table class="table-custom">
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>Email</th>
-                        <th>Tipo de Acesso</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="utilizadores-tbody">
-                    <tr><td colspan="4" class="empty-state">A carregar utilizadores...</td></tr>
-                </tbody>
-            </table>
-        </div>
+        <button class="btn-gold" onclick="abrirModalNovo()">+ Novo Utilizador</button>
     </div>
 
-    <!-- Modal Adicionar / Editar -->
-    <div class="modal-overlay" id="modal-user">
-        <div class="modal-card">
-            <h3 class="modal-title" id="modal-titulo">Novo Utilizador</h3>
-            <input type="hidden" id="user-id">
-            
-            <div class="form-group">
-                <label>Nome Completo</label>
-                <input type="text" id="user-nome" placeholder="Ex: Maria Silva">
-            </div>
-            <div class="form-group">
-                <label>Email (Acesso)</label>
-                <input type="email" id="user-email" placeholder="Ex: maria@atelier.com">
-            </div>
-            <div class="form-group">
-                <label>Palavra-Passe <span id="pwd-hint" style="font-weight:normal; font-size:0.75rem; color:#888;"></span></label>
-                <input type="password" id="user-senha" placeholder="*******">
-            </div>
-            <div class="form-group">
-                <label>Tipo de Conta</label>
-                <select id="user-tipo">
-                    <option value="admin">Admin (Normal)</option>
-                    <option value="maximo">Máximo (Total Acesso)</option>
-                </select>
-            </div>
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Email</th>
+                    <th>Tipo</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+        </table>
+    </div>
+</div>
 
-            <div class="modal-actions">
-                <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
-                <button class="btn-gold" id="btn-guardar" onclick="guardarUtilizador()">Guardar</button>
-            </div>
+<!-- Modal: Criar / Editar utilizador -->
+<div class="modal-overlay" id="modal-user">
+    <div class="modal-card">
+        <h3 class="modal-title" id="modal-titulo">Novo Utilizador</h3>
+        <input type="hidden" id="user-id">
+
+        <div class="form-group">
+            <label>Nome Completo</label>
+            <input type="text" id="user-nome" placeholder="Ex: Maria Silva">
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="user-email" placeholder="Ex: maria@atelier.com">
+        </div>
+        <div class="form-group">
+            <label>Palavra-passe <span class="hint" id="pwd-hint"></span></label>
+            <input type="password" id="user-senha" placeholder="••••••••">
+        </div>
+        <div class="form-group">
+            <label>Tipo de Conta</label>
+            <select id="user-tipo">
+                <option value="admin">Admin — acesso normal</option>
+                <option value="maximo">Máximo — acesso total (Dashboard e Contas)</option>
+            </select>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="fecharModais()">Cancelar</button>
+            <button class="btn-gold" id="btn-guardar" onclick="guardarUtilizador()">Guardar</button>
         </div>
     </div>
+</div>
 
-    <script>
-        let editando = false;
+<!-- Modal: Alterar Senha -->
+<div class="modal-overlay" id="modal-senha">
+    <div class="modal-card">
+        <h3 class="modal-title">Alterar Senha</h3>
+        <input type="hidden" id="senha-user-id">
+        <p id="senha-user-nome" style="margin:0 0 18px; color:var(--text-muted); font-size:0.88rem;"></p>
 
-        async function carregarUtilizadores() {
-            const db = window.supabaseClient;
-            if(!db) return;
+        <div class="form-group">
+            <label>Nova Senha</label>
+            <input type="password" id="nova-senha" placeholder="••••••••">
+        </div>
+        <div class="form-group">
+            <label>Confirmar Nova Senha</label>
+            <input type="password" id="confirmar-senha" placeholder="••••••••">
+        </div>
 
-            const tbody = document.getElementById('utilizadores-tbody');
-            const { data, error } = await db.from('contas_adm').select('*').order('criado_em', { ascending: true });
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="fecharModais()">Cancelar</button>
+            <button class="btn-gold" id="btn-alterar-senha" onclick="alterarSenha()">Alterar Senha</button>
+        </div>
+    </div>
+</div>
 
-            if (error) {
-                console.error(error);
-                tbody.innerHTML = `<tr><td colspan="4" class="empty-state" style="color:#c62828">Erro ao carregar dados.</td></tr>`;
+<script>
+    const SUPABASE_URL = "https://cixjmwfkfmeedajpmzmp.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeGptd2ZrZm1lZWRhanBtem1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MzM5ODIsImV4cCI6MjA2OTEwOTk4Mn0.vFvgRMK_oabG19FNauNaBu_CoQTL8QRSXcptyfY6rbM";
+
+    let db;
+    let editando = false;
+
+    function getDb() {
+        if (db) return db;
+        db = window.supabaseClient || window.supabase?.createClient(SUPABASE_URL, SUPABASE_KEY);
+        return db;
+    }
+
+    async function carregarUtilizadores() {
+        const tbody = document.getElementById('tbody');
+        tbody.innerHTML = `<tr><td colspan="4" class="empty">A carregar...</td></tr>`;
+
+        try {
+            const client = getDb();
+            if (!client) throw new Error("Cliente Supabase não disponível");
+
+            const { data, error } = await client.rpc('listar_adm');
+            if (error) throw error;
+
+            const lista = Array.isArray(data) ? data : [];
+
+            if (lista.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="empty">Nenhum utilizador registado.</td></tr>`;
                 return;
             }
 
-            if (!data || data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="empty-state">Nenhum utilizador encontrado.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = data.map(u => {
-                const tipoBadge = u.tipo_utilizador === 'maximo' 
-                    ? `<span class="badge-maximo">MÁXIMO</span>` 
-                    : `<span class="badge-admin">ADMIN</span>`;
-                
+            tbody.innerHTML = lista.map(u => {
+                const badge = u.tipo_utilizador === 'maximo'
+                    ? `<span class="badge badge-maximo">MÁXIMO</span>`
+                    : `<span class="badge badge-admin">ADMIN</span>`;
+                const nomeEsc = u.nome.replace(/'/g, "\\'");
                 return `
                 <tr>
-                    <td style="font-weight: 600">${u.nome}</td>
+                    <td style="font-weight:600">${u.nome}</td>
                     <td>${u.email}</td>
-                    <td>${tipoBadge}</td>
+                    <td>${badge}</td>
                     <td>
-                        <button class="btn-acao btn-editar" onclick="prepararEdicao('${u.id}', '${u.nome}', '${u.email}', '${u.tipo_utilizador}')">Editar</button>
-                        <button class="btn-acao btn-apagar" onclick="apagarUtilizador('${u.id}', '${u.nome}')">Apagar</button>
+                        <div class="acoes">
+                            <button class="btn-sm btn-edit" onclick="abrirModalEditar('${u.id}','${nomeEsc}','${u.email}','${u.tipo_utilizador}')">Editar</button>
+                            <button class="btn-sm btn-pwd"  onclick="abrirModalSenha('${u.id}','${nomeEsc}')">Senha</button>
+                            <button class="btn-sm btn-del"  onclick="apagarUtilizador('${u.id}','${nomeEsc}')">Apagar</button>
+                        </div>
                     </td>
-                </tr>
-                `;
+                </tr>`;
             }).join('');
+        } catch (err) {
+            console.error(err);
+            tbody.innerHTML = `<tr><td colspan="4" class="empty" style="color:#c62828">Erro ao carregar. Verifique a consola.</td></tr>`;
         }
+    }
 
-        function abrirModal() {
-            editando = false;
-            document.getElementById('modal-titulo').innerText = "Novo Utilizador";
-            document.getElementById('user-id').value = "";
-            document.getElementById('user-nome').value = "";
-            document.getElementById('user-email').value = "";
-            document.getElementById('user-senha').value = "";
-            document.getElementById('user-tipo').value = "admin";
-            document.getElementById('pwd-hint').innerText = "(Obrigatório)";
-            document.getElementById('modal-user').classList.add('active');
+    function abrirModalNovo() {
+        editando = false;
+        document.getElementById('modal-titulo').textContent = "Novo Utilizador";
+        document.getElementById('user-id').value = "";
+        document.getElementById('user-nome').value = "";
+        document.getElementById('user-email').value = "";
+        document.getElementById('user-senha').value = "";
+        document.getElementById('user-tipo').value = "admin";
+        document.getElementById('pwd-hint').textContent = "(Obrigatório)";
+        document.getElementById('btn-guardar').textContent = "Criar Utilizador";
+        document.getElementById('modal-user').classList.add('active');
+    }
+
+    function abrirModalEditar(id, nome, email, tipo) {
+        editando = true;
+        document.getElementById('modal-titulo').textContent = "Editar Utilizador";
+        document.getElementById('user-id').value = id;
+        document.getElementById('user-nome').value = nome;
+        document.getElementById('user-email').value = email;
+        document.getElementById('user-senha').value = "";
+        document.getElementById('user-tipo').value = tipo;
+        document.getElementById('pwd-hint').textContent = "(Deixe vazio para não alterar)";
+        document.getElementById('btn-guardar').textContent = "Guardar Alterações";
+        document.getElementById('modal-user').classList.add('active');
+    }
+
+    function abrirModalSenha(id, nome) {
+        document.getElementById('senha-user-id').value = id;
+        document.getElementById('senha-user-nome').textContent = `Utilizador: ${nome}`;
+        document.getElementById('nova-senha').value = "";
+        document.getElementById('confirmar-senha').value = "";
+        document.getElementById('modal-senha').classList.add('active');
+    }
+
+    function fecharModais() {
+        document.getElementById('modal-user').classList.remove('active');
+        document.getElementById('modal-senha').classList.remove('active');
+    }
+
+    async function guardarUtilizador() {
+        const id    = document.getElementById('user-id').value;
+        const nome  = document.getElementById('user-nome').value.trim();
+        const email = document.getElementById('user-email').value.trim();
+        const senha = document.getElementById('user-senha').value;
+        const tipo  = document.getElementById('user-tipo').value;
+        const btn   = document.getElementById('btn-guardar');
+
+        if (!nome || !email) { aviso("Preenche o nome e o email."); return; }
+        if (!editando && !senha) { aviso("A palavra-passe é obrigatória para novos utilizadores."); return; }
+
+        btn.textContent = "A guardar...";
+        btn.disabled = true;
+
+        try {
+            const client = getDb();
+            const fn = editando ? 'atualizar_adm' : 'criar_adm';
+            const params = editando
+                ? { p_id: id, p_nome: nome, p_email: email, p_senha: senha, p_tipo: tipo }
+                : { p_nome: nome, p_email: email, p_senha: senha, p_tipo: tipo };
+
+            const { data, error } = await client.rpc(fn, params);
+            if (error) throw error;
+            if (!data?.sucesso) throw new Error(data?.mensagem || "Erro desconhecido");
+
+            fecharModais();
+            await carregarUtilizadores();
+            aviso(data.mensagem || "Guardado com sucesso!", "Sucesso", "✅");
+        } catch (err) {
+            console.error(err);
+            aviso("Erro ao guardar. O email pode já existir.", "Erro", "❌");
+        } finally {
+            btn.textContent = editando ? "Guardar Alterações" : "Criar Utilizador";
+            btn.disabled = false;
         }
+    }
 
-        function prepararEdicao(id, nome, email, tipo) {
-            editando = true;
-            document.getElementById('modal-titulo').innerText = "Editar Utilizador";
-            document.getElementById('user-id').value = id;
-            document.getElementById('user-nome').value = nome;
-            document.getElementById('user-email').value = email;
-            document.getElementById('user-senha').value = ""; // Vazio por defeito
-            document.getElementById('user-tipo').value = tipo;
-            document.getElementById('pwd-hint').innerText = "(Deixe em branco para manter a atual)";
-            document.getElementById('modal-user').classList.add('active');
-        }
+    async function alterarSenha() {
+        const id       = document.getElementById('senha-user-id').value;
+        const nova     = document.getElementById('nova-senha').value;
+        const confirma = document.getElementById('confirmar-senha').value;
+        const btn      = document.getElementById('btn-alterar-senha');
 
-        function fecharModal() {
-            document.getElementById('modal-user').classList.remove('active');
-        }
+        if (!nova) { aviso("Introduz a nova senha."); return; }
+        if (nova !== confirma) { aviso("As senhas não coincidem."); return; }
+        if (nova.length < 6) { aviso("A senha deve ter pelo menos 6 caracteres."); return; }
 
-        async function guardarUtilizador() {
-            const id = document.getElementById('user-id').value;
-            const nome = document.getElementById('user-nome').value.trim();
-            const email = document.getElementById('user-email').value.trim();
-            const senha = document.getElementById('user-senha').value;
-            const tipo = document.getElementById('user-tipo').value;
-            const btn = document.getElementById('btn-guardar');
+        btn.textContent = "A alterar...";
+        btn.disabled = true;
 
-            if (!nome || !email || (!editando && !senha)) {
-                if(window.mostrarAviso) window.mostrarAviso("Preencha os campos obrigatórios.");
-                else alert("Preencha os campos obrigatórios.");
-                return;
+        try {
+            const client = getDb();
+            const { data, error } = await client.rpc('atualizar_adm', {
+                p_id: id, p_nome: '', p_email: '', p_senha: nova, p_tipo: ''
+            });
+
+            if (error) throw error;
+
+            // atualizar_adm com nome/email vazios pode falhar — usa RPC dedicada se existir
+            // Se retornou erro de campos vazios, tenta de outra forma
+            if (!data?.sucesso) {
+                // Busca os dados actuais e atualiza só a senha
+                const lista = await client.rpc('listar_adm');
+                const user  = (lista.data || []).find(u => u.id === id);
+                if (!user) throw new Error("Utilizador não encontrado");
+
+                const { data: d2, error: e2 } = await client.rpc('atualizar_adm', {
+                    p_id: id, p_nome: user.nome, p_email: user.email, p_senha: nova, p_tipo: user.tipo_utilizador
+                });
+                if (e2) throw e2;
+                if (!d2?.sucesso) throw new Error(d2?.mensagem);
             }
 
-            btn.innerText = "A guardar...";
-            btn.disabled = true;
-
-            const db = window.supabaseClient;
-            let resp;
-
-            try {
-                if (editando) {
-                    resp = await db.rpc('atualizar_adm', { p_id: id, p_nome: nome, p_email: email, p_senha: senha, p_tipo: tipo });
-                } else {
-                    resp = await db.rpc('criar_adm', { p_nome: nome, p_email: email, p_senha: senha, p_tipo: tipo });
-                }
-
-                if (resp.error) throw resp.error;
-                
-                const resultado = resp.data;
-                if(resultado && resultado.sucesso) {
-                    fecharModal();
-                    await carregarUtilizadores();
-                    if(window.mostrarAviso) window.mostrarAviso(resultado.mensagem, "Sucesso", "✅");
-                } else {
-                    throw new Error(resultado?.mensagem || "Erro desconhecido");
-                }
-            } catch (err) {
-                console.error(err);
-                if(window.mostrarAviso) window.mostrarAviso("Erro ao guardar: O email já pode existir.", "Erro", "❌");
-                else alert("Erro ao guardar.");
-            } finally {
-                btn.innerText = "Guardar";
-                btn.disabled = false;
-            }
+            fecharModais();
+            aviso("Senha alterada com sucesso!", "Sucesso", "✅");
+        } catch (err) {
+            console.error(err);
+            aviso("Erro ao alterar a senha.", "Erro", "❌");
+        } finally {
+            btn.textContent = "Alterar Senha";
+            btn.disabled = false;
         }
+    }
 
-        async function apagarUtilizador(id, nome) {
-            let confirmado = false;
-            if(window.mostrarConfirmacao) {
-                confirmado = await window.mostrarConfirmacao(`Tem a certeza que deseja apagar o utilizador "${nome}"?`, "Apagar Conta", "🗑️");
-            } else {
-                confirmado = confirm(`Tem a certeza que deseja apagar "${nome}"?`);
-            }
+    async function apagarUtilizador(id, nome) {
+        const ok = window.mostrarConfirmacao
+            ? await window.mostrarConfirmacao(`Apagar o utilizador "${nome}"? Esta ação não pode ser desfeita.`, "Apagar", "🗑️")
+            : confirm(`Apagar "${nome}"?`);
+        if (!ok) return;
 
-            if (!confirmado) return;
-
-            const db = window.supabaseClient;
-            const { data, error } = await db.rpc('apagar_adm', { p_id: id });
-
-            if (error || (data && !data.sucesso)) {
-                console.error(error || data);
-                if(window.mostrarAviso) window.mostrarAviso("Não foi possível apagar o utilizador.");
-            } else {
-                carregarUtilizadores();
-            }
+        try {
+            const { data, error } = await getDb().rpc('apagar_adm', { p_id: id });
+            if (error) throw error;
+            if (!data?.sucesso) throw new Error(data?.mensagem);
+            await carregarUtilizadores();
+        } catch (err) {
+            console.error(err);
+            aviso("Não foi possível apagar o utilizador.", "Erro", "❌");
         }
+    }
 
-        // Iniciar quando carregado
-        document.addEventListener("DOMContentLoaded", () => {
-            setTimeout(() => carregarUtilizadores(), 500); // Aguarda supabase carregar
+    function aviso(msg, titulo = "Atenção", icone = "⚠️") {
+        if (window.mostrarAviso) window.mostrarAviso(msg, titulo, icone);
+        else alert(msg);
+    }
+
+    // Fechar ao clicar no overlay
+    ['modal-user','modal-senha'].forEach(id => {
+        document.getElementById(id).addEventListener('click', function(e) {
+            if (e.target === this) fecharModais();
         });
+    });
 
-    </script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // Aguarda o supabaseClient ficar disponível (criado pelo auth-guard.js)
+        const tentarCarregar = (tentativas = 0) => {
+            if (getDb()) {
+                carregarUtilizadores();
+            } else if (tentativas < 10) {
+                setTimeout(() => tentarCarregar(tentativas + 1), 200);
+            } else {
+                document.getElementById('tbody').innerHTML =
+                    `<tr><td colspan="4" class="empty" style="color:#c62828">Supabase não carregou. Recarrega a página.</td></tr>`;
+            }
+        };
+        tentarCarregar();
+    });
+</script>
 </body>
 </html>
