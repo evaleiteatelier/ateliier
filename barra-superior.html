@@ -198,7 +198,7 @@
         margin-top: 5px;
         border: 1px solid #eee;
     }
-    .nav-dropdown:hover .nav-dropdown-content {
+    .nav-dropdown-content.aberto {
         display: block;
         animation: fadeIn 0.2s ease-out;
     }
@@ -228,7 +228,7 @@
         margin-left: 3px;
         color: inherit;
     }
-    .nav-dropdown:hover .dropdown-icon {
+    .nav-dropdown.aberto .dropdown-icon {
         transform: rotate(180deg);
     }
 
@@ -271,9 +271,9 @@
                 <a href="vouchers.html"   data-page="vouchers.html">Vouchers</a>
                 
                 <!-- Dropdown de Gestão -->
-                <div class="nav-dropdown">
-                    <a href="#" style="cursor:default">Administração <span class="dropdown-icon">▼</span></a>
-                    <div class="nav-dropdown-content">
+                <div class="nav-dropdown" id="nav-dropdown-admin">
+                    <a href="#" onclick="toggleDropdownAdmin(event)" style="cursor:pointer; user-select:none;">Administração <span class="dropdown-icon">▼</span></a>
+                    <div class="nav-dropdown-content" id="nav-dropdown-content-admin">
                         <a href="gerir-produtos.html" data-page="gerir-produtos.html">Gerir Produtos</a>
                         <a href="dashboard.html" data-page="dashboard.html" class="full-admin-only">Dashboard</a>
                         <a href="contas.html" data-page="contas.html" class="full-admin-only">Contas</a>
@@ -291,3 +291,22 @@
 
     </div>
 </header>
+
+<script>
+function toggleDropdownAdmin(e) {
+    e.preventDefault();
+    const wrapper = document.getElementById('nav-dropdown-admin');
+    const content = document.getElementById('nav-dropdown-content-admin');
+    const isAberto = wrapper.classList.toggle('aberto');
+    content.classList.toggle('aberto', isAberto);
+}
+
+// Fecha ao clicar fora
+document.addEventListener('click', function(e) {
+    const wrapper = document.getElementById('nav-dropdown-admin');
+    if (wrapper && !wrapper.contains(e.target)) {
+        wrapper.classList.remove('aberto');
+        document.getElementById('nav-dropdown-content-admin').classList.remove('aberto');
+    }
+});
+</script>
