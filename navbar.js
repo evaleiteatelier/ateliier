@@ -39,9 +39,7 @@ function configurarBarra() {
 // 4. FUNÇÃO DE SAIR
 async function sair() {
     localStorage.removeItem("tipoUsuario");
-    if (window.supabaseClient) {
-        await window.supabaseClient.auth.signOut();
-    }
+    localStorage.removeItem("adminToken");
     window.location.href = "index.html?logout=1";
 }
 

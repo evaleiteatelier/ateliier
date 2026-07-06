@@ -17,12 +17,11 @@ document.documentElement.style.visibility = 'hidden';
       return;
     }
 
-    const { data: { session } } = await db.auth.getSession();
+    const hasToken = !!localStorage.getItem('adminToken');
 
-    if (!session) {
+    if (!hasToken) {
       window.location.href = 'index.html';
     } else {
-      localStorage.setItem('tipoUsuario', 'admin');
       document.documentElement.style.visibility = '';
     }
   } catch (e) {
