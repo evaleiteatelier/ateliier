@@ -645,6 +645,16 @@
         </div>
       </div>
 
+      <!-- WEZA -->
+      <div class="card">
+        <p class="card-title">Weza — Por Semana</p>
+        <ul class="mensal-semanas-list" id="mensal-weza-list"></ul>
+        <div class="result-row highlight">
+          <span class="r-label">Total Weza</span>
+          <span class="r-val" id="mensal-weza-total">0,00 €</span>
+        </div>
+      </div>
+
 
       <!-- RECEBIMENTOS DE DÍVIDAS DO MÊS -->
       <div class="card" style="border-left:3px solid var(--green);">
@@ -1201,14 +1211,15 @@ function recalcularMensal() {
   document.getElementById('mensal-gastos-semana').textContent = `≈ ${fmt(totalGastos / numSemanasAtual)}/semana`;
   document.getElementById('mensal-lucro-gastos').textContent  = fmt(totalGastos);
 
-  let totalAtelier = 0, totalSalario = 0, totalPDivMes = 0, totalGastosVarMes = 0;
+  let totalAtelier = 0, totalSalario = 0, totalWeza = 0, totalPDivMes = 0, totalGastosVarMes = 0;
 
   const aL = document.getElementById('mensal-atelier-list');
   const sL = document.getElementById('mensal-salario-list');
+  const wzL = document.getElementById('mensal-weza-list');
   const dL = document.getElementById('mensal-dividas-list');
   const gL = document.getElementById('mensal-gastos-dia-list');
   const rs = document.getElementById('resumo-semanas');
-  aL.innerHTML = sL.innerHTML = dL.innerHTML = gL.innerHTML = rs.innerHTML = '';
+  aL.innerHTML = sL.innerHTML = wzL.innerHTML = dL.innerHTML = gL.innerHTML = rs.innerHTML = '';
 
   const receitasPorSemana = [], gastosPorSemana = [];
 
@@ -1229,7 +1240,7 @@ function recalcularMensal() {
       wV = saldoSemana * pW / 100;
     }
 
-    totalAtelier += aV; totalSalario += sV;
+    totalAtelier += aV; totalSalario += sV; totalWeza += wV;
     totalPDivMes += pdivV; totalGastosVarMes += gastosV;
     receitasPorSemana.push(parseFloat(((aV + sV)).toFixed(2)));
     gastosPorSemana.push(parseFloat(gastosV.toFixed(2)));
@@ -1242,6 +1253,7 @@ function recalcularMensal() {
     };
     aL.appendChild(li(`${i}ª Semana`, aV));
     sL.appendChild(li(`${i}ª Semana`, sV));
+    wzL.appendChild(li(`${i}ª Semana`, wV));
 
     if (pdivV > 0) {
       const d2 = document.createElement('li');
@@ -1263,6 +1275,7 @@ function recalcularMensal() {
 
   document.getElementById('mensal-atelier-total').textContent = fmt(totalAtelier);
   document.getElementById('mensal-salario-total').textContent = fmt(totalSalario);
+  document.getElementById('mensal-weza-total').textContent    = fmt(totalWeza);
   document.getElementById('mensal-lucro-atelier').textContent = fmt(totalAtelier);
   document.getElementById('mensal-pdiv-total').textContent         = fmt(totalPDivMes);
   document.getElementById('mensal-gastos-dia-total').textContent   = fmt(totalGastosVarMes);
