@@ -1279,9 +1279,13 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
             <button class="admin-only btn-editar" onclick="abrirEditorPedido('${p.id}')">Editar</button>
             <button class="admin-only btn-excluir" onclick="excluirPedido('${p.id}')">Excluir</button>
           ` : ''}
-          ${(p.fatura_simples_link || p.fatura_final_link) ? `
+          ${p.fatura_final_link ? `
             <button class="admin-only" onclick="abrirModalFatura('${p.id}')" style="background-color: #d4af37 !important; color: #fff !important; font-weight: bold;" title="Ver ou Editar Faturas e Envio">
               📄 Ver Fatura
+            </button>
+          ` : p.fatura_simples_link ? `
+            <button class="admin-only" onclick="abrirModalFatura('${p.id}')" style="background-color: #f57c00 !important; color: #fff !important; font-weight: bold;" title="Já tem fatura simples anexada — falta a fatura final/completa">
+              📄 Concluir Fatura
             </button>
           ` : `
             <button class="admin-only" onclick="abrirModalFatura('${p.id}')" style="background-color: #f5f5f5 !important; color: #555 !important; border: 1px solid #ccc;" title="Tratar da emissão ou envio da fatura">
