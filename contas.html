@@ -96,7 +96,7 @@
     .tab-content.active { display: block; }
 
     /* ── SEMANAS ── */
-    .semanas-tabs { display: flex; gap: 6px; margin-bottom: 20px; }
+    .semanas-tabs { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
     .semana-btn { padding: 8px 18px; border: 1px solid #ddd; background: #fff; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.82rem; font-weight: 600; color: var(--text-muted); border-radius: 8px; transition: all .2s; }
     .semana-btn:hover { border-color: var(--gold); color: var(--dark); }
     .semana-btn.active { background: var(--dark); color: var(--gold); border-color: var(--dark); }
@@ -220,7 +220,7 @@
     .lucro-badge.neg { background: var(--red-light); color: var(--red); }
 
     /* ── RESUMO SEMANAS (mensal) ── */
-    .resumo-semanas-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    .resumo-semanas-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; margin-bottom: 20px; }
     @media (max-width: 700px) { .resumo-semanas-grid { grid-template-columns: 1fr 1fr; } }
     .resumo-semana-card { background: #fff; border-radius: 10px; padding: 14px 16px; box-shadow: var(--shadow); text-align: center; }
     .resumo-semana-card .rs-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
@@ -419,12 +419,7 @@
   ══════════════════════════════════════ -->
   <div id="tab-semanal" class="tab-content active">
 
-    <div class="semanas-tabs">
-      <button class="semana-btn active" onclick="mudarSemana(1, this)">Semana 1</button>
-      <button class="semana-btn" onclick="mudarSemana(2, this)">Semana 2</button>
-      <button class="semana-btn" onclick="mudarSemana(3, this)">Semana 3</button>
-      <button class="semana-btn" onclick="mudarSemana(4, this)">Semana 4</button>
-    </div>
+    <div class="semanas-tabs" id="semanas-tabs"></div>
 
     <div class="semana-grid">
 
@@ -821,6 +816,52 @@
 // ═══════════════════════════════════════════
 let mesAtual = '';
 let semanaAtual = 1;
+let numSemanasAtual = 4;
+
+// ═══════════════════════════════════════════
+// SEMANAS DE CALENDÁRIO (Segunda a Domingo, recortadas ao mês)
+// O nº de semanas varia consoante o dia da semana em que o mês começa
+// (normalmente 4 ou 5, ocasionalmente 6).
+// ═══════════════════════════════════════════
+function calcularSemanasDoMes(ano, mes) {
+  const ultimoDia = new Date(ano, mes, 0).getDate();
+  const diaSemanaInicio = (new Date(ano, mes - 1, 1).getDay() + 6) % 7; // 0=Segunda...6=Domingo
+  const semanas = [];
+  let dia = 1;
+  while (dia <= ultimoDia) {
+    const tamanho = dia === 1 ? (7 - diaSemanaInicio) : 7;
+    const fim = Math.min(dia + tamanho - 1, ultimoDia);
+    semanas.push({ inicio: dia, fim });
+    dia = fim + 1;
+  }
+  return semanas;
+}
+function numSemanasDoMes(ano, mes) {
+  return calcularSemanasDoMes(ano, mes).length;
+}
+function semanaDoDia(ano, mes, dia) {
+  const semanas = calcularSemanasDoMes(ano, mes);
+  const idx = semanas.findIndex(s => dia >= s.inicio && dia <= s.fim);
+  return idx === -1 ? semanas.length : idx + 1;
+}
+
+function renderizarAbasSemanas() {
+  const [ano, mes] = mesAtual.split('-').map(Number);
+  const semanas = calcularSemanasDoMes(ano, mes);
+  numSemanasAtual = semanas.length;
+  if (semanaAtual > numSemanasAtual) semanaAtual = 1;
+
+  const cont = document.getElementById('semanas-tabs');
+  cont.innerHTML = '';
+  semanas.forEach((s, idx) => {
+    const n = idx + 1;
+    const btn = document.createElement('button');
+    btn.className = 'semana-btn' + (n === semanaAtual ? ' active' : '');
+    btn.textContent = `Semana ${n} · ${s.inicio}–${s.fim}`;
+    btn.onclick = () => mudarSemana(n, btn);
+    cont.appendChild(btn);
+  });
+}
 
 // ═══════════════════════════════════════════
 // INIT
@@ -864,7 +905,7 @@ function liberarAcessoContas() {
   document.getElementById('contas-wrapper').style.visibility = '';
 
   popularMeses();
-  carregarSemana(1);
+  carregarSemana(semanaAtual);
   carregarMensal();
   carregarDividas();
   sincronizarComLoja();
@@ -887,6 +928,7 @@ function popularMeses() {
   pickerAno = parseInt(mesAtual.split('-')[0]);
   atualizarBotaoMes();
   renderizarPicker();
+  renderizarAbasSemanas();
 
   // Fechar picker ao clicar fora
   document.addEventListener('click', e => {
@@ -949,6 +991,7 @@ function selecionarMes(key) {
   localStorage.setItem('contas_mes_atual', mesAtual);
   atualizarBotaoMes();
   fecharPicker();
+  renderizarAbasSemanas();
   carregarSemana(semanaAtual);
   carregarMensal();
   sincronizarComLoja();
@@ -1155,7 +1198,7 @@ function recalcularMensal() {
   const totalGastos = c + r + t + l + el + ro;
 
   document.getElementById('mensal-gastos-total').textContent  = fmt(totalGastos);
-  document.getElementById('mensal-gastos-semana').textContent = `≈ ${fmt(totalGastos / 4)}/semana`;
+  document.getElementById('mensal-gastos-semana').textContent = `≈ ${fmt(totalGastos / numSemanasAtual)}/semana`;
   document.getElementById('mensal-lucro-gastos').textContent  = fmt(totalGastos);
 
   let totalAtelier = 0, totalSalario = 0, totalPDivMes = 0, totalGastosVarMes = 0;
@@ -1169,7 +1212,7 @@ function recalcularMensal() {
 
   const receitasPorSemana = [], gastosPorSemana = [];
 
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= numSemanasAtual; i++) {
     const raw = localStorage.getItem(chaveSemana(i));
     let aV = 0, sV = 0, wV = 0, pdivV = 0, gastosV = 0;
 
@@ -1498,8 +1541,8 @@ function sincronizarPagamentosComDividas() {
     d.pagamentos = d.pagamentos.filter(p => !(p.fonte === 'semanal' && p.mes === mesAtual));
   });
 
-  // Lê todas as 4 semanas do mês actual e adiciona os pagamentos ligados
-  for (let s = 1; s <= 4; s++) {
+  // Lê todas as semanas do mês actual e adiciona os pagamentos ligados
+  for (let s = 1; s <= numSemanasAtual; s++) {
     const raw = localStorage.getItem(chaveSemana(s));
     if (!raw) continue;
     const semana = JSON.parse(raw);
@@ -1634,7 +1677,7 @@ function renderizarGraficoMensal(receitas, gastos) {
   chartMensalInstance = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['1ª Semana', '2ª Semana', '3ª Semana', '4ª Semana'],
+      labels: receitas.map((_, i) => `${i + 1}ª Semana`),
       datasets: [
         {
           label: 'Receitas',
@@ -1715,7 +1758,7 @@ function carregarMetas() {
 function lerTotaisMes(ano, mes) {
   const key = `${ano}-${String(mes).padStart(2,'0')}`;
   let totalAtelier = 0, totalSalario = 0, totalGastos = 0;
-  for (let s = 1; s <= 4; s++) {
+  for (let s = 1; s <= numSemanasDoMes(ano, mes); s++) {
     const raw = localStorage.getItem(`contas_${key}_s${s}`);
     if (!raw) continue;
     const d = JSON.parse(raw);
@@ -1871,7 +1914,8 @@ function renderizarGrafico() {
 
 // ═══════════════════════════════════════════
 // SINCRONIZAÇÃO COM SUPABASE
-// Semana 1: dias 1-7 | Semana 2: 8-14 | Semana 3: 15-21 | Semana 4: 22-fim
+// Cada pagamento vai automaticamente para a semana de calendário
+// (Segunda-Domingo, recortada ao mês) a que a sua data pertence.
 // ═══════════════════════════════════════════
 async function sincronizarComLoja() {
   const db = window.supabaseClient;
@@ -1882,6 +1926,7 @@ async function sincronizarComLoja() {
 
   try {
     const [ano, mes] = mesAtual.split('-').map(Number);
+    const totalSemanas = numSemanasDoMes(ano, mes);
 
     const { data: pedidos, error } = await db
       .from('pedidos')
@@ -1889,8 +1934,9 @@ async function sincronizarComLoja() {
 
     if (error) throw error;
 
-    // Agrupa pagamentos por semana do mês seleccionado
-    const semanas = { 1: [], 2: [], 3: [], 4: [] };
+    // Agrupa pagamentos por semana de calendário do mês seleccionado
+    const semanas = {};
+    for (let s = 1; s <= totalSemanas; s++) semanas[s] = [];
 
     pedidos.forEach(p => {
       let pgmts = [];
@@ -1905,7 +1951,7 @@ async function sincronizarComLoja() {
         const partes = pag.data.split('-').map(Number);
         if (partes[0] !== ano || partes[1] !== mes) return;
         const dia = partes[2];
-        const s = dia <= 7 ? 1 : dia <= 14 ? 2 : dia <= 21 ? 3 : 4;
+        const s = semanaDoDia(ano, mes, dia);
         semanas[s].push({
           nome:     p.nome + (pag.nota ? ` (${pag.nota})` : ''),
           valor:    pag.valor,
@@ -1916,7 +1962,7 @@ async function sincronizarComLoja() {
     });
 
     // Salva cada semana preservando entradas manuais
-    for (let s = 1; s <= 4; s++) {
+    for (let s = 1; s <= totalSemanas; s++) {
       const chave = chaveSemana(s);
       let d = {};
       try { d = JSON.parse(localStorage.getItem(chave)) || {}; } catch(e) {}
