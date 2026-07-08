@@ -1281,11 +1281,11 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
           ` : ''}
           ${(p.fatura_simples_link || p.fatura_final_link) ? `
             <button class="admin-only" onclick="abrirModalFatura('${p.id}')" style="background-color: #d4af37 !important; color: #fff !important; font-weight: bold;" title="Ver ou Editar Faturas e Envio">
-              📄 Gestão de Fatura
+              📄 Ver Fatura
             </button>
           ` : `
             <button class="admin-only" onclick="abrirModalFatura('${p.id}')" style="background-color: #f5f5f5 !important; color: #555 !important; border: 1px solid #ccc;" title="Tratar da emissão ou envio da fatura">
-              📄 Emitir / Enviar Fatura
+              📄 Emitir Fatura
             </button>
           `}
       </div>
