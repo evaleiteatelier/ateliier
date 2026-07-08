@@ -329,11 +329,59 @@
     .ponto-vals { font-size: 0.7rem; color: var(--text-muted); }
     .ponto-vals span { display: block; }
     .ponto-vals .pv-real { font-weight: 600; color: var(--dark); font-size: 0.78rem; }
+
+    /* ── GATE DE ACESSO: GESTOR DE CONTAS (login Supabase) ── */
+    .gate-overlay {
+      position: fixed; inset: 0; background: var(--dark); z-index: 100000;
+      display: flex; align-items: center; justify-content: center; padding: 24px;
+    }
+    .gate-card {
+      background: #fff; border-radius: 18px; box-shadow: 0 8px 40px rgba(0,0,0,.3);
+      padding: 40px 32px; width: 100%; max-width: 380px; text-align: center;
+    }
+    .gate-icon { font-size: 2.4rem; margin-bottom: 10px; }
+    .gate-title { margin: 0 0 6px; font-size: 1.25rem; color: var(--dark); }
+    .gate-sub { margin: 0 0 22px; font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+    .gate-erro {
+      display: none; background: var(--red-light); color: var(--red); border-radius: 8px;
+      padding: 10px 14px; font-size: 0.85rem; margin-bottom: 14px; text-align: left;
+    }
+    .gate-erro.visivel { display: block; }
+    .gate-campo {
+      width: 100%; padding: 12px 14px; border: 1.5px solid #e0dbd0; border-radius: 10px;
+      font-size: 0.93rem; font-family: inherit; margin-bottom: 12px; outline: none; box-sizing: border-box;
+      transition: border-color .2s;
+    }
+    .gate-campo:focus { border-color: var(--gold); }
+    .gate-btn {
+      width: 100%; padding: 12px; background: var(--dark); color: var(--gold); border: none;
+      border-radius: 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer; font-family: inherit;
+      transition: background .2s;
+    }
+    .gate-btn:hover { background: #2e2e4e; }
+    .gate-btn:disabled { opacity: .6; pointer-events: none; }
   </style>
 </head>
 <body>
 
-<div class="contas-wrapper">
+<!-- GATE: acesso restrito ao gestor de contas (login real via Supabase Auth) -->
+<div class="gate-overlay" id="gate-contas">
+  <div class="gate-card">
+    <div class="gate-icon">🔒</div>
+    <h2 class="gate-title">Acesso Restrito</h2>
+    <p class="gate-sub">Esta página tem dados financeiros sensíveis.<br>Inicia sessão com a conta do gestor de contas.</p>
+
+    <div class="gate-erro" id="gate-erro"></div>
+
+    <input type="email" id="gate-email" class="gate-campo" placeholder="Email" autocomplete="username">
+    <input type="password" id="gate-senha" class="gate-campo" placeholder="Senha" autocomplete="current-password"
+      onkeydown="if(event.key==='Enter') tentarLoginGestorContas()">
+
+    <button class="gate-btn" id="gate-btn" onclick="tentarLoginGestorContas()">Entrar</button>
+  </div>
+</div>
+
+<div class="contas-wrapper" id="contas-wrapper" style="visibility:hidden">
 
   <!-- CABEÇALHO -->
   <div class="contas-header">
@@ -789,12 +837,74 @@ document.addEventListener('DOMContentLoaded', () => {
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeGptd2ZrZm1lZWRhanBtem1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MzM5ODIsImV4cCI6MjA2OTEwOTk4Mn0.vFvgRMK_oabG19FNauNaBu_CoQTL8QRSXcptyfY6rbM"
     );
   }
+  iniciarGateContas();
+});
+
+// ═══════════════════════════════════════════
+// GATE DE ACESSO — GESTOR DE CONTAS (login real via Supabase Auth)
+// Só quem iniciar sessão com ESTA conta específica do Supabase Auth
+// (criada manualmente no Dashboard) consegue ver esta página.
+// ═══════════════════════════════════════════
+const CONTAS_EMAIL_PERMITIDO = 'TROCAR-PELO-EMAIL-DA-EVA@exemplo.com'; // <-- ajustar após criar o utilizador no Supabase Auth
+const MSG_ACESSO_NEGADO = 'Apenas o gestor de contas (Eva Leite) pode aceder a esta página. Vai embora.';
+
+async function iniciarGateContas() {
+  const db = window.supabaseClient;
+  const { data: { session } } = await db.auth.getSession();
+
+  if (session && session.user.email?.toLowerCase() === CONTAS_EMAIL_PERMITIDO.toLowerCase()) {
+    liberarAcessoContas();
+    return;
+  }
+
+  // Sessão de outra conta Supabase que não é a permitida: força logout
+  if (session) await db.auth.signOut();
+
+  document.getElementById('gate-email').focus();
+}
+
+function liberarAcessoContas() {
+  document.getElementById('gate-contas').remove();
+  document.getElementById('contas-wrapper').style.visibility = '';
+
   popularMeses();
   carregarSemana(1);
   carregarMensal();
   carregarDividas();
   sincronizarComLoja();
-});
+}
+
+async function tentarLoginGestorContas() {
+  const email = document.getElementById('gate-email').value.trim();
+  const senha = document.getElementById('gate-senha').value;
+  const btn   = document.getElementById('gate-btn');
+  const erro  = document.getElementById('gate-erro');
+
+  if (!email || !senha) {
+    erro.textContent = 'Preenche o email e a senha.';
+    erro.classList.add('visivel');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'A entrar...';
+  erro.classList.remove('visivel');
+
+  const db = window.supabaseClient;
+  const { data, error } = await db.auth.signInWithPassword({ email, password: senha });
+
+  if (error || !data?.session || data.session.user.email?.toLowerCase() !== CONTAS_EMAIL_PERMITIDO.toLowerCase()) {
+    if (data?.session) await db.auth.signOut();
+    erro.textContent = MSG_ACESSO_NEGADO;
+    erro.classList.add('visivel');
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
+    document.getElementById('gate-senha').value = '';
+    return;
+  }
+
+  liberarAcessoContas();
+}
 
 const NOMES_MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
                      'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];

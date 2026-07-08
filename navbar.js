@@ -59,6 +59,9 @@ function configurarBarra() {
 function sair() {
     localStorage.removeItem("tipoUsuario");
     localStorage.removeItem("adminToken");
+    if (window.supabaseClient?.auth) {
+        window.supabaseClient.auth.signOut();
+    }
     window.location.href = "index.html";
 }
 
