@@ -183,6 +183,7 @@ BEGIN
                 'nome', nome,
                 'email', email,
                 'tipo_utilizador', tipo_utilizador,
+                'gestor_contas', gestor_contas,
                 'criado_em', criado_em
             ) ORDER BY criado_em
         ), '[]'::jsonb)
@@ -267,6 +268,61 @@ BEGIN
     RETURN jsonb_build_object('sucesso', true, 'mensagem', 'Utilizador apagado com sucesso');
 EXCEPTION WHEN OTHERS THEN
     RETURN jsonb_build_object('sucesso', false, 'mensagem', SQLERRM);
+END;
+$$;
+
+-- ==========================================
+-- 5b. GESTOR DE CONTAS ÚNICO (acesso exclusivo à página Contas)
+-- Só um utilizador de cada vez pode ter este papel. Para passar
+-- o papel a outro utilizador é preciso confirmar a senha de quem
+-- é gestor actualmente.
+-- ==========================================
+
+ALTER TABLE public.contas_adm ADD COLUMN IF NOT EXISTS gestor_contas BOOLEAN NOT NULL DEFAULT false;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_unico_gestor_contas
+    ON public.contas_adm (gestor_contas)
+    WHERE gestor_contas = true;
+
+-- Usado pelo gate da página Contas: confirma se o email já com sessão iniciada é o gestor actual
+CREATE OR REPLACE FUNCTION public.sou_gestor_contas(p_email TEXT)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+AS $$
+    SELECT EXISTS (
+        SELECT 1 FROM public.contas_adm
+        WHERE email = p_email AND gestor_contas = true
+    );
+$$;
+
+-- Transfere o papel de gestor de contas para outro utilizador.
+-- Exige a senha de quem detém o papel actualmente (excepto se ainda não houver nenhum gestor definido).
+CREATE OR REPLACE FUNCTION public.definir_gestor_contas(p_novo_id UUID, p_senha_atual_gestor TEXT)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_atual public.contas_adm;
+BEGIN
+    SELECT * INTO v_atual FROM public.contas_adm WHERE gestor_contas = true LIMIT 1;
+
+    IF v_atual.id IS NOT NULL THEN
+        IF v_atual.id = p_novo_id THEN
+            RETURN jsonb_build_object('sucesso', false, 'mensagem', 'Este utilizador já é o gestor de contas.');
+        END IF;
+
+        IF v_atual.senha <> crypt(COALESCE(p_senha_atual_gestor, ''), v_atual.senha) THEN
+            RETURN jsonb_build_object('sucesso', false, 'mensagem', 'Senha do gestor de contas actual incorrecta.');
+        END IF;
+
+        UPDATE public.contas_adm SET gestor_contas = false WHERE id = v_atual.id;
+    END IF;
+
+    UPDATE public.contas_adm SET gestor_contas = true WHERE id = p_novo_id;
+
+    RETURN jsonb_build_object('sucesso', true, 'mensagem', 'Gestor de contas actualizado com sucesso.');
 END;
 $$;
 

@@ -364,20 +364,16 @@
 </head>
 <body>
 
-<!-- GATE: acesso restrito ao gestor de contas (login real via Supabase Auth) -->
+<!-- GATE: acesso restrito ao gestor de contas (usa a sessão de admin já iniciada) -->
 <div class="gate-overlay" id="gate-contas">
   <div class="gate-card">
     <div class="gate-icon">🔒</div>
     <h2 class="gate-title">Acesso Restrito</h2>
-    <p class="gate-sub">Esta página tem dados financeiros sensíveis.<br>Inicia sessão com a conta do gestor de contas.</p>
+    <p class="gate-sub">Esta página tem dados financeiros sensíveis.<br>Só o gestor de contas actual pode entrar aqui.</p>
 
-    <div class="gate-erro" id="gate-erro"></div>
+    <div class="gate-erro visivel" id="gate-erro">A verificar acesso...</div>
 
-    <input type="email" id="gate-email" class="gate-campo" placeholder="Email" autocomplete="username">
-    <input type="password" id="gate-senha" class="gate-campo" placeholder="Senha" autocomplete="current-password"
-      onkeydown="if(event.key==='Enter') tentarLoginGestorContas()">
-
-    <button class="gate-btn" id="gate-btn" onclick="tentarLoginGestorContas()">Entrar</button>
+    <button class="gate-btn" onclick="window.location.href='lista-espera.html'">Voltar</button>
   </div>
 </div>
 
@@ -841,26 +837,26 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ═══════════════════════════════════════════
-// GATE DE ACESSO — GESTOR DE CONTAS (login real via Supabase Auth)
-// Só quem iniciar sessão com ESTA conta específica do Supabase Auth
-// (criada manualmente no Dashboard) consegue ver esta página.
+// GATE DE ACESSO — GESTOR DE CONTAS
+// Usa o login de admin já existente (contas_adm / login_adm). Só o
+// utilizador marcado como gestor_contas nessa tabela (definido em
+// utilizadores.html, um de cada vez) consegue ver esta página.
 // ═══════════════════════════════════════════
-const CONTAS_EMAIL_PERMITIDO = 'deucelcio123456@gmail.com';
-const MSG_ACESSO_NEGADO = 'Apenas o gestor de contas (Eva Leite) pode aceder a esta página. Vai embora.';
-
 async function iniciarGateContas() {
+  const email = localStorage.getItem('adminToken');
   const db = window.supabaseClient;
-  const { data: { session } } = await db.auth.getSession();
 
-  if (session && session.user.email?.toLowerCase() === CONTAS_EMAIL_PERMITIDO.toLowerCase()) {
-    liberarAcessoContas();
-    return;
+  if (email && db) {
+    const { data, error } = await db.rpc('sou_gestor_contas', { p_email: email });
+    if (!error && data === true) {
+      liberarAcessoContas();
+      return;
+    }
+    if (error) console.error('Erro a verificar gestor de contas:', error.message, error);
   }
 
-  // Sessão de outra conta Supabase que não é a permitida: força logout
-  if (session) await db.auth.signOut();
-
-  document.getElementById('gate-email').focus();
+  document.getElementById('gate-erro').textContent =
+    'Não tens permissão para aceder a esta página — fala com quem gere os utilizadores.';
 }
 
 function liberarAcessoContas() {
@@ -872,40 +868,6 @@ function liberarAcessoContas() {
   carregarMensal();
   carregarDividas();
   sincronizarComLoja();
-}
-
-async function tentarLoginGestorContas() {
-  const email = document.getElementById('gate-email').value.trim();
-  const senha = document.getElementById('gate-senha').value;
-  const btn   = document.getElementById('gate-btn');
-  const erro  = document.getElementById('gate-erro');
-
-  if (!email || !senha) {
-    erro.textContent = 'Preenche o email e a senha.';
-    erro.classList.add('visivel');
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = 'A entrar...';
-  erro.classList.remove('visivel');
-
-  const db = window.supabaseClient;
-  const { data, error } = await db.auth.signInWithPassword({ email, password: senha });
-
-  if (error) console.error('Erro login Supabase Auth:', error.message, error);
-
-  if (error || !data?.session || data.session.user.email?.toLowerCase() !== CONTAS_EMAIL_PERMITIDO.toLowerCase()) {
-    if (data?.session) await db.auth.signOut();
-    erro.textContent = MSG_ACESSO_NEGADO;
-    erro.classList.add('visivel');
-    btn.disabled = false;
-    btn.textContent = 'Entrar';
-    document.getElementById('gate-senha').value = '';
-    return;
-  }
-
-  liberarAcessoContas();
 }
 
 const NOMES_MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',

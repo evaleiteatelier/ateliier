@@ -39,6 +39,7 @@
         .badge { padding: 3px 10px; border-radius: 20px; font-size: 0.73rem; font-weight: 700; display: inline-block; }
         .badge-maximo { background: #fce8e6; color: #c62828; }
         .badge-admin  { background: #e8f5e9; color: #2e7d32; }
+        .badge-gestor { background: #fff3cd; color: #8a6100; margin-left: 4px; }
 
         .acoes { display: flex; gap: 8px; flex-wrap: wrap; }
         .btn-sm { padding: 5px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 0.78rem; font-weight: 600; font-family: inherit; transition: all 0.2s; }
@@ -137,6 +138,25 @@
     </div>
 </div>
 
+<!-- Modal: Definir Gestor de Contas -->
+<div class="modal-overlay" id="modal-gestor">
+    <div class="modal-card">
+        <h3 class="modal-title">Definir Gestor de Contas</h3>
+        <input type="hidden" id="gestor-novo-id">
+        <p id="gestor-novo-nome" style="margin:0 0 18px; color:var(--text-muted); font-size:0.88rem;"></p>
+
+        <div class="form-group" id="gestor-senha-group">
+            <label>Senha do gestor de contas actual</label>
+            <input type="password" id="gestor-senha-atual" placeholder="••••••••">
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="fecharModais()">Cancelar</button>
+            <button class="btn-gold" id="btn-confirmar-gestor" onclick="confirmarGestorContas()">Confirmar</button>
+        </div>
+    </div>
+</div>
+
 <!-- Modal: Alterar Senha -->
 <div class="modal-overlay" id="modal-senha">
     <div class="modal-card">
@@ -170,6 +190,7 @@
 
     let db;
     let editando = false;
+    let gestorContasAtualExiste = false;
 
     function getDb() {
         if (db) return db;
@@ -189,6 +210,7 @@
             if (error) throw error;
 
             const lista = Array.isArray(data) ? data : [];
+            gestorContasAtualExiste = lista.some(u => u.gestor_contas);
 
             if (lista.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" class="empty">Nenhum utilizador registado.</td></tr>`;
@@ -199,16 +221,20 @@
                 const badge = u.tipo_utilizador === 'maximo'
                     ? `<span class="badge badge-maximo">MÁXIMO</span>`
                     : `<span class="badge badge-admin">ADMIN</span>`;
+                const badgeGestor = u.gestor_contas ? `<span class="badge badge-gestor">🔑 GESTOR DE CONTAS</span>` : '';
                 const nomeEsc = u.nome.replace(/'/g, "\\'");
+                const btnGestor = u.gestor_contas ? '' :
+                    `<button class="btn-sm btn-pwd" onclick="abrirModalGestor('${u.id}','${nomeEsc}')">Tornar Gestor</button>`;
                 return `
                 <tr>
                     <td style="font-weight:600">${u.nome}</td>
                     <td>${u.email}</td>
-                    <td>${badge}</td>
+                    <td>${badge}${badgeGestor}</td>
                     <td>
                         <div class="acoes">
                             <button class="btn-sm btn-edit" onclick="abrirModalEditar('${u.id}','${nomeEsc}','${u.email}','${u.tipo_utilizador}')">Editar</button>
                             <button class="btn-sm btn-pwd"  onclick="abrirModalSenha('${u.id}','${nomeEsc}')">Senha</button>
+                            ${btnGestor}
                             <button class="btn-sm btn-del"  onclick="apagarUtilizador('${u.id}','${nomeEsc}')">Apagar</button>
                         </div>
                     </td>
@@ -258,6 +284,47 @@
     function fecharModais() {
         document.getElementById('modal-user').classList.remove('active');
         document.getElementById('modal-senha').classList.remove('active');
+        document.getElementById('modal-gestor').classList.remove('active');
+    }
+
+    function abrirModalGestor(id, nome) {
+        document.getElementById('gestor-novo-id').value = id;
+        document.getElementById('gestor-novo-nome').textContent = gestorContasAtualExiste
+            ? `Tornar "${nome}" o novo gestor de contas. Precisas da senha de quem é gestor actualmente — essa pessoa perde o acesso à página Contas assim que confirmares.`
+            : `Tornar "${nome}" o gestor de contas. Ainda não há nenhum definido, por isso não é preciso senha.`;
+        document.getElementById('gestor-senha-group').style.display = gestorContasAtualExiste ? '' : 'none';
+        document.getElementById('gestor-senha-atual').value = '';
+        document.getElementById('modal-gestor').classList.add('active');
+    }
+
+    async function confirmarGestorContas() {
+        const id    = document.getElementById('gestor-novo-id').value;
+        const senha = document.getElementById('gestor-senha-atual').value;
+        const btn   = document.getElementById('btn-confirmar-gestor');
+
+        if (gestorContasAtualExiste && !senha) { aviso("Introduz a senha do gestor de contas actual."); return; }
+
+        btn.textContent = "A confirmar...";
+        btn.disabled = true;
+
+        try {
+            const { data, error } = await getDb().rpc('definir_gestor_contas', {
+                p_novo_id: id,
+                p_senha_atual_gestor: senha
+            });
+            if (error) throw error;
+            if (!data?.sucesso) { aviso(data?.mensagem || "Não foi possível transferir.", "Erro", "❌"); return; }
+
+            fecharModais();
+            await carregarUtilizadores();
+            aviso(data.mensagem || "Gestor de contas atualizado!", "Sucesso", "✅");
+        } catch (err) {
+            console.error(err);
+            aviso("Erro ao definir o gestor de contas.", "Erro", "❌");
+        } finally {
+            btn.textContent = "Confirmar";
+            btn.disabled = false;
+        }
     }
 
     async function guardarUtilizador() {
@@ -359,7 +426,7 @@
     }
 
     // Fechar ao clicar no overlay
-    ['modal-user','modal-senha'].forEach(id => {
+    ['modal-user','modal-senha','modal-gestor'].forEach(id => {
         document.getElementById(id).addEventListener('click', function(e) {
             if (e.target === this) fecharModais();
         });
