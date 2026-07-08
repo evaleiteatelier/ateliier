@@ -845,7 +845,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Só quem iniciar sessão com ESTA conta específica do Supabase Auth
 // (criada manualmente no Dashboard) consegue ver esta página.
 // ═══════════════════════════════════════════
-const CONTAS_EMAIL_PERMITIDO = 'TROCAR-PELO-EMAIL-DA-EVA@exemplo.com'; // <-- ajustar após criar o utilizador no Supabase Auth
+const CONTAS_EMAIL_PERMITIDO = 'evaleiteatelier@gmail.com';
 const MSG_ACESSO_NEGADO = 'Apenas o gestor de contas (Eva Leite) pode aceder a esta página. Vai embora.';
 
 async function iniciarGateContas() {
@@ -892,6 +892,8 @@ async function tentarLoginGestorContas() {
 
   const db = window.supabaseClient;
   const { data, error } = await db.auth.signInWithPassword({ email, password: senha });
+
+  if (error) console.error('Erro login Supabase Auth:', error.message, error);
 
   if (error || !data?.session || data.session.user.email?.toLowerCase() !== CONTAS_EMAIL_PERMITIDO.toLowerCase()) {
     if (data?.session) await db.auth.signOut();
