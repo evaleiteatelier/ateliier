@@ -688,6 +688,12 @@
         <canvas id="grafico-mensal-semanas" style="max-height:260px;"></canvas>
       </div>
 
+      <!-- GRÁFICO PIZZA: GANHOS / DÍVIDAS / GASTOS -->
+      <div class="card card-full">
+        <p class="card-title" style="margin-bottom:16px;">Ganhos vs Dívidas Recebidas vs Gastos — Este Mês</p>
+        <canvas id="grafico-pizza-mes" style="max-height:280px;"></canvas>
+      </div>
+
       <!-- NOTAS MENSAIS -->
       <div class="card card-full">
         <p class="card-title">Notas do Mês</p>
@@ -1211,7 +1217,7 @@ function recalcularMensal() {
   document.getElementById('mensal-gastos-semana').textContent = `≈ ${fmt(totalGastos / numSemanasAtual)}/semana`;
   document.getElementById('mensal-lucro-gastos').textContent  = fmt(totalGastos);
 
-  let totalAtelier = 0, totalSalario = 0, totalWeza = 0, totalPDivMes = 0, totalGastosVarMes = 0;
+  let totalAtelier = 0, totalSalario = 0, totalWeza = 0, totalPDivMes = 0, totalGastosVarMes = 0, totalGanhosMes = 0;
 
   const aL = document.getElementById('mensal-atelier-list');
   const sL = document.getElementById('mensal-salario-list');
@@ -1225,12 +1231,12 @@ function recalcularMensal() {
 
   for (let i = 1; i <= numSemanasAtual; i++) {
     const raw = localStorage.getItem(chaveSemana(i));
-    let aV = 0, sV = 0, wV = 0, pdivV = 0, gastosV = 0;
+    let aV = 0, sV = 0, wV = 0, pdivV = 0, gastosV = 0, tot = 0;
 
     if (raw) {
       const d = JSON.parse(raw);
       const pA = d.pctAtelier || 75, pS = d.pctSalario || 15, pW = d.pctWeza || 10;
-      const tot = (d.encomendas || []).reduce((s, e) => s + (parseFloat(e.valor) || 0), 0);
+      tot     = (d.encomendas || []).reduce((s, e) => s + (parseFloat(e.valor) || 0), 0);
       pdivV   = (d.pagamentosDivida || []).reduce((s, p) => s + (parseFloat(p.valor) || 0), 0);
       gastosV = (d.gastos           || []).reduce((s, g) => s + (parseFloat(g.valor) || 0), 0);
       // Saldo = encomendas + recebimentos de dívidas - gastos variáveis
@@ -1241,7 +1247,7 @@ function recalcularMensal() {
     }
 
     totalAtelier += aV; totalSalario += sV; totalWeza += wV;
-    totalPDivMes += pdivV; totalGastosVarMes += gastosV;
+    totalPDivMes += pdivV; totalGastosVarMes += gastosV; totalGanhosMes += tot;
     receitasPorSemana.push(parseFloat(((aV + sV)).toFixed(2)));
     gastosPorSemana.push(parseFloat(gastosV.toFixed(2)));
 
@@ -1282,6 +1288,9 @@ function recalcularMensal() {
 
   // Gráfico de barras semanal
   renderizarGraficoMensal(receitasPorSemana, gastosPorSemana);
+
+  // Gráfico de pizza: ganhos vs dívidas recebidas vs gastos (fixos + variáveis)
+  renderizarGraficoPizza(totalGanhosMes, totalPDivMes, totalGastos + totalGastosVarMes);
 
   const lucro = totalAtelier - totalGastos;
   const badge = document.getElementById('mensal-lucro-badge');
@@ -1731,6 +1740,46 @@ function renderizarGraficoMensal(receitas, gastos) {
           grid: { color: '#f0ead8' },
         },
         x: { ticks: { font: { family: 'Inter', size: 12 } }, grid: { display: false } },
+      },
+    },
+  });
+}
+
+// ═══════════════════════════════════════════
+// GRÁFICO PIZZA (ganhos / dívidas recebidas / gastos)
+// ═══════════════════════════════════════════
+let chartPizzaInstance = null;
+
+function renderizarGraficoPizza(ganhos, dividas, gastos) {
+  const ctx = document.getElementById('grafico-pizza-mes');
+  if (!ctx) return;
+  if (chartPizzaInstance) chartPizzaInstance.destroy();
+
+  const total = ganhos + dividas + gastos;
+  chartPizzaInstance = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: ['Ganhos', 'Dívidas Recebidas', 'Gastos'],
+      datasets: [{
+        data: [ganhos, dividas, gastos],
+        backgroundColor: ['rgba(46,125,50,0.8)', 'rgba(21,101,192,0.8)', 'rgba(230,81,0,0.8)'],
+        borderColor: ['#2e7d32', '#1565c0', '#e65100'],
+        borderWidth: 1,
+      }],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 12 }, boxWidth: 14 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const val = ctx.parsed;
+              const pct = total > 0 ? (val / total * 100).toFixed(1) : '0.0';
+              return ` ${ctx.label}: ${val.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })} (${pct}%)`;
+            },
+          },
+        },
       },
     },
   });
