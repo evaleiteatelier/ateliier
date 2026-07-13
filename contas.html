@@ -258,11 +258,13 @@
 
     /* ── GASTOS DO DIA ── */
     .gasto-dia-list { list-style:none; margin:0 0 12px; padding:0; max-height:300px; overflow-y:auto; }
-    .gasto-dia-item { display:grid; grid-template-columns:126px 1fr 90px 24px; gap:8px; align-items:center; margin-bottom:8px; }
+    .gasto-dia-item { display:grid; grid-template-columns:126px 1fr 140px 90px 24px; gap:8px; align-items:center; margin-bottom:8px; }
     .gasto-dia-data { padding:7px 8px; border:1px solid #ffe0b2; border-radius:6px; font-size:0.82rem; font-family:'Inter',sans-serif; outline:none; color:var(--text); }
     .gasto-dia-data:focus { border-color:var(--orange); }
     .gasto-dia-desc { padding:7px 10px; border:1px solid #ffe0b2; border-radius:6px; font-size:0.88rem; font-family:'Inter',sans-serif; outline:none; }
     .gasto-dia-desc:focus { border-color:var(--orange); }
+    .gasto-dia-tag { padding:7px 8px; border:1px solid #ffe0b2; border-radius:6px; font-size:0.82rem; font-family:'Inter',sans-serif; outline:none; color:var(--text); background:#fff; }
+    .gasto-dia-tag:focus { border-color:var(--orange); }
     .gasto-dia-val { padding:7px 10px; border:1px solid #ffe0b2; border-radius:6px; font-size:0.88rem; font-family:'Inter',sans-serif; text-align:right; outline:none; }
     .gasto-dia-val:focus { border-color:var(--orange); }
     .btn-add-gasto { display:flex; align-items:center; gap:6px; background:none; border:1px dashed #ffcc80; border-radius:6px; padding:7px 14px; cursor:pointer; font-size:0.82rem; font-family:'Inter',sans-serif; color:var(--orange); transition:all .2s; width:100%; box-sizing:border-box; }
@@ -413,6 +415,7 @@
     <button class="tab-btn" onclick="mudarTab('mensal', this)">Mensal</button>
     <button class="tab-btn" onclick="mudarTab('dividas', this)">Dívidas</button>
     <button class="tab-btn" onclick="mudarTab('grafico', this)">Gráfico</button>
+    <button class="tab-btn" onclick="mudarTab('gerirgastos', this)">Gerir Gastos</button>
   </div>
 
   <!-- ══════════════════════════════════════
@@ -469,9 +472,10 @@
       <div class="card card-full" style="border-left:3px solid var(--orange);">
         <p class="card-title" style="color:var(--orange);">Gastos do Dia</p>
         <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 10px;">Compras, materiais, deslocações e outros gastos desta semana — com data.</p>
-        <div style="display:grid;grid-template-columns:126px 1fr 90px 24px;gap:8px;margin-bottom:6px;">
+        <div style="display:grid;grid-template-columns:126px 1fr 140px 90px 24px;gap:8px;margin-bottom:6px;">
           <span style="font-size:0.72rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;padding:0 4px;">Data</span>
           <span style="font-size:0.72rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;padding:0 4px;">Descrição</span>
+          <span style="font-size:0.72rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;padding:0 4px;">Categoria</span>
           <span style="font-size:0.72rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;padding:0 4px;text-align:right;">Valor</span>
           <span></span>
         </div>
@@ -695,6 +699,18 @@
         <canvas id="grafico-pizza-mes" style="max-height:280px;"></canvas>
       </div>
 
+      <!-- GRÁFICO PIZZA: GASTOS POR CATEGORIA -->
+      <div class="card card-full">
+        <p class="card-title" style="margin-bottom:16px;">Gastos do Dia — Por Categoria (Este Mês)</p>
+        <canvas id="grafico-gastos-tag" style="max-height:280px;"></canvas>
+      </div>
+
+      <!-- GRÁFICO: VENDAS POR TIPO DE PRODUTO -->
+      <div class="card card-full">
+        <p class="card-title" style="margin-bottom:16px;">Vendas por Tipo de Produto (Este Mês)</p>
+        <canvas id="grafico-produtos-mes" style="max-height:280px;"></canvas>
+      </div>
+
       <!-- NOTAS MENSAIS -->
       <div class="card card-full">
         <p class="card-title">Notas do Mês</p>
@@ -822,6 +838,23 @@
 
   </div>
 
+  <!-- ══════════════════════════════════════
+       ABA GERIR GASTOS
+  ══════════════════════════════════════ -->
+  <div id="tab-gerirgastos" class="tab-content">
+    <div class="card card-full">
+      <p class="card-title">Categorias de Gastos (Tags)</p>
+      <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 16px;">Cria aqui as categorias que depois podes escolher em cada Gasto do Dia (ex: Materiais, Transporte, Manutenção...). São usadas para analisar os gastos por categoria no separador Mensal.</p>
+      <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+        <input type="text" id="nova-tag-gasto" placeholder="Nome da nova tag..."
+          style="flex:1;min-width:200px;padding:9px 12px;border:1px solid #ddd;border-radius:8px;font-size:0.9rem;font-family:'Inter',sans-serif;outline:none;"
+          onkeydown="if(event.key==='Enter') criarTagGasto()">
+        <button class="btn-guardar" onclick="criarTagGasto()">+ Adicionar Tag</button>
+      </div>
+      <ul id="lista-tags-gasto" style="list-style:none;margin:0;padding:0;"></ul>
+    </div>
+  </div>
+
 </div><!-- /contas-wrapper -->
 
 <!-- TOAST -->
@@ -917,10 +950,11 @@ async function iniciarGateContas() {
     'Não tens permissão para aceder a esta página — fala com quem gere os utilizadores.';
 }
 
-function liberarAcessoContas() {
+async function liberarAcessoContas() {
   document.getElementById('gate-contas').remove();
   document.getElementById('contas-wrapper').style.visibility = '';
 
+  await carregarTagsGastos();
   popularMeses();
   carregarSemana(semanaAtual);
   carregarMensal();
@@ -1025,6 +1059,7 @@ function mudarTab(tab, btn) {
   if (tab === 'mensal')  carregarMensal();
   if (tab === 'dividas') carregarDividas();
   if (tab === 'grafico') { carregarMetas(); graficoAno = parseInt(mesAtual.split('-')[0]); document.getElementById('grafico-ano-label').textContent = graficoAno; renderizarGrafico(); }
+  if (tab === 'gerirgastos') renderizarTagsGastosLista();
 }
 
 function mudarSemana(n, btn) {
@@ -1069,17 +1104,108 @@ function adicionarEncomenda(nome = '', valor = '', data = '', autoSync = false) 
 // ═══════════════════════════════════════════
 // GASTOS DO DIA
 // ═══════════════════════════════════════════
-function adicionarGastoDia(data = '', desc = '', val = '') {
+function adicionarGastoDia(data = '', desc = '', val = '', tag = '') {
   const li = document.createElement('li');
   li.className = 'gasto-dia-item';
   const hoje = new Date().toISOString().split('T')[0];
   li.innerHTML = `
     <input type="date"   class="gasto-dia-data" value="${data || hoje}" oninput="recalcular()">
     <input type="text"   class="gasto-dia-desc" placeholder="Ex: tecido, transporte..." value="${esc(desc)}" oninput="recalcular()">
+    <select class="gasto-dia-tag" oninput="recalcular()">${opcoesTagsGastos(tag)}</select>
     <input type="number" class="gasto-dia-val"  placeholder="0,00" value="${val}" min="0" step="0.01" oninput="recalcular()">
     <button class="btn-remover" onclick="this.closest('.gasto-dia-item').remove();recalcular()" title="Remover">×</button>`;
   document.getElementById('gasto-dia-list').appendChild(li);
   recalcular();
+}
+
+// ═══════════════════════════════════════════
+// TAGS DE GASTOS (aba Gerir Gastos)
+// ═══════════════════════════════════════════
+let tagsGastos = [];
+
+async function carregarTagsGastos() {
+  const db = window.supabaseClient;
+  if (!db) return;
+  try {
+    const { data, error } = await db.from('tags_gastos').select('*').order('nome');
+    if (error) throw error;
+    tagsGastos = data || [];
+  } catch (err) {
+    console.error('Erro ao carregar tags de gastos:', err);
+    tagsGastos = [];
+  }
+}
+
+function opcoesTagsGastos(selecionada) {
+  const semCategoria = `<option value=""${!selecionada ? ' selected' : ''}>— Sem categoria —</option>`;
+  const opcoes = tagsGastos.map(t =>
+    `<option value="${esc(t.nome)}"${t.nome === selecionada ? ' selected' : ''}>${esc(t.nome)}</option>`
+  ).join('');
+  return semCategoria + opcoes;
+}
+
+// Atualiza as opções dos selects já existentes sem perder o resto do que não foi guardado
+function atualizarSelectsTagsGastos() {
+  document.querySelectorAll('.gasto-dia-tag').forEach(sel => {
+    const atual = sel.value;
+    sel.innerHTML = opcoesTagsGastos(atual);
+  });
+}
+
+function renderizarTagsGastosLista() {
+  const lista = document.getElementById('lista-tags-gasto');
+  if (!lista) return;
+  if (tagsGastos.length === 0) {
+    lista.innerHTML = `<li style="padding:16px;text-align:center;color:var(--text-muted);font-size:0.88rem;">Ainda não criaste nenhuma tag.</li>`;
+    return;
+  }
+  lista.innerHTML = tagsGastos.map(t => `
+    <li style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1px solid #eee;border-radius:8px;margin-bottom:8px;">
+      <span>${esc(t.nome)}</span>
+      <button class="btn-remover" onclick="apagarTagGasto('${t.id}')" title="Apagar">×</button>
+    </li>`).join('');
+}
+
+async function criarTagGasto() {
+  const input = document.getElementById('nova-tag-gasto');
+  const nome = input.value.trim();
+  if (!nome) { mostrarToast('Escreve um nome para a tag.'); return; }
+
+  const jaExiste = tagsGastos.some(t => t.nome.toLowerCase() === nome.toLowerCase());
+  if (jaExiste) { mostrarToast('Já existe uma tag com esse nome.'); return; }
+
+  const db = window.supabaseClient;
+  try {
+    const { error } = await db.from('tags_gastos').insert({ nome });
+    if (error) throw error;
+  } catch (err) {
+    console.error('Erro ao criar tag:', err);
+    mostrarToast('Erro ao criar a tag.');
+    return;
+  }
+
+  input.value = '';
+  await carregarTagsGastos();
+  renderizarTagsGastosLista();
+  atualizarSelectsTagsGastos();
+  mostrarToast('Tag criada!');
+}
+
+async function apagarTagGasto(id) {
+  const db = window.supabaseClient;
+  try {
+    const { error } = await db.from('tags_gastos').delete().eq('id', id);
+    if (error) throw error;
+  } catch (err) {
+    console.error('Erro ao apagar tag:', err);
+    mostrarToast('Erro ao apagar a tag.');
+    return;
+  }
+
+  await carregarTagsGastos();
+  renderizarTagsGastosLista();
+  atualizarSelectsTagsGastos();
+  mostrarToast('Tag apagada.');
 }
 
 // ═══════════════════════════════════════════
@@ -1229,6 +1355,7 @@ function recalcularMensal() {
   aL.innerHTML = sL.innerHTML = wzL.innerHTML = dL.innerHTML = gL.innerHTML = rs.innerHTML = '';
 
   const receitasPorSemana = [], gastosPorSemana = [];
+  const gastosPorTag = {};
 
   for (let i = 1; i <= numSemanasAtual; i++) {
     const raw = localStorage.getItem(chaveSemana(i));
@@ -1240,6 +1367,10 @@ function recalcularMensal() {
       tot     = (d.encomendas || []).reduce((s, e) => s + (parseFloat(e.valor) || 0), 0);
       pdivV   = (d.pagamentosDivida || []).reduce((s, p) => s + (parseFloat(p.valor) || 0), 0);
       gastosV = (d.gastos           || []).reduce((s, g) => s + (parseFloat(g.valor) || 0), 0);
+      (d.gastos || []).forEach(g => {
+        const tag = (g.tag && g.tag.trim()) ? g.tag.trim() : 'Sem categoria';
+        gastosPorTag[tag] = (gastosPorTag[tag] || 0) + (parseFloat(g.valor) || 0);
+      });
       // Saldo = encomendas + recebimentos de dívidas - gastos variáveis
       const saldoSemana = tot + pdivV - gastosV;
       aV = saldoSemana * pA / 100;
@@ -1292,6 +1423,9 @@ function recalcularMensal() {
 
   // Gráfico de pizza: ganhos vs dívidas recebidas vs gastos (fixos + variáveis)
   renderizarGraficoPizza(totalGanhosMes, totalPDivMes, totalGastos + totalGastosVarMes);
+
+  // Gráfico de pizza: gastos do dia por categoria (tag)
+  renderizarGraficoGastosTag(gastosPorTag);
 
   const lucro = totalAtelier - totalGastos;
   const badge = document.getElementById('mensal-lucro-badge');
@@ -1534,6 +1668,7 @@ function dadosSemanaAtual() {
       data:     item.querySelector('.gasto-dia-data').value,
       descricao:item.querySelector('.gasto-dia-desc').value,
       valor:    item.querySelector('.gasto-dia-val').value,
+      tag:      item.querySelector('.gasto-dia-tag') ? item.querySelector('.gasto-dia-tag').value : '',
     });
   });
   return {
@@ -1620,7 +1755,7 @@ function carregarSemana(n) {
     document.getElementById('nota-semana').value = d.nota       || '';
     (d.encomendas       || []).forEach(e => adicionarEncomenda(e.nome, e.valor, e.data || '', e.autoSync || false));
     (d.pagamentosDivida || []).forEach(p => adicionarPagDivida(p.descricao, p.valor, p.data || '', p.dividaKey || '', p.ref || ''));
-    (d.gastos           || []).forEach(g => adicionarGastoDia(g.data, g.descricao, g.valor));
+    (d.gastos           || []).forEach(g => adicionarGastoDia(g.data, g.descricao, g.valor, g.tag || ''));
   } else {
     document.getElementById('pct-atelier').value = 75;
     document.getElementById('pct-salario').value = 15;
@@ -1670,6 +1805,7 @@ function carregarMensal() {
     document.getElementById('gasto-rodrigo').value      = 125;
   }
   recalcularMensal();
+  renderizarGraficoProdutos();
 }
 
 // ═══════════════════════════════════════════
@@ -1781,6 +1917,136 @@ function renderizarGraficoPizza(ganhos, dividas, gastos) {
             },
           },
         },
+      },
+    },
+  });
+}
+
+// ═══════════════════════════════════════════
+// GRÁFICO PIZZA (gastos do dia por categoria/tag)
+// ═══════════════════════════════════════════
+let chartGastosTagInstance = null;
+const CORES_TAGS = ['#e65100','#1565c0','#2e7d32','#d4af37','#c62828','#6a1b9a','#00838f','#ad1457','#455a64'];
+
+function renderizarGraficoGastosTag(porTag) {
+  const ctx = document.getElementById('grafico-gastos-tag');
+  if (!ctx) return;
+  if (chartGastosTagInstance) chartGastosTagInstance.destroy();
+
+  const entradas = Object.entries(porTag).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+  const labels  = entradas.map(e => e[0]);
+  const valores = entradas.map(e => e[1]);
+  const total   = valores.reduce((a, b) => a + b, 0);
+
+  chartGastosTagInstance = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels,
+      datasets: [{
+        data: valores,
+        backgroundColor: labels.map((_, i) => CORES_TAGS[i % CORES_TAGS.length] + 'cc'),
+        borderColor: labels.map((_, i) => CORES_TAGS[i % CORES_TAGS.length]),
+        borderWidth: 1,
+      }],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 12 }, boxWidth: 14 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const val = ctx.parsed;
+              const pct = total > 0 ? (val / total * 100).toFixed(1) : '0.0';
+              return ` ${ctx.label}: ${val.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })} (${pct}%)`;
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+// ═══════════════════════════════════════════
+// GRÁFICO: VENDAS POR TIPO DE PRODUTO (mês seleccionado)
+// ═══════════════════════════════════════════
+let chartProdutosInstance = null;
+
+async function renderizarGraficoProdutos() {
+  const ctx = document.getElementById('grafico-produtos-mes');
+  const db  = window.supabaseClient;
+  if (!ctx || !db) return;
+
+  const [ano, mes] = mesAtual.split('-').map(Number);
+
+  let pedidos = [];
+  try {
+    const { data, error } = await db.from('pedidos').select('itens, data_pedido');
+    if (error) throw error;
+    pedidos = data || [];
+  } catch (err) {
+    console.error('Erro ao carregar vendas por tipo de produto:', err);
+    return;
+  }
+
+  const porTipo = {};
+  pedidos.forEach(p => {
+    if (!p.data_pedido) return;
+    const partes = p.data_pedido.split('-').map(Number);
+    if (partes[0] !== ano || partes[1] !== mes) return;
+
+    let itensList = [];
+    try {
+      itensList = typeof p.itens === 'string' ? JSON.parse(p.itens) : (p.itens || []);
+    } catch (e) { itensList = []; }
+    if (!Array.isArray(itensList)) return;
+
+    itensList.forEach(item => {
+      const nomeBase = (item.subtipo || 'outro').trim();
+      if (!nomeBase) return;
+      const label = nomeBase.charAt(0).toUpperCase() + nomeBase.slice(1);
+      if (!porTipo[label]) porTipo[label] = { quantidade: 0, valor: 0 };
+      porTipo[label].quantidade += parseInt(item.quantidade) || 1;
+      porTipo[label].valor      += parseFloat(item.preco_total_item) || 0;
+    });
+  });
+
+  const entradas    = Object.entries(porTipo).sort((a, b) => b[1].quantidade - a[1].quantidade);
+  const labels      = entradas.map(e => e[0]);
+  const quantidades = entradas.map(e => e[1].quantidade);
+  const valores     = entradas.map(e => e[1].valor);
+
+  if (chartProdutosInstance) chartProdutosInstance.destroy();
+  chartProdutosInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Quantidade Vendida',
+        data: quantidades,
+        backgroundColor: 'rgba(212,175,55,0.75)',
+        borderColor: '#d4af37',
+        borderWidth: 1,
+        borderRadius: 6,
+      }],
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const i = ctx.dataIndex;
+              return ` ${quantidades[i]} vendido(s) · ${valores[i].toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })}`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: { beginAtZero: true, ticks: { precision: 0, font: { family: 'Inter', size: 11 } }, grid: { color: '#f0ead8' } },
+        y: { ticks: { font: { family: 'Inter', size: 12 } }, grid: { display: false } },
       },
     },
   });
