@@ -1131,7 +1131,20 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
     return; // Para a função aqui, não faz mais nada
   }
 
+  // --- ANEXAR AS FATURAS AOS PEDIDOS ---
+  const pedidoIds = data.map(p => p.id);
+  const { data: faturas } = await supabase.from('faturas').select('pedido_id, simples_link, final_link').in('pedido_id', pedidoIds);
+
   data.forEach(p => {
+    // Liga a fatura ao pedido para o botão de faturar saber o estado
+    if (faturas) {
+        const fatura = faturas.find(f => f.pedido_id === p.id);
+        if (fatura) {
+            p.fatura_simples_link = fatura.simples_link;
+            p.fatura_final_link = fatura.final_link;
+        }
+    }
+
     // --- CORREÇÃO PARA O TIPO JSONB ---
     let itensList = [];
     try {
@@ -1280,15 +1293,15 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
             <button class="admin-only btn-excluir" onclick="excluirPedido('${p.id}')">Excluir</button>
           ` : ''}
           ${p.fatura_final_link ? `
-            <button class="admin-only" onclick="abrirModalFatura('${p.id}')" style="background-color: #d4af37 !important; color: #fff !important; font-weight: bold;" title="Ver ou Editar Faturas e Envio">
+            <button class="admin-only" onclick="abrirModalFatura('${p.id}')" style="background-color: #d4af37 !important; color: #fff !important; font-weight: bold; border: none;" title="Ver ou Editar Faturas e Envio">
               📄 Ver Fatura
             </button>
           ` : p.fatura_simples_link ? `
-            <button class="admin-only" onclick="abrirModalFatura('${p.id}')" style="background-color: #f57c00 !important; color: #fff !important; font-weight: bold;" title="Já tem fatura simples anexada — falta a fatura final/completa">
-              📄 Concluir Fatura
+            <button class="admin-only" onclick="abrirModalFatura('${p.id}')" style="background-color: #f57c00 !important; color: #fff !important; font-weight: bold; border: none;" title="Já tem fatura simples anexada — falta a fatura final/completa">
+              📄 Completar Fatura
             </button>
           ` : `
-            <button class="admin-only" onclick="abrirModalFatura('${p.id}')" style="background-color: #f5f5f5 !important; color: #555 !important; border: 1px solid #ccc;" title="Tratar da emissão ou envio da fatura">
+            <button class="admin-only" onclick="abrirModalFatura('${p.id}')" style="background-color: #f5f5f5 !important; color: #555 !important; border: 1px solid #ccc; font-weight: bold;" title="Tratar da emissão ou envio da fatura">
               📄 Emitir Fatura
             </button>
           `}
