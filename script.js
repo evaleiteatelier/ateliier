@@ -2086,6 +2086,17 @@ async function abrirEditorPedido(id) {
       if (v > 0) { novosPagamentos.push({ valor: v, data: d, nota: n }); novoAdiantado += v; }
     });
 
+    // Se a edição deixou o pedido só com itens "pronto a vestir" (0 dias) e ele
+    // ainda está pendente, conclui-o automaticamente para não ocupar vaga na fila.
+    let novoStatus = pedido.status;
+    if (pedido.status === 'pendente') {
+      const isProntoAVestirAgora = itensEditados.length > 0 && itensEditados.every(i => parseInt(i.dias) === 0);
+      if (isProntoAVestirAgora) {
+        const estaPagoTotalAgora = novoPrecoFinal > 0 && novoAdiantado >= novoPrecoFinal;
+        novoStatus = estaPagoTotalAgora ? 'entregue' : 'concluido';
+      }
+    }
+
     const { error: updateError } = await supabase
       .from("pedidos")
       .update({
@@ -2096,7 +2107,8 @@ async function abrirEditorPedido(id) {
         desconto_percentagem: desconto > 0 ? desconto : null,
         valor_adiantado: novoAdiantado,
         pagamentos: JSON.stringify(novosPagamentos),
-        email_cliente: emailFinal
+        email_cliente: emailFinal,
+        status: novoStatus
       })
       .eq("id", id);
 
