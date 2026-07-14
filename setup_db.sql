@@ -448,5 +448,25 @@ WHERE (p.fatura_simples_link IS NOT NULL OR p.fatura_final_link IS NOT NULL)
       SELECT 1 FROM public.faturas f WHERE f.pedido_id = p.id
   );
 
+-- ==========================================
+-- 9. TABELA DE CARTÕES DE FIDELIDADE (ATELIER)
+-- ==========================================
+-- Cartões de fidelidade exclusivos do Eva Leite Atelier.
+-- Os cartões de parceria com a LINHA são guardados na base de dados do VendasLinha.
+
+CREATE TABLE IF NOT EXISTS public.loyalty_cards (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    client_name TEXT,
+    client_phone TEXT,
+    total_services INT4 NOT NULL DEFAULT 5,
+    current_services INT4 NOT NULL DEFAULT 0,
+    discount_pct NUMERIC NOT NULL DEFAULT 25,
+    status TEXT DEFAULT 'active',
+    expires_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE public.loyalty_cards DISABLE ROW LEVEL SECURITY;
+
 -- (Fim do script)
 

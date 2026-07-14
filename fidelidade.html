@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cartões de Fidelidade | Eva Leite Atelier</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css">
+    <script src="navbar.js" defer></script>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #faf9f7;
+            color: #1a1a2e;
+            margin: 0;
+        }
+
+        .page-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* ─── HEADER ─── */
+        .page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+        .page-header h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 0 0 4px 0;
+            color: #1a1a2e;
+        }
+        .page-header p {
+            color: #888;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        /* ─── METRICS ROW ─── */
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .metric-card {
+            background: #fff;
+            border-radius: 14px;
+            padding: 20px 22px;
+            border: 1px solid #ede9e3;
+            box-shadow: 0 2px 8px rgba(0,0,0,.04);
+        }
+        .metric-card .metric-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #1a1a2e;
+            line-height: 1.1;
+        }
+        .metric-card .metric-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-top: 4px;
+        }
+        .metric-card.gold .metric-value { color: #b8860b; }
+        .metric-card.green .metric-value { color: #2e7d32; }
+        .metric-card.red .metric-value   { color: #c62828; }
+
+        /* ─── SEARCH + FILTERS ─── */
+        .filters-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .search-input {
+            flex: 1;
+            min-width: 220px;
+            padding: 10px 14px;
+            border: 1px solid #e0d5c1;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-input:focus { border-color: #d4af37; }
+        .filter-btn {
+            padding: 9px 16px;
+            border: 1px solid #e0d5c1;
+            border-radius: 8px;
+            background: #fff;
+            font-family: inherit;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: #555;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover, .filter-btn.active {
+            border-color: #d4af37;
+            background: #d4af37;
+            color: #fff;
+        }
+
+        /* ─── CARDS GRID ─── */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .fidelidade-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 22px;
+            border: 1px solid #ede9e3;
+            box-shadow: 0 2px 10px rgba(0,0,0,.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .fidelidade-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #d4af37, #f5e6a3, #d4af37);
+        }
+        .fidelidade-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,.09);
+        }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 14px;
+        }
+        .card-client-name {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+        .card-client-phone {
+            font-size: 0.8rem;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        .status-badge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        .status-badge.em-curso   { background: #f0f4ff; color: #4f46e5; }
+        .status-badge.completo   { background: #fef9e7; color: #b8860b; }
+        .status-badge.utilizado  { background: #f0f0f0; color: #888; }
+        .status-badge.vencido    { background: #fdecea; color: #c62828; }
+
+        /* ─── PROGRESS DOTS ─── */
+        .progress-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 8px;
+        }
+        .dots-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+        .dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid #e5e7eb;
+            background: #f9fafb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #ccc;
+            transition: all 0.2s;
+        }
+        .dot.filled {
+            background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 3px 8px rgba(212,175,55,.35);
+        }
+        .dot.filled::before { content: '✓'; }
+
+        /* ─── PROGRESS BAR ─── */
+        .progress-bar-wrap {
+            height: 6px;
+            background: #f0ece5;
+            border-radius: 10px;
+            margin-bottom: 14px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 10px;
+            background: linear-gradient(90deg, #d4af37, #f5e6a3);
+            transition: width 0.5s ease;
+        }
+
+        /* ─── CARD FOOTER ─── */
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 12px;
+            border-top: 1px solid #f0ece5;
+        }
+        .card-progress-text {
+            font-size: 0.82rem;
+            color: #888;
+        }
+        .card-progress-text strong {
+            font-size: 1rem;
+            color: #1a1a2e;
+        }
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid #e0d5c1;
+            background: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+            text-decoration: none;
+            flex-shrink: 0;
+            line-height: 1;
+            padding: 0;
+            vertical-align: middle;
+            box-sizing: border-box;
+        }
+        .btn-icon:hover { border-color: #d4af37; background: #fef9e7; }
+        .btn-icon.danger:hover { border-color: #e53935; background: #fdecea; }
+
+        /* ─── EMPTY STATE ─── */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #aaa;
+            grid-column: 1 / -1;
+        }
+        .empty-state .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+        .empty-state p { font-size: 0.95rem; }
+
+        /* ─── LOADING ─── */
+        .loading-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #aaa;
+            grid-column: 1 / -1;
+        }
+        .spinner {
+            width: 32px; height: 32px;
+            border: 3px solid #e0d5c1;
+            border-top-color: #d4af37;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 14px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ─── MODAL ─── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.5);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.2s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal-box {
+            background: #fff;
+            border-radius: 16px;
+            padding: 28px;
+            width: 90%;
+            max-width: 440px;
+            box-shadow: 0 20px 50px rgba(0,0,0,.2);
+            animation: slideUp 0.25s ease;
+        }
+        @keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-box h3 { margin: 0 0 18px; font-size: 1.1rem; font-weight: 700; }
+        .modal-box label { display: block; font-size: 0.8rem; font-weight: 600; color: #555; margin-bottom: 5px; }
+        .modal-box input, .modal-box select {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            margin-bottom: 14px;
+            outline: none;
+        }
+        .modal-box input:focus, .modal-box select:focus { border-color: #d4af37; }
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
+        .btn-cancel {
+            padding: 9px 18px;
+            background: #f0ece5;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            color: #555;
+        }
+        .btn-primary-gold {
+            padding: 9px 18px;
+            background: #d4af37;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            color: #fff;
+            transition: background 0.2s;
+        }
+        .btn-primary-gold:hover { background: #b8960b; }
+        .btn-danger {
+            padding: 9px 18px;
+            background: #e53935;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            color: #fff;
+        }
+
+        .add-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #d4af37, #b8860b);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(212,175,55,.3);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+        .add-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(212,175,55,.4); }
+
+        .expires-tag {
+            font-size: 0.72rem;
+            color: #999;
+            margin-top: 4px;
+        }
+        .expires-tag.urgent { color: #e53935; font-weight: 700; }
+
+        /* ─── TOAST ─── */
+        .toast {
+            position: fixed;
+            bottom: 28px;
+            right: 24px;
+            background: #1a1a2e;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            box-shadow: 0 8px 24px rgba(0,0,0,.2);
+            z-index: 99999;
+            animation: slideUp 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+    <!-- PAGE HEADER -->
+
+    <div class="page-header">
+        <div>
+            <h1>🎁 Cartões de Fidelidade</h1>
+            <p>Cartões do programa de fidelidade Eva Leite Atelier — apenas serviços deste Atelier.</p>
+        </div>
+        <button class="add-btn" onclick="abrirModalNovo()">
+            ＋ Novo Cartão
+        </button>
+    </div>
+
+    <!-- MÉTRICAS -->
+    <div class="metrics-row" id="metrics-row">
+        <div class="metric-card">
+            <div class="metric-value" id="m-total">—</div>
+            <div class="metric-label">Total de Cartões</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value" id="m-ativos">—</div>
+            <div class="metric-label">Em Curso</div>
+        </div>
+        <div class="metric-card gold">
+            <div class="metric-value" id="m-completos">—</div>
+            <div class="metric-label">Completos (p/ usar)</div>
+        </div>
+        <div class="metric-card green">
+            <div class="metric-value" id="m-utilizados">—</div>
+            <div class="metric-label">Utilizados</div>
+        </div>
+        <div class="metric-card red">
+            <div class="metric-value" id="m-vencidos">—</div>
+            <div class="metric-label">Vencidos</div>
+        </div>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filters-bar">
+        <input type="text" class="search-input" id="search-input" placeholder="🔍  Pesquisar por nome ou telefone..." oninput="filtrarCartoes()">
+        <button class="filter-btn active" data-filtro="todos" onclick="mudarFiltro(this, 'todos')">Todos</button>
+        <button class="filter-btn" data-filtro="em-curso" onclick="mudarFiltro(this, 'em-curso')">Em Curso</button>
+        <button class="filter-btn" data-filtro="completo" onclick="mudarFiltro(this, 'completo')">Completos</button>
+        <button class="filter-btn" data-filtro="utilizado" onclick="mudarFiltro(this, 'utilizado')">Utilizados</button>
+        <button class="filter-btn" data-filtro="vencido" onclick="mudarFiltro(this, 'vencido')">Vencidos</button>
+    </div>
+
+    <!-- GRID DE CARTÕES -->
+    <div class="cards-grid" id="cards-grid">
+        <div class="loading-state">
+            <div class="spinner"></div>
+            <p>A carregar cartões de fidelidade...</p>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: NOVO CARTÃO -->
+<div id="modal-novo" style="display:none;" class="modal-overlay" onclick="fecharModalFora(event, 'modal-novo')">
+    <div class="modal-box">
+        <h3>🎁 Novo Cartão de Fidelidade</h3>
+        <label>Nome da Cliente *</label>
+        <input type="text" id="novo-nome" placeholder="Ex: Ana Silva">
+
+        <label>Telefone</label>
+        <input type="tel" id="novo-telefone" placeholder="Ex: 912 345 678">
+
+        <label>Total de Serviços (carimbos para completar)</label>
+        <input type="number" id="novo-total" value="5" min="1" max="20">
+
+        <label>Desconto ao completar (%)</label>
+        <input type="number" id="novo-desconto" value="25" min="1" max="100">
+
+        <!-- PARCERIA -->
+        <div style="margin-top:6px; margin-bottom:14px; background:#f8f7f5; border-radius:10px; padding:14px;">
+            <div style="font-size:0.78rem; font-weight:700; color:#aaa; text-transform:uppercase; letter-spacing:0.6px; margin-bottom:10px;">Parceria</div>
+            <p style="font-size:0.8rem; color:#999; margin:0 0 10px 0; line-height:1.5;">Se este cartão for emitido em parceria, escolha abaixo. Caso contrário, o cartão fica só no Atelier.</p>
+            <button type="button" id="btn-parceria-linha" onclick="toggleParceria('linha')" style="padding:8px 18px; border-radius:8px; border:2px solid #e0d5c1; background:#fff; font-family:inherit; cursor:pointer; transition:all .2s; display:inline-flex; align-items:center; gap:8px;">
+                <img src="img/logo_linha.png" alt="Linha" style="height:22px; width:auto; object-fit:contain;">
+            </button>
+            <p id="parceria-info" style="font-size:0.75rem; color:#aaa; margin:8px 0 0;"></p>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="fecharModal('modal-novo')">Cancelar</button>
+            <button class="btn-primary-gold" id="btn-criar" onclick="criarCartao()">✨ Criar Cartão</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: ADICIONAR SERVIÇO (PIN) -->
+<div id="modal-pin" style="display:none;" class="modal-overlay" onclick="fecharModalFora(event, 'modal-pin')">
+    <div class="modal-box">
+        <h3 id="modal-pin-title">✅ Registar Serviço</h3>
+        <p style="color:#888; font-size:0.88rem; margin-bottom:18px;" id="modal-pin-desc">Introduza a senha para confirmar o registo do serviço neste cartão.</p>
+        <label>Senha de Confirmação</label>
+        <input type="password" id="pin-input" placeholder="••••" onkeydown="if(event.key==='Enter') confirmarPin()">
+        <p id="pin-error" style="color:#e53935; font-size:0.8rem; min-height:18px; margin-bottom:10px;"></p>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="fecharModal('modal-pin')">Cancelar</button>
+            <button class="btn-primary-gold" onclick="confirmarPin()">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: USAR DESCONTO (PIN) -->
+<div id="modal-resgatar" style="display:none;" class="modal-overlay" onclick="fecharModalFora(event, 'modal-resgatar')">
+    <div class="modal-box">
+        <h3>🎉 Usar Desconto</h3>
+        <p style="color:#888; font-size:0.88rem; margin-bottom:18px;">Confirme a utilização do desconto neste cartão. Esta ação é irreversível.</p>
+        <label>Senha de Confirmação</label>
+        <input type="password" id="resgatar-pin-input" placeholder="••••" onkeydown="if(event.key==='Enter') confirmarResgate()">
+        <p id="resgatar-pin-error" style="color:#e53935; font-size:0.8rem; min-height:18px; margin-bottom:10px;"></p>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="fecharModal('modal-resgatar')">Cancelar</button>
+            <button class="btn-danger" onclick="confirmarResgate()">Usar Desconto</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ─── BASE DE DADOS DO ATELIER (próprio) ───
+    const ATELIER_URL = 'https://cixjmwfkfmeedajpmzmp.supabase.co';
+    const ATELIER_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeGptd2ZrZm1lZWRhanBtem1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MzM5ODIsImV4cCI6MjA2OTEwOTk4Mn0.vFvgRMK_oabG19FNauNaBu_CoQTL8QRSXcptyfY6rbM';
+    const dbAtelier = window.supabase.createClient(ATELIER_URL, ATELIER_KEY);
+
+    // ─── BASE DE DADOS DO SITE DE FIDELIDADE (VendasLinha) ───
+    const FIDELIDADE_URL = 'https://ygyomwclmfqehhbtjaxy.supabase.co';
+    const FIDELIDADE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlneW9td2NsbWZxZWhoYnRqYXh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMTk5ODksImV4cCI6MjA4ODU5NTk4OX0.sXsc3vS6wtsLE8iMIdXrpqxKjoYM14WGhQbyK3p5rj4';
+    const dbFidelidade = window.supabase.createClient(FIDELIDADE_URL, FIDELIDADE_KEY);
+
+    let todosCartoes = [];
+    let filtroAtivo = 'todos';
+    let cardParaAcao = null; // Cartão em espera de ação (pin/resgate)
+
+    // ─── IDENTIFICAR USER_ID DO ATELIER ───
+    // Como os cartões do Atelier têm total_services = 6, filtramos por esse campo.
+    // Em alternativa, se a tabela tiver um campo "partner" ou similar, usaríamos isso.
+    // Por enquanto filtramos por total_services = 6 (modelo atelier) e discount_pct = 25.
+
+    async function init() {
+        await carregarCartoes();
+    }
+
+    async function carregarCartoes() {
+        const grid = document.getElementById('cards-grid');
+        grid.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>A carregar...</p></div>';
+
+        // Cartões próprios do Atelier (base de dados do Atelier)
+        const { data: dataAtelier, error: errAtelier } = await dbAtelier
+            .from('loyalty_cards')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        // Cartões de parceria com a LINHA (filtramos por total_services = 5)
+        const { data: dataLinha } = await dbFidelidade
+            .from('loyalty_cards')
+            .select('*')
+            .eq('total_services', 5)
+            .order('created_at', { ascending: false });
+
+        if (errAtelier) {
+            // A tabela pode ainda não ter sido criada — mostrar aviso amigável
+            grid.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><p>Tabela <b>loyalty_cards</b> ainda não existe no Atelier.<br>Corre o <b>setup_db.sql</b> no Supabase do Atelier primeiro!</p></div>`;
+            return;
+        }
+
+        // Marcar origem dos cartões para saber qual DB usar depois
+        const atelierCards = (dataAtelier || []).map(c => ({ ...c, _origem: 'atelier' }));
+        const linhaCards   = (dataLinha   || []).map(c => ({ ...c, _origem: 'linha' }));
+
+        todosCartoes = [...atelierCards, ...linhaCards];
+        atualizarMetricas();
+        renderCartoes();
+    }
+
+    function getStatusCartao(c) {
+        if (c.current_services > c.total_services) return 'utilizado';
+        if (c.current_services >= c.total_services) {
+            const exp = c.expires_at ? new Date(c.expires_at) : null;
+            if (exp && new Date() > exp) return 'vencido';
+            return 'completo';
+        }
+        return 'em-curso';
+    }
+
+    function atualizarMetricas() {
+        const total = todosCartoes.length;
+        const ativos = todosCartoes.filter(c => getStatusCartao(c) === 'em-curso').length;
+        const completos = todosCartoes.filter(c => getStatusCartao(c) === 'completo').length;
+        const utilizados = todosCartoes.filter(c => getStatusCartao(c) === 'utilizado').length;
+        const vencidos = todosCartoes.filter(c => getStatusCartao(c) === 'vencido').length;
+
+        document.getElementById('m-total').textContent = total;
+        document.getElementById('m-ativos').textContent = ativos;
+        document.getElementById('m-completos').textContent = completos;
+        document.getElementById('m-utilizados').textContent = utilizados;
+        document.getElementById('m-vencidos').textContent = vencidos;
+    }
+
+    function renderCartoes() {
+        const grid = document.getElementById('cards-grid');
+        const termoBusca = document.getElementById('search-input').value.toLowerCase();
+
+        let lista = todosCartoes.filter(c => {
+            const status = getStatusCartao(c);
+            if (filtroAtivo !== 'todos' && status !== filtroAtivo) return false;
+            if (termoBusca) {
+                const nome = (c.client_name || '').toLowerCase();
+                const tel = (c.client_phone || '').toLowerCase();
+                if (!nome.includes(termoBusca) && !tel.includes(termoBusca)) return false;
+            }
+            return true;
+        });
+
+        if (!lista.length) {
+            grid.innerHTML = `<div class="empty-state"><div class="empty-icon">🎴</div><p>Nenhum cartão encontrado.</p></div>`;
+            return;
+        }
+
+        grid.innerHTML = lista.map(c => renderCard(c)).join('');
+    }
+
+    function renderCard(c) {
+        const status = getStatusCartao(c);
+        const progresso = Math.min(c.current_services, c.total_services);
+        const percentagem = Math.round((progresso / c.total_services) * 100);
+
+        const badgeMap = {
+            'em-curso':  ['em-curso',  'Em Curso'],
+            'completo':  ['completo',  '🎉 Pronto a Usar'],
+            'utilizado': ['utilizado', '✓ Utilizado'],
+            'vencido':   ['vencido',   '⚠️ Vencido'],
+        };
+        const [badgeCls, badgeTxt] = badgeMap[status];
+
+        // Dots
+        let dotsHTML = '';
+        for (let i = 0; i < c.total_services; i++) {
+            dotsHTML += `<div class="dot ${i < c.current_services ? 'filled' : ''}"></div>`;
+        }
+
+        // Data de validade
+        let expiresHTML = '';
+        if (status === 'completo' && c.expires_at) {
+            const exp = new Date(c.expires_at);
+            const dias = Math.ceil((exp - new Date()) / (1000 * 60 * 60 * 24));
+            const urgente = dias <= 15;
+            expiresHTML = `<div class="expires-tag ${urgente ? 'urgent' : ''}">Desconto válido até ${exp.toLocaleDateString('pt-PT')} (${dias} dias)</div>`;
+        }
+
+        // Link para o cartão público
+        const linkCartao = `https://fidelidade.linhaofficial.pt/?card=${c.id}`;
+
+        // Botão de resgate (só aparece quando completo)
+        let acaoBotao = '';
+        if (status === 'completo') {
+            acaoBotao = `<button class="btn-icon" title="Usar Desconto" onclick="pedirPinResgate('${c.id}')">🎁</button>`;
+        }
+
+        return `
+        <div class="fidelidade-card" id="card-${c.id}">
+            <div class="card-top">
+                <div>
+                    <div class="card-client-name">${c.client_name || '<span style="color:#ccc;font-style:italic;">Sem nome registado</span>'}</div>
+                    <div class="card-client-phone">${c.client_phone || ''}</div>
+                    ${expiresHTML}
+                </div>
+                <span class="status-badge ${badgeCls}">${badgeTxt}</span>
+            </div>
+
+            <div class="progress-label">Progresso do Cartão</div>
+            <div class="dots-row">${dotsHTML}</div>
+
+            <div class="progress-bar-wrap">
+                <div class="progress-bar-fill" style="width: ${percentagem}%"></div>
+            </div>
+
+            <div class="card-footer">
+                <div class="card-progress-text"><strong>${progresso}</strong> / ${c.total_services} serviços · ${c.discount_pct}% OFF</div>
+                <div class="card-actions">
+                    ${acaoBotao}
+                    <a class="btn-icon" href="https://fidelidade.linhaofficial.pt/?card=${c.id}" target="_blank" title="Ver cartão do cliente">👁️</a>
+                    <button class="btn-icon danger" title="Apagar cartão" onclick="apagarCartao('${c.id}')">🗑️</button>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    function mudarFiltro(btn, filtro) {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        filtroAtivo = filtro;
+        renderCartoes();
+    }
+
+    function filtrarCartoes() {
+        renderCartoes();
+    }
+
+    // ─── CRIAR CARTÃO ───
+    function abrirModalNovo() {
+        parceiroSelecionado = null;
+        document.getElementById('novo-nome').value = '';
+        document.getElementById('novo-telefone').value = '';
+        document.getElementById('novo-total').value = '5';
+        document.getElementById('novo-desconto').value = '25';
+        // Resetar botão de parceria
+        document.getElementById('btn-parceria-linha').style.background = '#fff';
+        document.getElementById('btn-parceria-linha').style.borderColor = '#e0d5c1';
+        document.getElementById('btn-parceria-linha').style.color = '#555';
+        document.getElementById('parceria-info').textContent = '';
+        document.getElementById('modal-novo').style.display = 'flex';
+    }
+
+    function toggleParceria(parceiro) {
+        const btn = document.getElementById('btn-parceria-linha');
+        const info = document.getElementById('parceria-info');
+        if (parceiroSelecionado === parceiro) {
+            parceiroSelecionado = null;
+            btn.style.borderColor = '#e0d5c1';
+            btn.style.background = '#fff';
+            info.textContent = '';
+        } else {
+            parceiroSelecionado = parceiro;
+            btn.style.borderColor = '#1a1a2e';
+            btn.style.background = '#fff';
+            info.textContent = '✔️ Cartão será criado na base de dados da LINHA (VendasLinha).';
+        }
+    }
+
+    async function criarCartao() {
+        const nome = document.getElementById('novo-nome').value.trim();
+        const tel = document.getElementById('novo-telefone').value.trim();
+        const total = parseInt(document.getElementById('novo-total').value) || 5;
+        const desconto = parseFloat(document.getElementById('novo-desconto').value) || 25;
+
+        if (!nome) { mostrarToast('⚠️ O nome da cliente é obrigatório.'); return; }
+
+        const btn = document.getElementById('btn-criar');
+        btn.disabled = true;
+        btn.textContent = 'A criar...';
+
+        let error;
+        if (parceiroSelecionado === 'linha') {
+            // Criar na base de dados da LINHA
+            let userId = todosCartoes.find(c => c._origem === 'linha')?.user_id || null;
+            let collaboratorId = todosCartoes.find(c => c._origem === 'linha')?.collaborator_id || null;
+            const res = await dbFidelidade.from('loyalty_cards').insert([{
+                user_id: userId,
+                collaborator_id: collaboratorId,
+                client_name: nome,
+                client_phone: tel || null,
+                total_services: total,
+                current_services: 0,
+                discount_pct: desconto,
+                status: 'active'
+            }]);
+            error = res.error;
+        } else {
+            // Criar na base de dados do Atelier
+            const res = await dbAtelier.from('loyalty_cards').insert([{
+                client_name: nome,
+                client_phone: tel || null,
+                total_services: total,
+                current_services: 0,
+                discount_pct: desconto,
+                status: 'active'
+            }]);
+            error = res.error;
+        }
+
+        btn.disabled = false;
+        btn.textContent = '✨ Criar Cartão';
+
+        if (error) { mostrarToast('❌ Erro: ' + error.message); return; }
+
+        fecharModal('modal-novo');
+        mostrarToast(parceiroSelecionado === 'linha' ? '🧵 Cartão LINHA criado com sucesso!' : '🎁 Cartão Atelier criado com sucesso!');
+        await carregarCartoes();
+    }
+
+    // ─── REGISTAR SERVIÇO (com PIN) ───
+    function pedirPinServico(cardId) {
+        cardParaAcao = { id: cardId, tipo: 'servico' };
+        document.getElementById('modal-pin-title').textContent = '✅ Registar Serviço';
+        document.getElementById('modal-pin-desc').textContent = 'Introduza a senha para confirmar o registo do serviço neste cartão.';
+        document.getElementById('pin-input').value = '';
+        document.getElementById('pin-error').textContent = '';
+        document.getElementById('modal-pin').style.display = 'flex';
+        setTimeout(() => document.getElementById('pin-input').focus(), 100);
+    }
+
+    async function confirmarPin() {
+        if (!cardParaAcao) return;
+        const pin = document.getElementById('pin-input').value.trim();
+        if (!pin) return;
+
+        // Verificar PIN contra colaboradores da base de dados
+        const { data: colabs } = await dbFidelidade.from('collaborators').select('loyalty_password').limit(50);
+        const pinValido = colabs && colabs.some(c => c.loyalty_password === pin);
+
+        if (!pinValido) {
+            document.getElementById('pin-error').textContent = 'Senha incorreta.';
+            return;
+        }
+
+        const card = todosCartoes.find(c => c.id === cardParaAcao.id);
+        if (!card) return;
+
+        const newCount = card.current_services + 1;
+        let updateData = { current_services: newCount };
+
+        if (newCount >= card.total_services) {
+            const expiry = new Date();
+            expiry.setMonth(expiry.getMonth() + 3);
+            updateData.expires_at = expiry.toISOString();
+        }
+
+        const { error } = await dbFidelidade.from('loyalty_cards').update(updateData).eq('id', card.id);
+        if (error) { mostrarToast('❌ Erro: ' + error.message); return; }
+
+        fecharModal('modal-pin');
+        mostrarToast('✅ Serviço registado com sucesso!');
+        await carregarCartoes();
+    }
+
+    // ─── RESGATAR DESCONTO (com PIN) ───
+    function pedirPinResgate(cardId) {
+        cardParaAcao = { id: cardId, tipo: 'resgate' };
+        document.getElementById('resgatar-pin-input').value = '';
+        document.getElementById('resgatar-pin-error').textContent = '';
+        document.getElementById('modal-resgatar').style.display = 'flex';
+        setTimeout(() => document.getElementById('resgatar-pin-input').focus(), 100);
+    }
+
+    async function confirmarResgate() {
+        const pin = document.getElementById('resgatar-pin-input').value.trim();
+        if (!pin) return;
+
+        const { data: colabs } = await dbFidelidade.from('collaborators').select('loyalty_password').limit(50);
+        const pinValido = colabs && colabs.some(c => c.loyalty_password === pin);
+
+        if (!pinValido) {
+            document.getElementById('resgatar-pin-error').textContent = 'Senha incorreta.';
+            return;
+        }
+
+        const card = todosCartoes.find(c => c.id === cardParaAcao.id);
+        if (!card) return;
+
+        // Marcar como resgatado (current_services = total_services + 1)
+        const { error } = await dbFidelidade.from('loyalty_cards')
+            .update({ current_services: card.total_services + 1 })
+            .eq('id', card.id);
+
+        if (error) { mostrarToast('❌ Erro: ' + error.message); return; }
+
+        fecharModal('modal-resgatar');
+        mostrarToast('🎉 Desconto utilizado com sucesso!');
+        await carregarCartoes();
+    }
+
+    // ─── APAGAR CARTÃO ───
+    async function apagarCartao(id) {
+        if (!confirm('Tem a certeza que deseja apagar este cartão? Esta ação é permanente.')) return;
+        const { error } = await dbFidelidade.from('loyalty_cards').delete().eq('id', id);
+        if (error) { mostrarToast('❌ Erro: ' + error.message); return; }
+        mostrarToast('🗑️ Cartão apagado.');
+        await carregarCartoes();
+    }
+
+    // ─── COPIAR LINK ───
+    function copiarLink(id) {
+        const url = 'https://fidelidade.linhaofficial.pt/?card=' + id;
+        navigator.clipboard.writeText(url).then(() => {
+            mostrarToast('🔗 Link copiado para o clipboard!');
+        }).catch(() => {
+            prompt('Copie o link:', url);
+        });
+    }
+
+    // ─── MODAIS UTILITÁRIOS ───
+    function fecharModal(id) {
+        document.getElementById(id).style.display = 'none';
+    }
+    function fecharModalFora(event, id) {
+        if (event.target.id === id) fecharModal(id);
+    }
+
+    // ─── TOAST ───
+    function mostrarToast(msg) {
+        const t = document.createElement('div');
+        t.className = 'toast';
+        t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 3200);
+    }
+
+    // ─── INÍCIO ───
+    document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
