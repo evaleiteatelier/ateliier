@@ -1128,6 +1128,7 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
             <p>Não há pedidos nesta lista no momento.</p>
         </div>
     `;
+    restaurarFiltroGuardado(destino);
     return; // Para a função aqui, não faz mais nada
   }
 
@@ -1164,7 +1165,7 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
     const div = document.createElement('div');
     div.className = 'pedido';
     div.setAttribute('data-nome', p.nome ? p.nome.toLowerCase() : "");
-    div.setAttribute('data-data', p.data_pedido || '');
+    div.setAttribute('data-data', p.data_real || p.data_pedido || '');
 
     // Formata datas para o padrão PT (Dia/Mês/Ano) - Protegido contra fuso horário
     const dataPedidoF = formatarDataParaExibir(p.data_real || p.data_pedido);
@@ -1312,6 +1313,7 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
   });
 
   esconderBotoesSeCliente();
+  restaurarFiltroGuardado(destino);
 
   // Applica Masonry effect após os itens estarem no DOM
   setTimeout(() => {
@@ -1656,7 +1658,8 @@ function definirFiltroPagamento(estado) {
 
 function filtrarPedidos() {
   const input = document.getElementById('pesquisa');
-  const termo = input ? input.value.toLowerCase() : '';
+  const termoOriginal = input ? input.value : '';
+  const termo = termoOriginal.toLowerCase();
   const ordem = document.getElementById('ordem-pedidos')?.value || 'data-desc';
 
   // Determina o container correto
@@ -1664,6 +1667,10 @@ function filtrarPedidos() {
   if (window.location.pathname.includes('concluidos')) containerId = 'lista-concluidos';
   if (window.location.pathname.includes('entregues')) containerId = 'lista-entregues';
   const container = document.getElementById(containerId);
+
+  // Guarda a pesquisa/ordenação escolhidas para sobreviverem a um reload da página
+  sessionStorage.setItem('filtro_pesquisa_' + containerId, termoOriginal);
+  sessionStorage.setItem('filtro_ordem_' + containerId, ordem);
 
   const pedidos = container ? Array.from(container.querySelectorAll('.pedido')) : [];
 
@@ -1689,6 +1696,20 @@ function filtrarPedidos() {
   }
 
   setTimeout(() => aplicarMasonryUI(containerId === 'lista-espera' ? 'pendente' : containerId === 'lista-concluidos' ? 'concluido' : 'entregue'), 20);
+}
+
+// Repõe a pesquisa/ordenação guardada (ex: após um reload por ter alterado um pedido)
+function restaurarFiltroGuardado(containerId) {
+  const inputPesquisa = document.getElementById('pesquisa');
+  const selectOrdem   = document.getElementById('ordem-pedidos');
+
+  const pesquisaSalva = sessionStorage.getItem('filtro_pesquisa_' + containerId);
+  const ordemSalva    = sessionStorage.getItem('filtro_ordem_' + containerId);
+
+  if (inputPesquisa && pesquisaSalva !== null) inputPesquisa.value = pesquisaSalva;
+  if (selectOrdem && ordemSalva !== null) selectOrdem.value = ordemSalva;
+
+  filtrarPedidos();
 }
 
 // ==========================================
