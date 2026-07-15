@@ -501,4 +501,20 @@ BEGIN
 END;
 $$;
 
+-- ==========================================
+-- 12. TABELA DE GESTÃO DE TECIDOS (ALUGUER DE ESPAÇO)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS public.tecidos_aluguer (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    posicao TEXT NOT NULL UNIQUE, -- ex: '1A', '3', '6C'
+    nome_dono TEXT NOT NULL,
+    valor_venda TEXT NOT NULL,
+    foto_url TEXT,
+    data_pagamento DATE NOT NULL,
+    data_vencimento DATE NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE public.tecidos_aluguer DISABLE ROW LEVEL SECURITY;
+
 -- (Fim do script)

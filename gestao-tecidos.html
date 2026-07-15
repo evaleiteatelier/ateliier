@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Tecidos - Eva Leite Atelier</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="auth-guard.js"></script>
+    <script src="navbar.js" defer></script>
+
+    <style>
+        :root {
+            --gold: #d4af37;
+            --dark: #1a1a2e;
+            --bg: #f5f1ea;
+            --text: #2d2d2d;
+            --text-muted: #888;
+            --radius: 14px;
+        }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; }
+        .wrapper { max-width: 1200px; margin: 30px auto; padding: 0 20px 60px; }
+        
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 14px; }
+        .page-header h1 { margin: 0; font-size: 1.8rem; color: var(--dark); }
+        .page-header p { margin: 4px 0 0; color: var(--text-muted); font-size: 0.88rem; }
+
+        .btn-gold {
+            background: var(--gold); color: #fff; border: none; padding: 10px 20px;
+            border-radius: 8px; font-size: 0.88rem; font-weight: 600; cursor: pointer;
+            transition: background 0.2s; font-family: inherit;
+        }
+        .btn-gold:hover { background: #b8972e; }
+
+        .layout-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+        @media (max-width: 900px) {
+            .layout-grid { grid-template-columns: 1fr; }
+        }
+
+        /* LADO ESQUERDO: MÓVEL */
+        .movel-container {
+            background: #fff; border-radius: 16px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,.06);
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .movel-container h2 { margin: 0 0 24px 0; font-size: 1.15rem; color: var(--dark); text-align: center; }
+
+        .movel-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: repeat(8, 60px);
+            gap: 15px;
+            width: 100%;
+            max-width: 380px;
+            background: #faf9f6;
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #eaddcf;
+        }
+
+        .prateleira {
+            background: #fff;
+            border: 2px solid #eaddcf;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-evenly;
+            gap: 5px;
+            padding: 5px;
+            position: relative;
+            overflow: hidden;
+        }
+        .prateleira::before {
+            content: attr(data-id);
+            position: absolute;
+            font-size: 2rem;
+            font-weight: 800;
+            color: #f0ebe4;
+            z-index: 1;
+            pointer-events: none;
+        }
+        .prateleira.full { grid-column: 1 / span 2; }
+        
+        .pano-wrapper {
+            position: relative;
+            z-index: 2;
+        }
+        .pano-circle {
+            width: 44px; height: 44px; border-radius: 50%;
+            background-size: cover; background-position: center;
+            border: 2.5px solid var(--gold); box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            background-color: #fdfdfd;
+        }
+        .pano-wrapper.atrasado .pano-circle { border-color: #c62828; }
+        .pano-wrapper.atrasado::after {
+            content: "⚠️"; position: absolute; top: -8px; right: -8px;
+            font-size: 0.9rem; background: #fff; border-radius: 50%; width: 20px; height: 20px;
+            display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 3;
+        }
+
+        /* LADO DIREITO: TABELA */
+        .tabela-container {
+            background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,.06);
+        }
+        .tabela-container h2 { margin: 0 0 16px 0; font-size: 1.15rem; color: var(--dark); }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        thead th { text-align: left; padding: 10px 12px; border-bottom: 2px solid #eee; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        tbody td { padding: 14px 12px; border-bottom: 1px solid #f5f5f5; vertical-align: middle; }
+        tbody tr:last-child td { border-bottom: none; }
+        .empty { text-align: center; padding: 30px; color: var(--text-muted); font-size: 0.9rem; }
+
+        .badge-status { padding: 4px 10px; border-radius: 20px; font-size: 0.73rem; font-weight: 700; display: inline-block; margin-top: 4px;}
+        .status-ok { background: #e8f5e9; color: #2e7d32; }
+        .status-atrasado { background: #fce8e6; color: #c62828; }
+
+        .acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn-sm {
+            background: #f0f0f0; color: #333; border: none; padding: 6px 12px;
+            border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: 0.2s;
+        }
+        .btn-sm:hover { background: #e0e0e0; }
+        .btn-renovar { background: #e8f5e9; color: #2e7d32; }
+        .btn-renovar:hover { background: #c8e6c9; }
+        .btn-del { background: #fce8e6; color: #c62828; }
+        .btn-del:hover { background: #ffcdd2; }
+
+        .alerta-topo {
+            background: #fce8e6; border: 1px solid #ffcdd2; border-radius: 12px;
+            padding: 14px 20px; color: #c62828; margin-bottom: 24px; display: none;
+            align-items: center; gap: 10px; font-weight: 600; font-size: 0.95rem;
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,.55);
+            display: none; align-items: center; justify-content: center;
+            z-index: 9999; backdrop-filter: blur(4px);
+        }
+        .modal-overlay.active { display: flex; animation: fadeIn .2s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .modal-card {
+            background: #fff; width: 100%; max-width: 440px; border-radius: var(--radius);
+            padding: 28px 24px; box-shadow: 0 10px 40px rgba(0,0,0,.2); animation: slideUp .25s;
+        }
+        @keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .modal-title { font-size: 1.15rem; font-weight: 700; margin: 0 0 20px; color: var(--dark); }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 10px 12px; border: 1.5px solid #e0dbd0; border-radius: 8px;
+            font-size: 0.93rem; font-family: inherit; outline: none; box-sizing: border-box; transition: border .2s;
+        }
+        .form-group input:focus, .form-group select:focus { border-color: var(--gold); }
+        
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+        .btn-cancel { background: #f0f0f0; color: #666; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 600; }
+        .btn-cancel:hover { background: #e0e0e0; }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <div class="alerta-topo" id="alerta-atrasos">
+        ⚠️ Atenção! Existem posições com o aluguer em atraso.
+    </div>
+
+    <div class="page-header">
+        <div>
+            <h1>🧵 Gestão de Tecidos</h1>
+            <p>Controle o aluguer de posições no móvel de tecidos</p>
+        </div>
+        <button class="btn-gold" onclick="abrirModal()">+ Novo Pano</button>
+    </div>
+
+    <div class="layout-grid">
+        <!-- MAPA VISUAL DO MÓVEL -->
+        <div class="movel-container">
+            <h2>Móvel de Tecidos</h2>
+            <div class="movel-grid" id="movel-grid">
+                <!-- Construído dinamicamente -->
+            </div>
+        </div>
+
+        <!-- TABELA DE GESTÃO -->
+        <div class="tabela-container">
+            <h2>Lista de Ocupações</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Pos.</th>
+                        <th>Dono / Valor</th>
+                        <th>Vencimento</th>
+                        <th style="text-align: right;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-tecidos">
+                    <tr><td colspan="4" class="empty">A carregar...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL NOVO PANO -->
+<div class="modal-overlay" id="modal-pano" onclick="fecharModalFora(event)">
+    <div class="modal-card">
+        <h3 class="modal-title">Adicionar Tecido</h3>
+        
+        <div class="form-group">
+            <label>Posição Disponível *</label>
+            <select id="pano-posicao">
+                <!-- Preenchido dinamicamente -->
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Dono do Tecido *</label>
+            <input type="text" id="pano-dono" placeholder="Ex: Maria Silva">
+        </div>
+
+        <div class="form-group">
+            <label>Valor de Venda *</label>
+            <input type="text" id="pano-valor" placeholder="Ex: 15€ / metro">
+        </div>
+
+        <div class="form-group">
+            <label>Link da Foto (Opcional mas Recomendado)</label>
+            <input type="url" id="pano-foto" placeholder="https://exemplo.com/foto.jpg">
+        </div>
+
+        <div class="form-group">
+            <label>Data de Pagamento do Aluguer *</label>
+            <input type="date" id="pano-data-pag">
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+            <button class="btn-gold" id="btn-guardar" onclick="salvarPano()">Adicionar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SUPABASE_URL = "https://cixjmwfkfmeedajpmzmp.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeGptd2ZrZm1lZWRhanBtem1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MzM5ODIsImV4cCI6MjA2OTEwOTk4Mn0.vFvgRMK_oabG19FNauNaBu_CoQTL8QRSXcptyfY6rbM";
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let tecidosAtuais = [];
+
+    document.addEventListener("DOMContentLoaded", () => {
+        desenharMovelVazio();
+        carregarTecidos();
+    });
+
+    // Mapeamento das 11 posições no grid
+    const mapPosicoes = [
+        { id: 1, full: true },
+        { id: 2, full: true },
+        { id: 3, full: false },
+        { id: 9, full: false },
+        { id: 4, full: false },
+        { id: 10, full: false },
+        { id: 5, full: false },
+        { id: 11, full: false },
+        { id: 6, full: true },
+        { id: 7, full: true },
+        { id: 8, full: true }
+    ];
+
+    function desenharMovelVazio() {
+        const grid = document.getElementById('movel-grid');
+        grid.innerHTML = mapPosicoes.map(p => {
+            const extraClass = p.full ? 'full' : '';
+            return `<div class="prateleira ${extraClass}" id="prat-${p.id}">${p.id}</div>`;
+        }).join('');
+    }
+
+    function formatarData(dataIso) {
+        if (!dataIso) return '-';
+        return new Date(dataIso).toLocaleDateString('pt-PT');
+    }
+
+    async function carregarTecidos() {
+        const tbody = document.getElementById('tbody-tecidos');
+        tbody.innerHTML = `<tr><td colspan="4" class="empty"><div class="spinner" style="margin:0 auto;"></div></td></tr>`;
+        
+        const { data, error } = await db.from('tecidos_aluguer').select('*').order('posicao', { ascending: true });
+
+        if (error) {
+            tbody.innerHTML = `<tr><td colspan="4" class="empty" style="color:red">Erro: ${error.message}</td></tr>`;
+            return;
+        }
+
+        tecidosAtuais = data || [];
+        atualizarInterface();
+    }
+
+    const todasPosicoes = [
+        '1A', '1B', '1C', '1D',
+        '2A', '2B', '2C', '2D',
+        '3',
+        '4',
+        '5',
+        '6A', '6B', '6C', '6D',
+        '7A', '7B', '7C', '7D',
+        '8A', '8B', '8C', '8D',
+        '9',
+        '10',
+        '11'
+    ];
+
+    function atualizarInterface() {
+        const tbody = document.getElementById('tbody-tecidos');
+        const hoje = new Date();
+        hoje.setHours(0,0,0,0);
+        let temAtrasos = false;
+
+        // Limpar visual do móvel
+        desenharMovelVazio();
+
+        if (tecidosAtuais.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="empty">Nenhum tecido no móvel.</td></tr>`;
+        } else {
+            tbody.innerHTML = tecidosAtuais.map(item => {
+                const vencimento = new Date(item.data_vencimento);
+                const isAtrasado = vencimento < hoje;
+                if (isAtrasado) temAtrasos = true;
+
+                // ATUALIZAR MÓVEL
+                // Acha a base da prateleira (ex: '1A' -> '1', '10' -> '10')
+                const baseId = item.posicao.toString().replace(/[A-Z]/g, '');
+                const pratEl = document.getElementById(`prat-${baseId}`);
+                
+                if (pratEl) {
+                    const imgUrl = item.foto_url || 'https://via.placeholder.com/150/e0dbd0/888?text=Pano';
+                    const classAtrasado = isAtrasado ? 'atrasado' : '';
+                    pratEl.innerHTML += `
+                        <div class="pano-wrapper ${classAtrasado}" title="Posição ${item.posicao} - ${item.nome_dono}">
+                            <div class="pano-circle" style="background-image: url('${imgUrl}')"></div>
+                        </div>
+                    `;
+                }
+
+                // LINHA DA TABELA
+                const statusBadge = isAtrasado 
+                    ? `<span class="badge-status status-atrasado">Atrasado</span>` 
+                    : `<span class="badge-status status-ok">OK</span>`;
+
+                return `
+                <tr>
+                    <td style="font-weight:700; font-size:1.1rem; color:var(--dark)">#${item.posicao}</td>
+                    <td>
+                        <strong style="color: #1a1a2e">${item.nome_dono}</strong><br>
+                        <span style="font-size: 0.8rem; color:#666">💰 ${item.valor_venda}</span>
+                    </td>
+                    <td>
+                        ${formatarData(item.data_vencimento)}<br>
+                        ${statusBadge}
+                    </td>
+                    <td style="text-align: right;">
+                        <div class="acoes" style="justify-content: flex-end;">
+                            <button class="btn-sm btn-renovar" onclick="renovarMensalidade('${item.id}', '${item.data_vencimento}')">Renovar Mês</button>
+                            <button class="btn-sm btn-del" onclick="apagarTecido('${item.id}', '${item.posicao}')">Remover</button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        // Mostrar Alerta se houver atrasos
+        document.getElementById('alerta-atrasos').style.display = temAtrasos ? 'flex' : 'none';
+    }
+
+    function abrirModal() {
+        // Preencher o select de posições apenas com as disponíveis
+        const posOcupadas = tecidosAtuais.map(t => t.posicao.toString());
+        const selPos = document.getElementById('pano-posicao');
+        selPos.innerHTML = '';
+        
+        let temLivre = false;
+        todasPosicoes.forEach(pos => {
+            if (!posOcupadas.includes(pos)) {
+                selPos.innerHTML += `<option value="${pos}">Posição ${pos}</option>`;
+                temLivre = true;
+            }
+        });
+
+        if (!temLivre) {
+            window.mostrarAviso?.("Não há posições livres no móvel!", "Aviso", "⚠️") || alert("Móvel cheio!");
+            return;
+        }
+
+        document.getElementById('pano-dono').value = '';
+        document.getElementById('pano-valor').value = '';
+        document.getElementById('pano-foto').value = '';
+        
+        // Data atual por defeito
+        const hojeIso = new Date().toISOString().split('T')[0];
+        document.getElementById('pano-data-pag').value = hojeIso;
+
+        document.getElementById('modal-pano').classList.add('active');
+    }
+
+    function fecharModal() {
+        document.getElementById('modal-pano').classList.remove('active');
+    }
+
+    function fecharModalFora(e) {
+        if (e.target.id === 'modal-pano') fecharModal();
+    }
+
+    async function salvarPano() {
+        const posicao = parseInt(document.getElementById('pano-posicao').value);
+        const dono = document.getElementById('pano-dono').value.trim();
+        const valor = document.getElementById('pano-valor').value.trim();
+        const foto = document.getElementById('pano-foto').value.trim();
+        const dataPagTxt = document.getElementById('pano-data-pag').value;
+
+        if (!dono || !valor || !dataPagTxt) {
+            window.mostrarAviso?.("Preencha o Dono, Valor e Data de Pagamento.", "Atenção", "⚠️") || alert("Campos obrigatórios em falta.");
+            return;
+        }
+
+        // Calcula vencimento (+ 1 mês)
+        const dPag = new Date(dataPagTxt);
+        const dVenc = new Date(dPag);
+        dVenc.setMonth(dVenc.getMonth() + 1);
+        const dataVencTxt = dVenc.toISOString().split('T')[0];
+
+        const btn = document.getElementById('btn-guardar');
+        btn.disabled = true;
+        btn.textContent = 'A guardar...';
+
+        const { error } = await db.from('tecidos_aluguer').insert([{
+            posicao,
+            nome_dono: dono,
+            valor_venda: valor,
+            foto_url: foto || null,
+            data_pagamento: dataPagTxt,
+            data_vencimento: dataVencTxt
+        }]);
+
+        btn.disabled = false;
+        btn.textContent = 'Adicionar';
+
+        if (error) {
+            console.error(error);
+            window.mostrarAviso?.("Erro: " + error.message, "Erro", "❌") || alert("Erro: " + error.message);
+            return;
+        }
+
+        fecharModal();
+        carregarTecidos();
+    }
+
+    async function renovarMensalidade(id, dataVencAtual) {
+        const confirmar = window.mostrarConfirmacao 
+            ? await window.mostrarConfirmacao("Confirmar pagamento da mensalidade e adicionar +1 mês?", "Renovar", "🔄", "Renovar", "Cancelar")
+            : confirm("Confirmar renovação de +1 mês?");
+            
+        if (!confirmar) return;
+
+        // Adiciona 1 mês à data de vencimento anterior
+        const d = new Date(dataVencAtual);
+        d.setMonth(d.getMonth() + 1);
+        const novoVenc = d.toISOString().split('T')[0];
+
+        const { error } = await db.from('tecidos_aluguer').update({
+            data_vencimento: novoVenc
+        }).eq('id', id);
+
+        if (error) {
+            window.mostrarAviso?.("Erro ao renovar: " + error.message, "Erro", "❌") || alert("Erro: " + error.message);
+        } else {
+            carregarTecidos();
+        }
+    }
+
+    async function apagarTecido(id, pos) {
+        const confirmar = window.mostrarConfirmacao 
+            ? await window.mostrarConfirmacao(`Tem a certeza que deseja remover o tecido da Posição ${pos}?`, "Remover", "🗑️", "Remover", "Cancelar")
+            : confirm(`Tem a certeza que deseja remover da Posição ${pos}?`);
+            
+        if (!confirmar) return;
+
+        const { error } = await db.from('tecidos_aluguer').delete().eq('id', id);
+
+        if (error) {
+            window.mostrarAviso?.("Erro ao remover: " + error.message, "Erro", "❌") || alert("Erro: " + error.message);
+        } else {
+            carregarTecidos();
+        }
+    }
+</script>
+
+</body>
+</html>
