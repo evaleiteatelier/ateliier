@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Perfil - Eva Leite Atelier</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="auth-guard.js"></script>
+    <script src="navbar.js" defer></script>
+
+    <style>
+        :root {
+            --gold: #d4af37;
+            --dark: #1a1a2e;
+            --bg: #f5f1ea;
+            --text: #2d2d2d;
+            --text-muted: #888;
+            --radius: 14px;
+        }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; }
+        .wrapper { max-width: 600px; margin: 40px auto; padding: 0 20px 60px; }
+        
+        .page-header { margin-bottom: 28px; }
+        .page-header h1 { margin: 0; font-size: 1.8rem; color: var(--dark); }
+        .page-header p { margin: 4px 0 0; color: var(--text-muted); font-size: 0.88rem; }
+
+        .card { background: #fff; border-radius: 16px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,.06); margin-bottom: 24px; }
+        .card h2 { margin: 0 0 20px 0; font-size: 1.2rem; color: var(--dark); }
+        
+        .info-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid #f0f0f0; }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .info-value { font-size: 0.95rem; font-weight: 500; color: var(--dark); }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+        .form-group input {
+            width: 100%; padding: 12px 14px; border: 1.5px solid #e0dbd0; border-radius: 10px;
+            font-size: 0.95rem; font-family: inherit; outline: none; box-sizing: border-box; transition: border .2s;
+            background: #fdfcf9;
+        }
+        .form-group input:focus { border-color: var(--gold); background: #fff; }
+
+        .btn-gold {
+            background: var(--gold); color: #fff; border: none; padding: 12px 20px; width: 100%;
+            border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+            transition: background 0.2s; font-family: inherit; margin-top: 10px;
+        }
+        .btn-gold:hover { background: #b8972e; }
+
+        .badge-maximo { background: #fce8e6; color: #c62828; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+        .badge-admin  { background: #e8f5e9; color: #2e7d32; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+        .badge-basico { background: #fff3cd; color: #8a6100; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <div class="page-header">
+        <h1>Meu Perfil</h1>
+        <p>Gerencie as suas credenciais e detalhes da conta</p>
+    </div>
+
+    <!-- INFORMAÇÕES PESSOAIS -->
+    <div class="card">
+        <h2>Detalhes da Conta</h2>
+        <div class="info-row">
+            <div class="info-label">Nome Completo</div>
+            <div class="info-value" id="view-nome">A carregar...</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Email de Acesso</div>
+            <div class="info-value" id="view-email">A carregar...</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Nível de Acesso</div>
+            <div class="info-value" id="view-tipo">A carregar...</div>
+        </div>
+    </div>
+
+    <!-- ALTERAR SENHA -->
+    <div class="card" id="card-senha" style="display: none;">
+        <h2>Alterar Palavra-passe</h2>
+        <div class="form-group">
+            <label>Palavra-passe Atual</label>
+            <input type="password" id="senha-atual" placeholder="••••••••">
+        </div>
+        <div class="form-group">
+            <label>Nova Palavra-passe</label>
+            <input type="password" id="nova-senha" placeholder="••••••••">
+        </div>
+        <div class="form-group">
+            <label>Confirmar Nova Palavra-passe</label>
+            <input type="password" id="confirmar-senha" placeholder="••••••••">
+        </div>
+        <button class="btn-gold" id="btn-alterar-senha" onclick="mudarSenha()">Atualizar Palavra-passe</button>
+    </div>
+</div>
+
+<script>
+    const SUPABASE_URL = "https://cixjmwfkfmeedajpmzmp.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeGptd2ZrZm1lZWRhanBtem1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MzM5ODIsImV4cCI6MjA2OTEwOTk4Mn0.vFvgRMK_oabG19FNauNaBu_CoQTL8QRSXcptyfY6rbM";
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    document.addEventListener("DOMContentLoaded", () => {
+        carregarDadosPerfil();
+    });
+
+    function carregarDadosPerfil() {
+        const nome = localStorage.getItem("adminNome") || "Desconhecido";
+        const email = localStorage.getItem("adminToken") || "Não aplicável";
+        const tipo = localStorage.getItem("tipoUsuario") || "basico";
+        const id = localStorage.getItem("adminId");
+
+        document.getElementById('view-nome').textContent = nome;
+        document.getElementById('view-email').textContent = email;
+
+        const elTipo = document.getElementById('view-tipo');
+        if (tipo === 'maximo') elTipo.innerHTML = '<span class="badge-maximo">MÁXIMO</span>';
+        else if (tipo === 'basico') elTipo.innerHTML = '<span class="badge-basico">BÁSICO</span>';
+        else elTipo.innerHTML = '<span class="badge-admin">ADMIN</span>';
+
+        // Se o utilizador tem ID e não for a conta básica "sem senha", permitimos alterar a senha
+        if (id && tipo !== 'basico') {
+            document.getElementById('card-senha').style.display = 'block';
+        }
+    }
+
+    async function mudarSenha() {
+        const userId = localStorage.getItem("adminId");
+        if (!userId) {
+            mostrarAviso("O seu perfil não tem um ID válido. Volte a iniciar sessão.", "Erro", "❌");
+            return;
+        }
+
+        const atual = document.getElementById('senha-atual').value;
+        const nova = document.getElementById('nova-senha').value;
+        const conf = document.getElementById('confirmar-senha').value;
+
+        if (!atual || !nova || !conf) {
+            mostrarAviso("Por favor preencha todos os campos da palavra-passe.", "Atenção", "⚠️");
+            return;
+        }
+
+        if (nova !== conf) {
+            mostrarAviso("A nova palavra-passe e a confirmação não coincidem.", "Atenção", "⚠️");
+            return;
+        }
+
+        if (nova.length < 6) {
+            mostrarAviso("A nova palavra-passe deve ter pelo menos 6 caracteres.", "Atenção", "⚠️");
+            return;
+        }
+
+        const btn = document.getElementById('btn-alterar-senha');
+        btn.disabled = true;
+        btn.textContent = "A atualizar...";
+
+        try {
+            const { data, error } = await db.rpc('alterar_senha_adm', {
+                p_id: userId,
+                p_senha_atual: atual,
+                p_senha_nova: nova
+            });
+
+            if (error) throw error;
+            if (!data.sucesso) throw new Error(data.mensagem || "Erro ao alterar palavra-passe.");
+
+            mostrarAviso("A sua palavra-passe foi alterada com sucesso!", "Sucesso", "✅");
+            
+            // Limpar formulário
+            document.getElementById('senha-atual').value = '';
+            document.getElementById('nova-senha').value = '';
+            document.getElementById('confirmar-senha').value = '';
+            
+        } catch (err) {
+            console.error("Erro mudar senha:", err);
+            mostrarAviso(err.message, "Erro", "❌");
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Atualizar Palavra-passe";
+        }
+    }
+</script>
+
+</body>
+</html>

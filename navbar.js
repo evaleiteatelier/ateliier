@@ -53,13 +53,62 @@ function configurarBarra() {
         // Acesso sem senha: esconde apenas Dashboard e Contas
         document.querySelectorAll(".full-admin-only").forEach(g => g.style.display = "none");
     }
+
+    // 4. PREENCHER DADOS DO PERFIL
+    const adminNome = localStorage.getItem("adminNome") || "Equipa Atelier";
+    const adminEmail = localStorage.getItem("adminToken") || "";
+    const adminInitials = adminNome.substring(0, 2).toUpperCase();
+
+    const perfilNome = document.getElementById("perfil-nome");
+    const perfilRole = document.getElementById("perfil-role");
+    const avatarIniciais = document.getElementById("avatar-iniciais");
+    
+    if (perfilNome) perfilNome.textContent = adminNome;
+    if (avatarIniciais) avatarIniciais.textContent = adminInitials;
+    if (perfilRole) {
+        if (tipoUsuario === 'maximo') perfilRole.textContent = 'Admin Máximo';
+        else if (tipoUsuario === 'basico') perfilRole.textContent = 'Equipa';
+        else perfilRole.textContent = 'Admin';
+    }
+
+    // Preencher menu aberto
+    const ddNome = document.getElementById("dd-nome");
+    const ddEmail = document.getElementById("dd-email");
+    const ddBadge = document.getElementById("dd-badge");
+    if (ddNome) ddNome.textContent = adminNome;
+    if (ddEmail) ddEmail.textContent = adminEmail;
+    if (ddBadge) {
+        if (tipoUsuario === 'maximo') ddBadge.textContent = 'MÁXIMO';
+        else if (tipoUsuario === 'basico') ddBadge.textContent = 'BÁSICO';
+        else ddBadge.textContent = 'ADMIN';
+    }
+
+    // Fechar dropdown de perfil se clicar fora
+    const navProfile = document.getElementById('nav-profile');
+    if (navProfile) {
+        document.addEventListener('click', function(e) {
+            if (!navProfile.contains(e.target)) {
+                navProfile.classList.remove('aberto');
+            }
+        });
+    }
 }
 
-// 4. FUNÇÃO DE SAIR
-function sair() {
+// TOGGLE PERFIL
+window.togglePerfilDropdown = function() {
+    const navProfile = document.getElementById('nav-profile');
+    if (navProfile) {
+        navProfile.classList.toggle('aberto');
+    }
+};
+
+// 5. FUNÇÃO DE SAIR
+window.sair = function() {
     localStorage.removeItem("tipoUsuario");
     localStorage.removeItem("adminToken");
-    if (window.supabaseClient?.auth) {
+    localStorage.removeItem("adminNome");
+    localStorage.removeItem("adminId");
+    if (window.supabaseClient && window.supabaseClient.auth) {
         window.supabaseClient.auth.signOut();
     }
     window.location.href = "index.html";

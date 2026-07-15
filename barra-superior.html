@@ -198,6 +198,121 @@
         margin-top: 5px;
         border: 1px solid #eee;
     }
+    
+    /* ── PERFIL DROPDOWN ── */
+    .nav-profile {
+        position: relative;
+        flex-shrink: 0;
+    }
+    .nav-profile-btn {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 5px 8px;
+        border-radius: 10px;
+        transition: background 0.2s;
+        font-family: inherit;
+    }
+    .nav-profile-btn:hover { background: rgba(212,175,55,.08); }
+    .nav-profile-avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #d4af37, #b8860b);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #fff;
+        flex-shrink: 0;
+        border: 2px solid rgba(212,175,55,.3);
+    }
+    .nav-profile-name {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #333;
+        max-width: 110px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .nav-profile-role {
+        font-size: 0.7rem;
+        color: #aaa;
+        font-weight: 400;
+    }
+    .nav-profile-chevron {
+        font-size: 0.55rem;
+        color: #aaa;
+        transition: transform 0.2s;
+    }
+    .nav-profile.aberto .nav-profile-chevron { transform: rotate(180deg); }
+    .nav-profile-dropdown {
+        display: none;
+        position: absolute;
+        top: calc(100% + 10px);
+        right: 0;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0,0,0,.13);
+        border: 1px solid #ede9e3;
+        min-width: 200px;
+        z-index: 2000;
+        overflow: hidden;
+        animation: fadeIn 0.15s ease-out;
+    }
+    .nav-profile.aberto .nav-profile-dropdown { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+    .profile-dd-header {
+        padding: 14px 16px 10px;
+        border-bottom: 1px solid #f0ece5;
+    }
+    .profile-dd-email {
+        font-size: 0.78rem;
+        color: #aaa;
+        margin-top: 2px;
+        word-break: break-all;
+    }
+    .profile-dd-name {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #1a1a2e;
+    }
+    .profile-dd-badge {
+        display: inline-block;
+        font-size: 0.68rem;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 10px;
+        margin-top: 4px;
+        background: #fef9e7;
+        color: #b8860b;
+        border: 1px solid #f5e6a3;
+    }
+    .profile-dd-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 16px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #444;
+        cursor: pointer;
+        transition: background 0.15s;
+        text-decoration: none;
+        border: none;
+        background: none;
+        width: 100%;
+        font-family: inherit;
+    }
+    .profile-dd-item:hover { background: #faf9f7; }
+    .profile-dd-item.danger { color: #c62828; }
+    .profile-dd-item.danger:hover { background: #fdecea; }
+    .profile-dd-sep { height: 1px; background: #f0ece5; margin: 2px 0; }
     .nav-dropdown:hover .nav-dropdown-content,
     .nav-dropdown-content.aberto {
         display: block;
@@ -280,6 +395,7 @@
                         <a href="dashboard.html" data-page="dashboard.html" class="full-admin-only">Dashboard</a>
                         <a href="contas.html" data-page="contas.html" class="full-admin-only">Contas</a>
                         <a href="financas.html"   data-page="financas.html">Finanças</a>
+                        <a href="lista-compras.html" data-page="lista-compras.html">🛒 Lista de Compras</a>
                         <a href="fidelidade.html" data-page="fidelidade.html">🎁 Fidelidade</a>
                         <a href="utilizadores.html" data-page="utilizadores.html">Utilizadores</a>
                     </div>
@@ -287,9 +403,27 @@
             </span>
         </nav>
 
-        <!-- BOTÃO SAIR -->
-        <div class="nav-right admin-only-group">
-            <button class="btn-logout" onclick="sair()">Sair</button>
+        <!-- PERFIL -->
+        <div class="nav-profile admin-only-group" id="nav-profile">
+            <button class="nav-profile-btn" id="btn-perfil" onclick="togglePerfilDropdown()">
+                <div class="nav-profile-avatar" id="avatar-iniciais">?</div>
+                <div style="text-align:left;">
+                    <div class="nav-profile-name" id="perfil-nome">Utilizador</div>
+                    <div class="nav-profile-role" id="perfil-role">Admin</div>
+                </div>
+                <span class="nav-profile-chevron">&#9660;</span>
+            </button>
+            <div class="nav-profile-dropdown" id="perfil-dropdown">
+                <div class="profile-dd-header">
+                    <div class="profile-dd-name" id="dd-nome">Utilizador</div>
+                    <div class="profile-dd-email" id="dd-email"></div>
+                    <span class="profile-dd-badge" id="dd-badge">Admin</span>
+                </div>
+                <a href="utilizadores.html" class="profile-dd-item">&#128100; Gerir Utilizadores</a>
+                <a href="meu-perfil.html" class="profile-dd-item">&#9881; Meu Perfil</a>
+                <div class="profile-dd-sep"></div>
+                <button class="profile-dd-item danger" onclick="sair()">&#128682; Sair da conta</button>
+            </div>
         </div>
 
     </div>

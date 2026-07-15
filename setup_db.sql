@@ -165,7 +165,7 @@ BEGIN
     WHERE email = p_email AND senha = crypt(p_senha, senha);
 
     IF v_user.id IS NOT NULL THEN
-        RETURN jsonb_build_object('sucesso', true, 'nome', v_user.nome, 'tipo', v_user.tipo_utilizador, 'email', v_user.email);
+        RETURN jsonb_build_object('sucesso', true, 'id', v_user.id, 'nome', v_user.nome, 'tipo', v_user.tipo_utilizador, 'email', v_user.email);
     ELSE
         RETURN jsonb_build_object('sucesso', false);
     END IF;
@@ -468,5 +468,37 @@ CREATE TABLE IF NOT EXISTS public.loyalty_cards (
 
 ALTER TABLE public.loyalty_cards DISABLE ROW LEVEL SECURITY;
 
--- (Fim do script)
+-- ==========================================
+-- 10. TABELA DE LISTA DE COMPRAS
+-- ==========================================
+CREATE TABLE IF NOT EXISTS public.compras (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    nome TEXT NOT NULL,
+    link TEXT,
+    valor_estimado TEXT,
+    prioridade TEXT DEFAULT 'media', -- baixa, media, maxima
+    prazo_maximo DATE,
+    status TEXT DEFAULT 'pendente', -- pendente, concluido
+    data_conclusao TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
 
+ALTER TABLE public.compras DISABLE ROW LEVEL SECURITY;
+
+-- ==========================================
+-- 11. FUNÇÃO DE LIMPEZA AUTOMÁTICA DE COMPRAS
+-- ==========================================
+-- Apaga itens concluídos há mais de 15 dias
+CREATE OR REPLACE FUNCTION public.limpar_compras_antigas()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    DELETE FROM public.compras
+    WHERE status = 'concluido'
+      AND data_conclusao < (now() - interval '15 days');
+END;
+$$;
+
+-- (Fim do script)
