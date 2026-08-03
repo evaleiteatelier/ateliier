@@ -2194,28 +2194,49 @@ async function abrirEditorPedido(id) {
 // ==========================================
 
 async function limparPedidosAntigos() {
-  // 1. Calcula a data de 30 dias atrás
   const dataLimite = new Date();
-  dataLimite.setDate(dataLimite.getDate() - 30); // Subtrai 30 dias de hoje
+  dataLimite.setDate(dataLimite.getDate() - 30);
   const dataString = formatarParaISO(dataLimite);
 
   console.log(`🧹 Verificando pedidos entregues/arquivados muito antigos...`);
 
   try {
-    // Chama o RPC no Supabase que apaga (DELETE) os arquivados há mais de 30 dias E 100% pagos
-    const { error } = await supabase.rpc('limpar_pedidos_antigos');
-
-    // Continua a arquivar os "entregues" que não foram apagados (ex: não estão 100% pagos)
-    const { error: errUpdate, count } = await supabase
+    const { data: antigos, error: errBusca } = await window.supabaseClient
       .from('pedidos')
-      .update({ status: 'arquivado' })
-      .eq('status', 'entregue')       
+      .select('id, preco_final, valor_adiantado')
+      .in('status', ['entregue', 'arquivado'])
       .lt('data_entrega', dataString);
 
-    if (error || errUpdate) {
-      console.error("Erro na limpeza automática:", error || errUpdate);
+    if (errBusca || !antigos) throw errBusca;
+
+    const idsParaApagar = [];
+    const idsParaArquivar = [];
+
+    antigos.forEach(p => {
+      const precoFinal = Number(p.preco_final || 0);
+      const valorAdiantado = Number(p.valor_adiantado || 0);
+      if (precoFinal > 0 && valorAdiantado >= precoFinal) {
+        idsParaApagar.push(p.id);
+      } else {
+        idsParaArquivar.push(p.id);
+      }
+    });
+
+    let fezAlgo = false;
+    if (idsParaApagar.length > 0) {
+      await window.supabaseClient.from('pedidos').delete().in('id', idsParaApagar);
+      fezAlgo = true;
+    }
+    if (idsParaArquivar.length > 0) {
+      await window.supabaseClient.from('pedidos').update({ status: 'arquivado' }).in('id', idsParaArquivar);
+      fezAlgo = true;
+    }
+
+    if (fezAlgo) {
+      console.log(`✅ Limpeza: ${idsParaApagar.length} apagados, ${idsParaArquivar.length} arquivados.`);
+      setTimeout(() => location.reload(), 1000);
     } else {
-      console.log(`✅ Limpeza e arquivamento concluídos.`);
+      console.log("👍 Nada para limpar hoje.");
     }
   } catch (err) {
     console.error("Erro inesperado na limpeza:", err);
