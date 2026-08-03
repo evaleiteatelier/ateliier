@@ -265,13 +265,17 @@ async function salvarModalFatura() {
     btn.disabled = true;
 
     try {
-        // Puxamos o nome e o NIF caso estejamos a criar a fatura pela primeira vez
+        // Puxamos o nome e a data_real do pedido
         const { data: p } = await supabase.from('pedidos').select('nome, data_real').eq('id', id).single();
         const nomeCliente = p ? p.nome : null;
         let nifAtual = '999999990';
+        
         if (nomeCliente) {
-            const { data: cli } = await supabase.from('clientes_financas').select('nif').ilike('nome', nomeCliente).single();
-            if (cli && cli.nif) nifAtual = cli.nif;
+            const nomeLimpo = nomeCliente.trim();
+            const { data: cliData } = await supabase.from('clientes_financas').select('nif').ilike('nome', `%${nomeLimpo}%`).limit(1);
+            if (cliData && cliData.length > 0 && cliData[0].nif && cliData[0].nif.trim() !== '') {
+                nifAtual = cliData[0].nif;
+            }
         }
 
         const payload = {
@@ -282,7 +286,7 @@ async function salvarModalFatura() {
             final_link: final,
             pagina_fisica: pagina,
             fatura_codigo: codigo,
-            valor_total: valor,
+            valor_total: valor !== null ? valor : 0,
             quer_receber: querReceber,
             metodo_envio: metodo,
             contato_envio: contato,
@@ -290,9 +294,9 @@ async function salvarModalFatura() {
             data_emissao: p ? (p.data_real ? new Date(p.data_real).toISOString() : new Date().toISOString()) : new Date().toISOString()
         };
 
-        // Usa upsert para criar se não existir ou atualizar se já existir baseado no pedido_id
-        // Para usar upsert baseado em pedido_id, primeiro temos de ver se existe:
-        const { data: existing } = await supabase.from('faturas').select('id').eq('pedido_id', id).single();
+        // Verifica se a fatura já existe para este pedido
+        const { data: existingData } = await supabase.from('faturas').select('id').eq('pedido_id', id).limit(1);
+        const existing = existingData && existingData.length > 0 ? existingData[0] : null;
         
         if (existing && existing.id) {
             const { error } = await supabase.from('faturas').update(payload).eq('id', existing.id);
@@ -317,7 +321,7 @@ async function salvarModalFatura() {
         }
     } catch (err) {
         console.error("Erro ao guardar fatura:", err);
-        alert("Erro ao guardar dados.");
+        alert("Erro ao guardar dados: " + (err.message || JSON.stringify(err)));
     } finally {
         btn.textContent = "Guardar Tudo";
         btn.disabled = false;
@@ -1087,6 +1091,53 @@ async function corrigirAgendamentosRetroativos(pedidosPendentes) {
   location.reload();
 }
 
+// Função para exibir as informações do cliente (Email e NIF)
+window.verInformacoesCliente = async function(nome, emailClienteStr) {
+    let nif = 'Não registado / 999999990';
+    let email = emailClienteStr && emailClienteStr.trim() !== '' ? emailClienteStr : 'Não fornecido';
+    let debugMsg = '';
+    
+    // Tentar obter o NIF do cliente
+    if (nome) {
+        try {
+            const nomeLimpo = nome.trim();
+            const { data: cliData, error } = await window.supabaseClient.from('clientes_financas')
+                .select('nif')
+                .ilike('nome', `%${nomeLimpo}%`)
+                .limit(1);
+            
+            if (error) {
+                debugMsg = `(Erro Supabase: ${error.message})`;
+                console.error("Erro Supabase:", error);
+            } else if (cliData && cliData.length > 0) {
+                if (cliData[0].nif && String(cliData[0].nif).trim() !== '') {
+                    nif = String(cliData[0].nif);
+                } else {
+                    debugMsg = `(Encontrado na BD, mas NIF está vazio)`;
+                }
+            } else {
+                debugMsg = `(Nome '${nomeLimpo}' não encontrado na tabela clientes_financas)`;
+            }
+        } catch (err) {
+            debugMsg = `(Exceção: ${err.message})`;
+            console.error("Exceção ao buscar NIF:", err);
+        }
+    }
+    
+    // Mostra as info
+    if (window.mostrarAviso) {
+        window.mostrarAviso(`
+            <div style="text-align:left; margin-top:15px; font-size:1.05rem; line-height:1.6; background:#f9f9f9; padding:15px; border-radius:8px; border:1px solid #eee;">
+                <p style="margin:5px 0;"><strong>👤 Nome:</strong> ${nome}</p>
+                <p style="margin:5px 0;"><strong>✉️ Email:</strong> ${email}</p>
+                <p style="margin:5px 0;"><strong>🏢 NIF:</strong> ${nif} <span style="font-size:0.8rem; color:#888;">${debugMsg}</span></p>
+            </div>
+        `, "Informações do Cliente", "ℹ️");
+    } else {
+        alert(`Nome: ${nome}\nEmail: ${email}\nNIF: ${nif} ${debugMsg}`);
+    }
+}
+
 // Substitua a função carregarPedidos no seu script.js por esta:
 
 async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
@@ -1305,6 +1356,9 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
               📄 Emitir Fatura
             </button>
           `}
+          <button class="admin-only" onclick="verInformacoesCliente('${p.nome ? p.nome.replace(/'/g, "\\'") : ''}', '${p.email_cliente ? p.email_cliente.replace(/'/g, "\\'") : ''}')" style="background-color: #607d8b !important; color: white !important; font-weight: bold; border: none;" title="Ver email e NIF do cliente">
+            ℹ️ Ver Informações
+          </button>
       </div>
       <hr>
     `;
