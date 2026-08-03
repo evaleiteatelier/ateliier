@@ -347,7 +347,7 @@
             if(!db) return;
 
             // Busca pedidos para os prazos
-            const { data: pedidos, error: errorP } = await db.from('pedidos').select('id, nome, data_pedido, data_real, status');
+            const { data: pedidos, error: errorP } = await db.from('pedidos').select('id, nome, data_pedido, data_real, status, preco_final, valor_adiantado');
             // Busca faturas para os cartões
             const { data: faturas, error: errorF } = await db.from('faturas').select('*');
             if(errorP || errorF) return;
@@ -399,10 +399,11 @@
             pedidos.forEach(p => {
                 const f = faturas.find(fat => fat.pedido_id === p.id);
                 const temFatura = f && (f.simples_link || f.final_link);
+                const is100Pago = Number(p.valor_adiantado || 0) >= Number(p.preco_final || 0) && Number(p.preco_final || 0) > 0;
                 
                 if (!temFatura && p.status !== 'arquivado') aDeclarar++;
 
-                if (!temFatura && p.data_real && p.status !== 'arquivado') {
+                if (!temFatura && p.data_real && p.status !== 'arquivado' && is100Pago) {
                     const dias = getDiasUteis(p.data_real);
                     if (dias >= 4) {
                         atrasados.push({ nome: p.nome, dias });

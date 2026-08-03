@@ -2197,39 +2197,26 @@ async function limparPedidosAntigos() {
   // 1. Calcula a data de 30 dias atrás
   const dataLimite = new Date();
   dataLimite.setDate(dataLimite.getDate() - 30); // Subtrai 30 dias de hoje
-
-  // Formata para o padrão do banco YYYY-MM-DD
   const dataString = formatarParaISO(dataLimite);
 
-  console.log(`🧹 Verificando pedidos entregues antes de: ${dataString}...`);
+  console.log(`🧹 Verificando pedidos entregues/arquivados muito antigos...`);
 
   try {
-    // 2. Manda o Supabase ARQUIVAR tudo que for 'entregue' E data < 30 dias atrás
-    // Antigamente nós apagávamos (.delete), mas agora arquivamos (.update) para não perder as faturas.
-    const { error, count } = await supabase
+    // Chama o RPC no Supabase que apaga (DELETE) os arquivados há mais de 30 dias E 100% pagos
+    const { error } = await supabase.rpc('limpar_pedidos_antigos');
+
+    // Continua a arquivar os "entregues" que não foram apagados (ex: não estão 100% pagos)
+    const { error: errUpdate, count } = await supabase
       .from('pedidos')
       .update({ status: 'arquivado' })
-      .eq('status', 'entregue')       // Apenas os entregues
-      .lt('data_entrega', dataString) // 'lt' significa "Less Than" (menor que / antes de)
-      // Como agora só estamos a arquivar, podemos arquivar todos os entregues muito antigos, 
-      // pois os dados não são apagados, as faturas continuam visíveis em Finanças.
-      // Se ainda preferir só arquivar se tiver fatura completa, poderíamos manter a linha seguinte.
-      // Vou omiti-la porque, mesmo sem fatura, queremos que o sistema limpe a visualização após 30 dias.
-      // .not('fatura_final_link', 'is', null); 
+      .eq('status', 'entregue')       
+      .lt('data_entrega', dataString);
 
-    if (error) {
-      console.error("Erro na limpeza automática:", error);
-    } else if (count > 0) {
-      console.log(`✅ Limpeza concluída: ${count} pedidos antigos foram excluídos permanentemente.`);
-      // Opcional: Se quiser avisar na tela, descomente a linha abaixo
-      // alert(`${count} pedidos muito antigos foram removidos do histórico.`);
-
-      // Recarrega a lista para sumir com os apagados
-      location.reload();
+    if (error || errUpdate) {
+      console.error("Erro na limpeza automática:", error || errUpdate);
     } else {
-      console.log("👍 Nada para limpar hoje.");
+      console.log(`✅ Limpeza e arquivamento concluídos.`);
     }
-
   } catch (err) {
     console.error("Erro inesperado na limpeza:", err);
   }
