@@ -504,17 +504,68 @@ $$;
 -- ==========================================
 -- 12. TABELA DE GESTÃO DE TECIDOS (ALUGUER DE ESPAÇO)
 -- ==========================================
+
+-- Registo de donos e saldos
+CREATE TABLE IF NOT EXISTS public.tecidos_donos (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    nome TEXT NOT NULL UNIQUE,
+    telefone TEXT,
+    divida_acumulada NUMERIC DEFAULT 0,
+    saldo_vendas NUMERIC DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE public.tecidos_donos DISABLE ROW LEVEL SECURITY;
+
 CREATE TABLE IF NOT EXISTS public.tecidos_aluguer (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     posicao TEXT NOT NULL UNIQUE, -- ex: '1A', '3', '6C'
     nome_dono TEXT NOT NULL,
+    dono_id UUID REFERENCES public.tecidos_donos(id) ON DELETE CASCADE,
     valor_venda TEXT NOT NULL,
+    valor_mensal NUMERIC DEFAULT 5.00,
     foto_url TEXT,
     data_pagamento DATE NOT NULL,
     data_vencimento DATE NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- Se a tabela já existir, adiciona as novas colunas sem apagar dados
+ALTER TABLE public.tecidos_aluguer ADD COLUMN IF NOT EXISTS dono_id UUID REFERENCES public.tecidos_donos(id) ON DELETE CASCADE;
+ALTER TABLE public.tecidos_aluguer ADD COLUMN IF NOT EXISTS valor_mensal NUMERIC DEFAULT 5.00;
+
 ALTER TABLE public.tecidos_aluguer DISABLE ROW LEVEL SECURITY;
+
+-- Registo de vendas e acerto de contas
+CREATE TABLE IF NOT EXISTS public.tecidos_vendas (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    dono_id UUID REFERENCES public.tecidos_donos(id) ON DELETE CASCADE,
+    posicao TEXT,
+    valor_venda NUMERIC NOT NULL,
+    valor_aluguer_deduzido NUMERIC DEFAULT 0,
+    valor_liquido NUMERIC NOT NULL,
+    data_venda TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE public.tecidos_vendas DISABLE ROW LEVEL SECURITY;
+
+-- ==========================================
+-- 13. FUNÇÃO DE LIMPEZA AUTOMÁTICA DE PEDIDOS ANTIGOS
+-- ==========================================
+-- Apaga pedidos arquivados há mais de 30 dias que estejam 100% pagos.
+-- O faturamento anual nas finanças não será afetado pois as faturas continuam na tabela 'faturas'.
+CREATE OR REPLACE FUNCTION public.limpar_pedidos_antigos()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    DELETE FROM public.pedidos
+    WHERE status = 'arquivado'
+      AND data_real < (now() - interval '30 days')
+      AND valor_adiantado >= preco_final
+      AND preco_final > 0;
+END;
+$$;
 
 -- (Fim do script)

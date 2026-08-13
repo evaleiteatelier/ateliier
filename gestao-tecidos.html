@@ -32,6 +32,37 @@
         }
         .btn-gold:hover { background: #b8972e; }
 
+        /* TABS */
+        .tabs { display: flex; gap: 10px; margin-bottom: 24px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .tab-btn { background: none; border: none; font-size: 1rem; font-weight: 600; color: var(--text-muted); cursor: pointer; padding: 8px 16px; border-radius: 8px; transition: 0.2s; }
+        .tab-btn:hover { background: #f0f0f0; }
+        .tab-btn.active { background: var(--dark); color: #fff; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        
+        .saldo-positivo { color: #2e7d32; font-weight: bold; }
+        .saldo-negativo { color: #c62828; font-weight: bold; }
+            --gold: #d4af37;
+            --dark: #1a1a2e;
+            --bg: #f5f1ea;
+            --text: #2d2d2d;
+            --text-muted: #888;
+            --radius: 14px;
+        }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; }
+        .wrapper { max-width: 1200px; margin: 30px auto; padding: 0 20px 60px; }
+        
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 14px; }
+        .page-header h1 { margin: 0; font-size: 1.8rem; color: var(--dark); }
+        .page-header p { margin: 4px 0 0; color: var(--text-muted); font-size: 0.88rem; }
+
+        .btn-gold {
+            background: var(--gold); color: #fff; border: none; padding: 10px 20px;
+            border-radius: 8px; font-size: 0.88rem; font-weight: 600; cursor: pointer;
+            transition: background 0.2s; font-family: inherit;
+        }
+        .btn-gold:hover { background: #b8972e; }
+
         .layout-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -179,8 +210,14 @@
         <button class="btn-gold" onclick="abrirModal()">+ Novo Pano</button>
     </div>
 
-    <div class="layout-grid">
-        <!-- MAPA VISUAL DO MÓVEL -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('tab-movel', this)">Móvel & Prateleiras</button>
+        <button class="tab-btn" onclick="showTab('tab-contas', this)">Donos & Contas</button>
+    </div>
+
+    <div id="tab-movel" class="tab-content active">
+        <div class="layout-grid">
+            <!-- MAPA VISUAL DO MÓVEL -->
         <div class="movel-container">
             <h2>Móvel de Tecidos</h2>
             <div class="movel-grid" id="movel-grid">
@@ -202,6 +239,30 @@
                 </thead>
                 <tbody id="tbody-tecidos">
                     <tr><td colspan="4" class="empty">A carregar...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        </div>
+    </div>
+    </div> <!-- tab-movel -->
+
+    <div id="tab-contas" class="tab-content">
+        <div class="tabela-container">
+            <div style="display:flex; justify-content:space-between; margin-bottom: 16px;">
+                <h2>Conta Corrente dos Donos</h2>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Dono</th>
+                        <th>Saldo de Vendas</th>
+                        <th>Dívida de Aluguer</th>
+                        <th>Balanço Final</th>
+                        <th style="text-align: right;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-donos">
+                    <tr><td colspan="5" class="empty">A carregar...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -258,6 +319,89 @@
         desenharMovelVazio();
         carregarTecidos();
     });
+
+    function showTab(tabId, btn) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        if (btn) btn.classList.add('active');
+        if (tabId === 'tab-contas') carregarDonos();
+    }
+
+    async function carregarDonos() {
+        const tbody = document.getElementById('tbody-donos');
+        tbody.innerHTML = '<tr><td colspan="5" class="empty"><div class="spinner" style="margin:0 auto;"></div></td></tr>';
+        
+        const { data, error } = await db.from('tecidos_donos').select('*').order('nome', { ascending: true });
+        if (error) return tbody.innerHTML = '<tr><td colspan="5" class="empty" style="color:red">Erro: ' + error.message + '</td></tr>';
+        
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="empty">Nenhum dono registado com contas.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = data.map(d => {
+            const balanco = (d.saldo_vendas || 0) - (d.divida_acumulada || 0);
+            const balancoClass = balanco >= 0 ? 'saldo-positivo' : 'saldo-negativo';
+            return `
+                <tr>
+                    <td><strong>${d.nome}</strong><br><small style="color:#888">${d.telefone || 'Sem contato'}</small></td>
+                    <td style="color:#2e7d32">+ ${Number(d.saldo_vendas || 0).toFixed(2)}€</td>
+                    <td style="color:#c62828">- ${Number(d.divida_acumulada || 0).toFixed(2)}€</td>
+                    <td class="${balancoClass}">${balanco.toFixed(2)}€</td>
+                    <td style="text-align: right;">
+                        <button class="btn-sm" onclick="acertarContas('${d.id}', '${d.nome}')">Acertar Contas</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    async function venderTecido(id, pos, nome_dono, valorVendaStr) {
+        const valorNumerico = parseFloat(valorVendaStr.replace(/[^0-9,.-]/g, '').replace(',', '.'));
+        const confirmar = window.mostrarConfirmacao 
+            ? await window.mostrarConfirmacao(`Registar venda do tecido da Posição ${pos} por ${valorNumerico}€? O valor irá para a conta do dono.`, 'Vender', '💰', 'Sim, Vender', 'Cancelar')
+            : confirm(`Vender tecido por ${valorNumerico}€?`);
+            
+        if (!confirmar) return;
+
+        // 1. Verificar se dono existe
+        let { data: donos } = await db.from('tecidos_donos').select('id, saldo_vendas').eq('nome', nome_dono);
+        let dono_id = null;
+        let saldo_atual = 0;
+        
+        if (!donos || donos.length === 0) {
+            const { data: newDono } = await db.from('tecidos_donos').insert([{ nome: nome_dono }]).select();
+            if(newDono && newDono.length > 0) dono_id = newDono[0].id;
+        } else {
+            dono_id = donos[0].id;
+            saldo_atual = Number(donos[0].saldo_vendas || 0);
+        }
+
+        // 2. Adicionar ao saldo
+        if(dono_id) {
+            const novoSaldo = saldo_atual + valorNumerico;
+            await db.from('tecidos_donos').update({ saldo_vendas: novoSaldo }).eq('id', dono_id);
+            await db.from('tecidos_vendas').insert([{ dono_id, posicao: pos, valor_venda: valorNumerico, valor_liquido: valorNumerico }]);
+        }
+
+        // 3. Remover do móvel
+        await db.from('tecidos_aluguer').delete().eq('id', id);
+        carregarTecidos();
+        window.mostrarAviso?.('Venda registada! O valor foi adicionado à conta de ' + nome_dono, 'Sucesso', '✅') || alert('Vendido!');
+    }
+
+    async function acertarContas(dono_id, nome) {
+        const confirmar = window.mostrarConfirmacao 
+            ? await window.mostrarConfirmacao(`Entregou o valor final a ${nome}? As contas de vendas e dívidas vão ser zeradas.`, 'Acertar Contas', '🤝', 'Sim, Entreguei', 'Cancelar')
+            : confirm(`Zerar contas de ${nome}?`);
+            
+        if(!confirmar) return;
+        
+        await db.from('tecidos_donos').update({ saldo_vendas: 0, divida_acumulada: 0 }).eq('id', dono_id);
+        carregarDonos();
+        window.mostrarAviso?.('Contas acertadas com sucesso!', 'Pronto', '✅');
+    }
 
     // Mapeamento das 11 posições no grid
     const mapPosicoes = [
@@ -365,7 +509,7 @@
                         ${statusBadge}
                     </td>
                     <td style="text-align: right;">
-                        <div class="acoes" style="justify-content: flex-end;">
+                            <button class="btn-sm btn-gold" onclick="venderTecido('${item.id}', '${item.posicao}', '${item.nome_dono}', '${item.valor_venda}')">💰 Vender</button>
                             <button class="btn-sm btn-renovar" onclick="renovarMensalidade('${item.id}', '${item.data_vencimento}')">Renovar Mês</button>
                             <button class="btn-sm btn-del" onclick="apagarTecido('${item.id}', '${item.posicao}')">Remover</button>
                         </div>
