@@ -125,6 +125,9 @@
     .enc-nome:focus { border-color: var(--gold); }
     .enc-valor { width: 88px; padding: 7px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.88rem; font-family: 'Inter', sans-serif; text-align: right; outline: none; }
     .enc-valor:focus { border-color: var(--gold); }
+    .metodo-select { width: 118px; padding: 7px 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.82rem; font-family: 'Inter', sans-serif; outline: none; background: #fff; flex-shrink: 0; }
+    .metodo-select:focus { border-color: var(--gold); }
+    .metodo-select.vazio { border-color: #e0a5a5; color: var(--text-muted); }
     .btn-remover { background: none; border: none; cursor: pointer; color: #ccc; font-size: 1.1rem; padding: 4px; line-height: 1; transition: color .2s; }
     .btn-remover:hover { color: var(--red); }
     .btn-add-enc { display: flex; align-items: center; gap: 6px; background: none; border: 1px dashed #ccc; border-radius: 6px; padding: 7px 14px; cursor: pointer; font-size: 0.82rem; font-family: 'Inter', sans-serif; color: var(--text-muted); transition: all .2s; width: 100%; box-sizing: border-box; }
@@ -144,6 +147,8 @@
     .pdiv-desc:focus { border-color: var(--red); }
     .pdiv-val { width: 88px; padding: 7px 10px; border: 1px solid #ffc5c5; border-radius: 6px; font-size: 0.88rem; font-family: 'Inter', sans-serif; text-align: right; outline: none; background: #fff9f9; }
     .pdiv-val:focus { border-color: var(--red); }
+    .pdiv-item .metodo-select { background: #fff9f9; border-color: #ffc5c5; }
+    .pdiv-item .metodo-select:focus { border-color: var(--red); }
     .btn-add-pdiv { display: flex; align-items: center; gap: 6px; background: none; border: 1px dashed #ffaaaa; border-radius: 6px; padding: 7px 14px; cursor: pointer; font-size: 0.82rem; font-family: 'Inter', sans-serif; color: var(--red); transition: all .2s; width: 100%; box-sizing: border-box; }
     .btn-add-pdiv:hover { border-color: var(--red); background: var(--red-light); }
 
@@ -226,6 +231,12 @@
     .resumo-semana-card { background: #fff; border-radius: 10px; padding: 14px 16px; box-shadow: var(--shadow); text-align: center; }
     .resumo-semana-card .rs-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
     .resumo-semana-card .rs-val { font-size: 1.1rem; font-weight: 700; color: var(--dark); margin-top: 4px; }
+
+    /* ── ENTRADAS POR MÉTODO DE PAGAMENTO ── */
+    .metodo-resumo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 14px; }
+    .metodo-stat { background: #fafaf8; border-radius: 10px; padding: 14px 16px; }
+    .metodo-stat .ms-label { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+    .metodo-stat .ms-val { font-size: 1.15rem; font-weight: 700; color: var(--dark); }
 
     /* ── DÍVIDAS TAB ── */
     .dividas-resumo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
@@ -548,6 +559,13 @@
         </div>
       </div>
 
+      <!-- ENTRADAS POR MÉTODO DE PAGAMENTO (SEMANAL) -->
+      <div class="card card-full">
+        <p class="card-title">Entradas por Método de Pagamento</p>
+        <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 14px;">Soma das Encomendas da Semana + Recebimentos de Dívidas desta semana, por método.</p>
+        <div class="metodo-resumo-grid" id="metodo-resumo-semana"></div>
+      </div>
+
       <!-- NOTAS -->
       <div class="card card-full">
         <p class="card-title">Notas da Semana</p>
@@ -685,6 +703,13 @@
           <span class="r-label">Total Gastos Variáveis</span>
           <span class="r-val" style="color:var(--orange);" id="mensal-gastos-dia-total">0,00 €</span>
         </div>
+      </div>
+
+      <!-- ENTRADAS POR MÉTODO DE PAGAMENTO — RESUMO MENSAL -->
+      <div class="card card-full">
+        <p class="card-title">Entradas por Método de Pagamento — Este Mês</p>
+        <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 14px;">Soma de todas as semanas do mês (Encomendas + Recebimentos de Dívidas).</p>
+        <div class="metodo-resumo-grid" id="metodo-resumo-mes"></div>
       </div>
 
       <!-- GRÁFICO SEMANAL DO MÊS -->
@@ -1078,6 +1103,20 @@ function chaveMensal()  { return `contas_${mesAtual}_mensal`; }
 const CHAVE_DIVIDAS = 'contas_dividas_global';
 
 // ═══════════════════════════════════════════
+// MÉTODO DE PAGAMENTO (MB Way / Dinheiro / Multibanco)
+// ═══════════════════════════════════════════
+const METODOS_PAGAMENTO = [['', 'Método...'], ['mbway', 'MB Way'], ['dinheiro', 'Dinheiro'], ['multibanco', 'Multibanco']];
+function opcoesMetodoPagamento(selecionado) {
+  return METODOS_PAGAMENTO.map(([valor, label]) =>
+    `<option value="${valor}"${valor === (selecionado || '') ? ' selected' : ''}>${label}</option>`
+  ).join('');
+}
+function labelMetodoPagamento(metodo) {
+  const item = METODOS_PAGAMENTO.find(([valor]) => valor && valor === metodo);
+  return item ? item[1] : 'Não especificado';
+}
+
+// ═══════════════════════════════════════════
 // ENCOMENDAS
 // ═══════════════════════════════════════════
 function filtrarEncomendas(termo) {
@@ -1087,7 +1126,7 @@ function filtrarEncomendas(termo) {
     item.style.display = (!t || nome.includes(t)) ? '' : 'none';
   });
 }
-function adicionarEncomenda(nome = '', valor = '', data = '', autoSync = false) {
+function adicionarEncomenda(nome = '', valor = '', data = '', autoSync = false, metodo = '') {
   const li = document.createElement('li');
   li.className = 'enc-item' + (autoSync ? ' enc-auto' : '');
   if (autoSync) li.dataset.autoSync = '1';
@@ -1095,6 +1134,7 @@ function adicionarEncomenda(nome = '', valor = '', data = '', autoSync = false) 
     <input type="text"   class="enc-nome"  placeholder="Nome do cliente" value="${esc(nome)}" oninput="recalcular()">
     <input type="date"   class="enc-data"  value="${data}">
     <input type="number" class="enc-valor" placeholder="0,00" value="${valor}" min="0" step="0.01" oninput="recalcular()">
+    <select class="metodo-select enc-metodo" oninput="recalcular()">${opcoesMetodoPagamento(metodo)}</select>
     ${autoSync ? '<span class="enc-sync-tag" title="Importado da loja">🔗</span>' : ''}
     <button class="btn-remover" onclick="this.closest(\'.enc-item\').remove();recalcular()" title="Remover">×</button>`;
   document.getElementById('enc-list').appendChild(li);
@@ -1243,7 +1283,7 @@ function filtrarCredoresPdiv(input) {
   });
 }
 
-function adicionarPagDivida(desc = '', val = '', data = '', dividaKey = '', ref = '') {
+function adicionarPagDivida(desc = '', val = '', data = '', dividaKey = '', ref = '', metodo = '') {
   const li = document.createElement('li');
   li.className = 'pdiv-item';
   const hoje = formatarDataHojeLocal();
@@ -1260,9 +1300,62 @@ function adicionarPagDivida(desc = '', val = '', data = '', dividaKey = '', ref 
     </div>
     <input type="date" class="pdiv-data" value="${data || hoje}">
     <input type="number" class="pdiv-val" placeholder="€" value="${val}" min="0" step="0.01" oninput="recalcular()">
+    <select class="metodo-select pdiv-metodo" oninput="recalcular()">${opcoesMetodoPagamento(metodo)}</select>
     <button class="btn-remover" onclick="this.closest('.pdiv-item').remove();recalcular()" title="Remover">×</button>`;
   document.getElementById('pdiv-list').appendChild(li);
   recalcular();
+}
+
+// ═══════════════════════════════════════════
+// ENTRADAS POR MÉTODO DE PAGAMENTO
+// ═══════════════════════════════════════════
+const ICONES_METODO = { mbway: '📱', dinheiro: '💵', multibanco: '💳', naoEspecificado: '❔' };
+
+// Soma, a partir das linhas visíveis no DOM (Encomendas + Recebimentos de Dívida), quanto entrou por método
+function totaisPorMetodoDOM() {
+  const totais = { mbway: 0, dinheiro: 0, multibanco: 0, naoEspecificado: 0 };
+  const somar = (valEl, metEl) => {
+    const v = valEl ? (parseFloat(valEl.value) || 0) : 0;
+    if (v <= 0) return;
+    const m = metEl ? metEl.value : '';
+    totais[m && totais.hasOwnProperty(m) ? m : 'naoEspecificado'] += v;
+  };
+  document.querySelectorAll('#enc-list .enc-item').forEach(item => {
+    somar(item.querySelector('.enc-valor'), item.querySelector('.enc-metodo'));
+  });
+  document.querySelectorAll('#pdiv-list .pdiv-item').forEach(item => {
+    somar(item.querySelector('.pdiv-val'), item.querySelector('.pdiv-metodo'));
+  });
+  return totais;
+}
+
+// Soma quanto entrou por método a partir dos dados guardados de uma semana (usado no cálculo mensal)
+function somarTotaisPorMetodo(totais, itens) {
+  (itens || []).forEach(item => {
+    const v = parseFloat(item.valor) || 0;
+    if (v <= 0) return;
+    const m = item.metodo;
+    totais[m && totais.hasOwnProperty(m) ? m : 'naoEspecificado'] += v;
+  });
+}
+
+function renderizarMetodoResumo(containerId, totais) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const linhas = [['mbway', 'MB Way'], ['dinheiro', 'Dinheiro'], ['multibanco', 'Multibanco']];
+  let html = linhas.map(([chave, label]) => `
+    <div class="metodo-stat">
+      <div class="ms-label">${ICONES_METODO[chave]} ${label}</div>
+      <div class="ms-val">${fmt(totais[chave] || 0)}</div>
+    </div>`).join('');
+  if (totais.naoEspecificado > 0) {
+    html += `
+    <div class="metodo-stat">
+      <div class="ms-label">${ICONES_METODO.naoEspecificado} Não especificado</div>
+      <div class="ms-val">${fmt(totais.naoEspecificado)}</div>
+    </div>`;
+  }
+  container.innerHTML = html;
 }
 
 // ═══════════════════════════════════════════
@@ -1326,6 +1419,8 @@ function recalcular() {
     fEl.textContent = fmt(saldo);
     fEl.className   = 'r-val ' + (saldo >= 0 ? 'positivo' : 'negativo');
   }
+
+  renderizarMetodoResumo('metodo-resumo-semana', totaisPorMetodoDOM());
 }
 
 // ═══════════════════════════════════════════
@@ -1356,6 +1451,7 @@ function recalcularMensal() {
 
   const receitasPorSemana = [], gastosPorSemana = [];
   const gastosPorTag = {};
+  const totaisMetodoMes = { mbway: 0, dinheiro: 0, multibanco: 0, naoEspecificado: 0 };
 
   for (let i = 1; i <= numSemanasAtual; i++) {
     const raw = localStorage.getItem(chaveSemana(i));
@@ -1367,6 +1463,8 @@ function recalcularMensal() {
       tot     = (d.encomendas || []).reduce((s, e) => s + (parseFloat(e.valor) || 0), 0);
       pdivV   = (d.pagamentosDivida || []).reduce((s, p) => s + (parseFloat(p.valor) || 0), 0);
       gastosV = (d.gastos           || []).reduce((s, g) => s + (parseFloat(g.valor) || 0), 0);
+      somarTotaisPorMetodo(totaisMetodoMes, d.encomendas);
+      somarTotaisPorMetodo(totaisMetodoMes, d.pagamentosDivida);
       (d.gastos || []).forEach(g => {
         const tag = (g.tag && g.tag.trim()) ? g.tag.trim() : 'Sem categoria';
         gastosPorTag[tag] = (gastosPorTag[tag] || 0) + (parseFloat(g.valor) || 0);
@@ -1417,6 +1515,8 @@ function recalcularMensal() {
   document.getElementById('mensal-lucro-atelier').textContent = fmt(totalAtelier);
   document.getElementById('mensal-pdiv-total').textContent         = fmt(totalPDivMes);
   document.getElementById('mensal-gastos-dia-total').textContent   = fmt(totalGastosVarMes);
+
+  renderizarMetodoResumo('metodo-resumo-mes', totaisMetodoMes);
 
   // Gráfico de barras semanal
   renderizarGraficoMensal(receitasPorSemana, gastosPorSemana);
@@ -1478,6 +1578,7 @@ function adicionarDivida(credor = '', total = '', nota = '', pagamentos = []) {
   formEl.innerHTML = `
     <input type="date" class="pag-dir-data" value="${hoje}">
     <input type="number" class="pag-dir-val" placeholder="€ valor" min="0" step="0.01">
+    <select class="metodo-select pag-dir-metodo">${opcoesMetodoPagamento('')}</select>
     <input type="text" class="pag-dir-nota" placeholder="Nota (opcional)">
     <button class="btn-salvar-pag" onclick="salvarPagDireto(this)">✓ Guardar</button>
     <button class="btn-cancelar-pag" onclick="this.closest('.divida-pag-form').style.display='none'">Cancelar</button>`;
@@ -1526,6 +1627,7 @@ function renderizarHistoricoDivida(container, pagamentos) {
       <span class="divida-hist-data">${dataFmt}</span>
       <span class="divida-hist-val">${fmt(parseFloat(p.valor) || 0)}</span>
       <span class="divida-hist-fonte ${fonteClass}">${fonteLabel}</span>
+      <span style="font-size:.7rem;color:var(--text-muted);white-space:nowrap;">${ICONES_METODO[p.metodo] || ICONES_METODO.naoEspecificado} ${esc(labelMetodoPagamento(p.metodo))}</span>
       ${p.nota ? `<span style="font-size:.75rem;color:var(--text-muted);flex:1">${esc(p.nota)}</span>` : '<span style="flex:1"></span>'}
       ${p.fonte !== 'semanal' ? `<button class="btn-remover-hist" onclick="removerPagHist(this,'${esc(p.ref || '')}')" title="Remover">×</button>` : ''}`;
     histDiv.appendChild(item);
@@ -1557,17 +1659,21 @@ function salvarPagDireto(btn) {
   const data = form.querySelector('.pag-dir-data').value;
   const val  = parseFloat(form.querySelector('.pag-dir-val').value);
   const nota = form.querySelector('.pag-dir-nota').value.trim();
+  const metodoEl = form.querySelector('.pag-dir-metodo');
+  const metodo = metodoEl ? metodoEl.value : '';
 
   if (!val || val <= 0) { mostrarToast('Coloca um valor válido.'); return; }
+  if (!metodo) { mostrarToast('Escolhe o método de pagamento.'); return; }
 
   const pags = JSON.parse(li.dataset.pagamentos || '[]');
-  pags.push({ ref: gerarRef(), valor: val, data, fonte: 'direto', nota });
+  pags.push({ ref: gerarRef(), valor: val, data, fonte: 'direto', nota, metodo });
   li.dataset.pagamentos = JSON.stringify(pags);
 
   renderizarHistoricoDivida(li.querySelector('.divida-hist-section'), pags);
   form.style.display = 'none';
   form.querySelector('.pag-dir-val').value = '';
   form.querySelector('.pag-dir-nota').value = '';
+  if (metodoEl) metodoEl.value = '';
   recalcularDividas();
 }
 
@@ -1650,6 +1756,7 @@ function dadosSemanaAtual() {
       valor:     item.querySelector('.enc-valor').value,
       data:      item.querySelector('.enc-data') ? item.querySelector('.enc-data').value : '',
       autoSync:  item.dataset.autoSync === '1',
+      metodo:    item.querySelector('.enc-metodo') ? item.querySelector('.enc-metodo').value : '',
     });
   });
   const pagamentosDivida = [];
@@ -1660,6 +1767,7 @@ function dadosSemanaAtual() {
       data:      item.querySelector('.pdiv-data').value,
       dividaKey: item.querySelector('.pdiv-divida-key').value,
       ref:       item.querySelector('.pdiv-ref').value,
+      metodo:    item.querySelector('.pdiv-metodo') ? item.querySelector('.pdiv-metodo').value : '',
     });
   });
   const gastos = [];
@@ -1716,6 +1824,7 @@ function sincronizarPagamentosComDividas() {
         mes:    mesAtual,
         semana: s,
         nota:   '',
+        metodo: p.metodo || '',
       });
     });
   }
@@ -1734,7 +1843,30 @@ function sincronizarPagamentosComDividas() {
   }
 }
 
+// Verifica se todas as linhas com valor > 0 (Encomendas + Recebimentos de Dívida) têm método escolhido.
+// Marca visualmente as que faltam e devolve false se alguma faltar.
+function validarMetodosSemana() {
+  let ok = true;
+  const checar = (valSel, metSel) => {
+    document.querySelectorAll(valSel).forEach(valEl => {
+      const v = parseFloat(valEl.value) || 0;
+      const metEl = valEl.closest('li').querySelector(metSel);
+      if (!metEl) return;
+      const falta = v > 0 && !metEl.value;
+      metEl.classList.toggle('vazio', falta);
+      if (falta) ok = false;
+    });
+  };
+  checar('.enc-valor', '.enc-metodo');
+  checar('.pdiv-val', '.pdiv-metodo');
+  return ok;
+}
+
 function guardarSemana() {
+  if (!validarMetodosSemana()) {
+    mostrarToast('Escolhe o método de pagamento em todas as linhas com valor.');
+    return;
+  }
   guardarEstadoAtual();
   sincronizarPagamentosComDividas();
   mostrarToast('Semana guardada!');
@@ -1753,8 +1885,8 @@ function carregarSemana(n) {
     document.getElementById('pct-salario').value = d.pctSalario ?? 15;
     document.getElementById('pct-weza').value    = d.pctWeza    ?? 10;
     document.getElementById('nota-semana').value = d.nota       || '';
-    (d.encomendas       || []).forEach(e => adicionarEncomenda(e.nome, e.valor, e.data || '', e.autoSync || false));
-    (d.pagamentosDivida || []).forEach(p => adicionarPagDivida(p.descricao, p.valor, p.data || '', p.dividaKey || '', p.ref || ''));
+    (d.encomendas       || []).forEach(e => adicionarEncomenda(e.nome, e.valor, e.data || '', e.autoSync || false, e.metodo || ''));
+    (d.pagamentosDivida || []).forEach(p => adicionarPagDivida(p.descricao, p.valor, p.data || '', p.dividaKey || '', p.ref || '', p.metodo || ''));
     (d.gastos           || []).forEach(g => adicionarGastoDia(g.data, g.descricao, g.valor, g.tag || ''));
   } else {
     document.getElementById('pct-atelier').value = 75;
@@ -2286,6 +2418,7 @@ async function sincronizarComLoja() {
           valor:    pag.valor,
           data:     pag.data,
           autoSync: true,
+          metodo:   pag.metodo || '',
         });
       });
     });

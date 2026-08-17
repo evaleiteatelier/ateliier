@@ -123,7 +123,15 @@
             <input type="date" id="data_pagamento_inicial"
               style="flex:1; margin:0; padding:0.8rem; font-size:1rem; border:1px solid #ccc; border-radius:4px;">
           </div>
-          
+          <div style="margin-bottom:15px;">
+            <select id="metodo_pagamento_inicial" style="width:100%; margin:0; padding:0.8rem; font-size:1rem; border:1px solid #ccc; border-radius:4px; background:#fff; box-sizing:border-box;">
+              <option value="">Método de pagamento...</option>
+              <option value="mbway">MB Way</option>
+              <option value="dinheiro">Dinheiro</option>
+              <option value="multibanco">Multibanco</option>
+            </select>
+          </div>
+
           <div id="resumo-financeiro" style="display:flex; flex-direction:column; gap:10px; background:#fff; padding:15px; border-radius:6px; border:1px solid #ddd;">
             <div style="display:flex; justify-content:space-between; font-size:1.1rem; color:#000;">
               <span><strong>Total:</strong></span>

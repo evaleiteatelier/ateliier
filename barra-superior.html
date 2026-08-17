@@ -349,18 +349,151 @@
         transform: rotate(180deg);
     }
 
-    /* ── RESPONSIVO ── */
-    @media (max-width: 960px) {
-        .nav-links a { font-size: 0.75rem; padding: 5px 8px; }
-        .nav-divider  { margin: 0 12px 0 20px; }
-        .header-content { padding: 0 16px; }
-    }
+    /* ── WRAPPER: agrupa links + perfil para virarem um único painel deslizante no mobile ──
+       Em ecrã largo o "display:contents" torna este wrapper invisível ao layout,
+       por isso .nav-links e .nav-profile continuam a comportar-se como itens
+       diretos do .header-content (sem qualquer impacto no desktop). ── */
+    .nav-drawer-group { display: contents; }
 
-    @media (max-width: 768px) {
+    /* ── BOTÃO HAMBÚRGUER (só aparece em ecrãs pequenos) ── */
+    .nav-hamburger {
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+        width: 40px;
+        height: 40px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        flex-shrink: 0;
+        padding: 0;
+        margin-left: 8px;
+        z-index: 1001;
+        position: relative;
+    }
+    .nav-hamburger span {
+        display: block;
+        width: 22px;
+        height: 2px;
+        background: #1a1a2e;
+        border-radius: 2px;
+        transition: transform .25s ease, opacity .2s ease;
+    }
+    .top-bar.menu-aberto .nav-hamburger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .top-bar.menu-aberto .nav-hamburger span:nth-child(2) { opacity: 0; }
+    .top-bar.menu-aberto .nav-hamburger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* ── OVERLAY ESCURO ATRÁS DO PAINEL MOBILE ── */
+    .nav-mobile-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15,15,25,.42);
+        z-index: 998;
+        opacity: 0;
+        transition: opacity .25s ease;
+    }
+    .top-bar.menu-aberto .nav-mobile-overlay { display: block; opacity: 1; }
+
+    /* ── RESPONSIVO: tablet e telemóvel passam a usar o painel deslizante ── */
+    @media (max-width: 1024px) {
+        body { padding-top: 68px !important; }
+        .header-content { height: 60px; padding: 0 16px; }
+        .nav-logo { height: 36px; }
+        .nav-divider { display: none; }
+        .nav-hamburger { display: flex; }
+
+        .nav-drawer-group {
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100dvh;
+            width: min(300px, 85vw);
+            background: #fff;
+            box-shadow: -10px 0 34px rgba(0,0,0,.18);
+            transform: translateX(100%);
+            transition: transform .3s cubic-bezier(.4,0,.2,1);
+            z-index: 999;
+            overflow-y: auto;
+            padding-top: 60px;
+            box-sizing: border-box;
+        }
+        .top-bar.menu-aberto .nav-drawer-group { transform: translateX(0); }
+
+        .nav-links, .nav-profile {
+            flex: none;
+            width: 100%;
+            margin: 0;
+        }
+
+        /* Perfil aparece primeiro no painel, com estilo de cabeçalho */
+        .nav-profile {
+            order: -1;
+            position: static;
+            padding: 14px 18px;
+            box-sizing: border-box;
+            border-bottom: 1px solid #f0ece5;
+        }
+        .nav-profile-btn { width: 100%; justify-content: flex-start; padding: 6px; }
+        .nav-profile-name { max-width: none; }
+        .nav-profile-chevron { display: none; }
+        .nav-profile-dropdown {
+            display: block !important;
+            position: static;
+            box-shadow: none;
+            border: none;
+            border-radius: 0;
+            min-width: 0;
+            margin-top: 10px;
+            animation: none;
+        }
+        .profile-dd-header { padding: 0 0 10px; }
+
+        /* Lista de links vira coluna, ocupando toda a largura do painel */
+        .nav-links {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0;
+            padding: 8px 0 20px;
+        }
+        .nav-links a {
+            white-space: normal;
+            padding: 13px 20px;
+            font-size: 0.85rem;
+            border-radius: 0 !important;
+            letter-spacing: .4px;
+        }
+        .nav-links a::after { display: none; }
+        .nav-links a.link-novo {
+            margin: 6px 16px;
+            padding: 12px;
+            text-align: center;
+        }
         .nav-admin-sep { display: none; }
-        .nav-links { gap: 2px; }
-        .nav-links a { font-size: 0.7rem; padding: 5px 6px; letter-spacing: 0; }
-        body { padding-top: 80px !important; }
+
+        /* Dropdown "Administração" fica sempre expandido, encaixado na coluna */
+        .nav-dropdown { display: block; width: 100%; }
+        .nav-dropdown-content {
+            display: block !important;
+            position: static;
+            transform: none;
+            box-shadow: none;
+            border: none;
+            border-radius: 0;
+            min-width: 0;
+            margin: 0;
+            padding: 0;
+            background: #faf8f2;
+        }
+        .nav-dropdown-content a {
+            text-align: left !important;
+            padding: 12px 20px 12px 36px !important;
+        }
+        .dropdown-icon { display: none; }
     }
 </style>
 
@@ -375,58 +508,68 @@
         <!-- SEPARADOR VERTICAL -->
         <div class="nav-divider"></div>
 
-        <!-- LINKS -->
-        <nav class="nav-links">
-            <a href="lista-espera.html"  data-page="lista-espera.html">Lista de Espera</a>
-            <a href="concluidos.html"    data-page="concluidos.html">Concluídos</a>
+        <!-- LINKS + PERFIL — agrupados para virarem um único painel no mobile -->
+        <div class="nav-drawer-group">
+            <nav class="nav-links">
+                <a href="lista-espera.html"  data-page="lista-espera.html">Lista de Espera</a>
+                <a href="concluidos.html"    data-page="concluidos.html">Concluídos</a>
 
-            <!-- Links apenas para Admin -->
-            <span class="admin-only-group" style="display:contents">
-                <div class="nav-admin-sep"></div>
-                <a href="adicionar-pedido.html" data-page="adicionar-pedido.html" class="link-novo">+ Novo Pedido</a>
-                <a href="entregues.html"  data-page="entregues.html">Histórico</a>
-                <a href="vouchers.html"   data-page="vouchers.html">Vouchers</a>
-                
-                <!-- Dropdown de Gestão -->
-                <div class="nav-dropdown" id="nav-dropdown-admin">
-                    <a href="#" style="cursor:pointer; user-select:none;">Administração <span class="dropdown-icon">▼</span></a>
-                    <div class="nav-dropdown-content" id="nav-dropdown-content-admin">
-                        <a href="gerir-produtos.html" data-page="gerir-produtos.html">Gerir Produtos</a>
-                        <a href="dashboard.html" data-page="dashboard.html" class="full-admin-only">Dashboard</a>
-                        <a href="contas.html" data-page="contas.html" class="full-admin-only">Contas</a>
-                        <a href="financas.html"   data-page="financas.html">Finanças</a>
-                        <a href="lista-compras.html" data-page="lista-compras.html">🛒 Lista de Compras</a>
-                        <a href="gestao-tecidos.html" data-page="gestao-tecidos.html">🧵 Gestão de Tecidos</a>
-                        <a href="fidelidade.html" data-page="fidelidade.html">🎁 Fidelidade</a>
-                        <a href="utilizadores.html" data-page="utilizadores.html">Utilizadores</a>
+                <!-- Links apenas para Admin -->
+                <span class="admin-only-group" style="display:contents">
+                    <div class="nav-admin-sep"></div>
+                    <a href="adicionar-pedido.html" data-page="adicionar-pedido.html" class="link-novo">+ Novo Pedido</a>
+                    <a href="entregues.html"  data-page="entregues.html">Histórico</a>
+                    <a href="vouchers.html"   data-page="vouchers.html">Vouchers</a>
+
+                    <!-- Dropdown de Gestão -->
+                    <div class="nav-dropdown" id="nav-dropdown-admin">
+                        <a href="#" style="cursor:pointer; user-select:none;">Administração <span class="dropdown-icon">▼</span></a>
+                        <div class="nav-dropdown-content" id="nav-dropdown-content-admin">
+                            <a href="gerir-produtos.html" data-page="gerir-produtos.html">Gerir Produtos</a>
+                            <a href="dashboard.html" data-page="dashboard.html" class="full-admin-only">Dashboard</a>
+                            <a href="contas.html" data-page="contas.html" class="full-admin-only">Contas</a>
+                            <a href="financas.html"   data-page="financas.html">Finanças</a>
+                            <a href="lista-compras.html" data-page="lista-compras.html">🛒 Lista de Compras</a>
+                            <a href="gestao-tecidos.html" data-page="gestao-tecidos.html">🧵 Gestão de Tecidos</a>
+                            <a href="fidelidade.html" data-page="fidelidade.html">🎁 Fidelidade</a>
+                            <a href="utilizadores.html" data-page="utilizadores.html">Utilizadores</a>
+                        </div>
                     </div>
-                </div>
-            </span>
-        </nav>
+                </span>
+            </nav>
 
-        <!-- PERFIL -->
-        <div class="nav-profile admin-only-group" id="nav-profile">
-            <button class="nav-profile-btn" id="btn-perfil" onclick="togglePerfilDropdown()">
-                <div class="nav-profile-avatar" id="avatar-iniciais">?</div>
-                <div style="text-align:left;">
-                    <div class="nav-profile-name" id="perfil-nome">Utilizador</div>
-                    <div class="nav-profile-role" id="perfil-role">Admin</div>
+            <!-- PERFIL -->
+            <div class="nav-profile admin-only-group" id="nav-profile">
+                <button class="nav-profile-btn" id="btn-perfil" onclick="togglePerfilDropdown()">
+                    <div class="nav-profile-avatar" id="avatar-iniciais">?</div>
+                    <div style="text-align:left;">
+                        <div class="nav-profile-name" id="perfil-nome">Utilizador</div>
+                        <div class="nav-profile-role" id="perfil-role">Admin</div>
+                    </div>
+                    <span class="nav-profile-chevron">&#9660;</span>
+                </button>
+                <div class="nav-profile-dropdown" id="perfil-dropdown">
+                    <div class="profile-dd-header">
+                        <div class="profile-dd-name" id="dd-nome">Utilizador</div>
+                        <div class="profile-dd-email" id="dd-email"></div>
+                        <span class="profile-dd-badge" id="dd-badge">Admin</span>
+                    </div>
+                    <a href="utilizadores.html" class="profile-dd-item">&#128100; Gerir Utilizadores</a>
+                    <a href="meu-perfil.html" class="profile-dd-item">&#9881; Meu Perfil</a>
+                    <div class="profile-dd-sep"></div>
+                    <button class="profile-dd-item danger" onclick="sair()">&#128682; Sair da conta</button>
                 </div>
-                <span class="nav-profile-chevron">&#9660;</span>
-            </button>
-            <div class="nav-profile-dropdown" id="perfil-dropdown">
-                <div class="profile-dd-header">
-                    <div class="profile-dd-name" id="dd-nome">Utilizador</div>
-                    <div class="profile-dd-email" id="dd-email"></div>
-                    <span class="profile-dd-badge" id="dd-badge">Admin</span>
-                </div>
-                <a href="utilizadores.html" class="profile-dd-item">&#128100; Gerir Utilizadores</a>
-                <a href="meu-perfil.html" class="profile-dd-item">&#9881; Meu Perfil</a>
-                <div class="profile-dd-sep"></div>
-                <button class="profile-dd-item danger" onclick="sair()">&#128682; Sair da conta</button>
             </div>
         </div>
 
+        <!-- HAMBÚRGUER (tablet/telemóvel) -->
+        <button class="nav-hamburger" id="btn-hamburguer" onclick="toggleMenuMobile()" aria-label="Abrir menu">
+            <span></span><span></span><span></span>
+        </button>
+
     </div>
+
+    <!-- OVERLAY do painel mobile -->
+    <div class="nav-mobile-overlay" id="nav-mobile-overlay" onclick="fecharMenuMobile()"></div>
 </header>
 

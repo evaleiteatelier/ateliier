@@ -92,7 +92,31 @@ function configurarBarra() {
             }
         });
     }
+
+    // 5. MENU MOBILE (hambúrguer) — fecha ao navegar para uma página real
+    links.forEach(link => {
+        if (link.getAttribute('href') && link.getAttribute('href') !== '#') {
+            link.addEventListener('click', fecharMenuMobile);
+        }
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') fecharMenuMobile();
+    });
 }
+
+// ABRIR/FECHAR PAINEL MOBILE (hambúrguer)
+window.toggleMenuMobile = function() {
+    const bar = document.querySelector('.top-bar');
+    if (!bar) return;
+    const aberto = bar.classList.toggle('menu-aberto');
+    document.body.style.overflow = aberto ? 'hidden' : '';
+};
+
+window.fecharMenuMobile = function() {
+    const bar = document.querySelector('.top-bar');
+    if (bar) bar.classList.remove('menu-aberto');
+    document.body.style.overflow = '';
+};
 
 // TOGGLE PERFIL
 window.togglePerfilDropdown = function() {

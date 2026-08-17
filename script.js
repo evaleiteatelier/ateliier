@@ -467,13 +467,24 @@ if (document.getElementById('form-pedido')) {
       ? (estaPagoTotal ? 'entregue' : 'concluido')
       : 'pendente';
 
+    // Método de pagamento do pagamento inicial
+    const metodoPagamentoEl = document.getElementById('metodo_pagamento_inicial');
+    const metodoPagamentoInicial = (metodoPagamentoEl && metodoPagamentoEl.value) ? metodoPagamentoEl.value : '';
+    if (valorFinalAdiantado > 0 && !metodoPagamentoInicial) {
+      await mostrarAviso("Escolha o método de pagamento do pagamento inicial (MB Way, Dinheiro ou Multibanco).", "Campo Obrigatório", "⚠️");
+      _submittingPedido = false;
+      if (btnSalvar) { btnSalvar.disabled = false; btnSalvar.textContent = '✓ Salvar Pedido'; }
+      return;
+    }
+
     // Constrói array de pagamentos com data
     const dataInicialPgmt = document.getElementById('data_pagamento_inicial');
     const dataHoje = formatarParaISO(new Date());
     const pagamentosInicial = valorFinalAdiantado > 0 ? [{
       valor: valorFinalAdiantado,
       data: (dataInicialPgmt && dataInicialPgmt.value) ? dataInicialPgmt.value : dataHoje,
-      nota: isProntoAVestir ? (estaPagoTotal ? 'Pagamento total (pronto a vestir)' : 'Pagamento parcial (pronto a vestir)') : 'Pagamento inicial'
+      nota: isProntoAVestir ? (estaPagoTotal ? 'Pagamento total (pronto a vestir)' : 'Pagamento parcial (pronto a vestir)') : 'Pagamento inicial',
+      metodo: metodoPagamentoInicial
     }] : [];
 
     const nif_el = document.getElementById('nif_cliente');
@@ -1387,33 +1398,73 @@ async function mudarStatus(id, novoStatus, enviarEmail = true) {
   location.reload();
 }
 
-// =====================================================
-// CONCLUIR & PAGO — individual
-// =====================================================
-async function concluirEPago(id, precoFinal) {
-  const confirmado = await new Promise(resolve => {
+// Lê os pagamentos já registados e calcula quanto falta pagar para atingir precoFinal
+async function buscarPagamentosERestante(id, precoFinal) {
+  const { data: p } = await supabase.from('pedidos').select('pagamentos').eq('id', id).single();
+  let pgmts = [];
+  try { pgmts = p && p.pagamentos ? (typeof p.pagamentos === 'string' ? JSON.parse(p.pagamentos) : p.pagamentos) : []; } catch(e) {}
+  const jaAdiantado = pgmts.reduce((s, x) => s + (parseFloat(x.valor) || 0), 0);
+  return { pgmts, restante: Number(precoFinal) - jaAdiantado };
+}
+
+// Overlay de confirmação partilhado pelas ações rápidas de pagamento. Quando há um valor
+// por registar (valorAPagar > 0), obriga a escolher o método de pagamento antes de confirmar.
+function confirmarPagamento({ icone, titulo, mensagem, valorAPagar, corBtn = '#2e7d32' }) {
+  return new Promise(resolve => {
+    const precisaMetodo = Number(valorAPagar) > 0.01;
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
     overlay.innerHTML = `
       <div style="background:#fff;border-radius:14px;padding:28px 30px;max-width:360px;width:90%;box-shadow:0 10px 30px rgba(0,0,0,.2);text-align:center;">
-        <div style="font-size:2.5rem;margin-bottom:10px;">✅</div>
-        <h3 style="margin:0 0 8px;font-size:1.1rem;">Concluir e Marcar como Pago?</h3>
-        <p style="color:#666;font-size:0.9rem;margin-bottom:20px;">Este pedido será marcado como <strong>Concluído</strong> e o valor de <strong style="color:#2e7d32;">€${Number(precoFinal).toFixed(2)}</strong> ficará registado como 100% pago.</p>
+        <div style="font-size:2.5rem;margin-bottom:10px;">${icone}</div>
+        <h3 style="margin:0 0 8px;font-size:1.1rem;">${titulo}</h3>
+        <p style="color:#666;font-size:0.9rem;margin-bottom:${precisaMetodo ? '14px' : '20px'};">${mensagem}</p>
+        ${precisaMetodo ? `
+        <div style="text-align:left;margin-bottom:16px;">
+          <label style="display:block;font-size:0.82rem;color:#555;margin-bottom:4px;">Método de pagamento:</label>
+          <select id="conf-metodo-pagamento" style="width:100%;padding:9px;border:1px solid #ccc;border-radius:8px;font-size:0.92rem;background:#fff;box-sizing:border-box;">
+            ${opcoesMetodoPagamento('')}
+          </select>
+          <p id="conf-metodo-erro" style="display:none;color:#c62828;font-size:0.78rem;margin:6px 0 0;">Escolhe o método de pagamento.</p>
+        </div>` : ''}
         <div style="display:flex;gap:10px;">
-          <button id="btn-conf-ok" style="flex:1;background:#2e7d32;color:#fff;border:none;border-radius:8px;padding:11px;font-size:1rem;cursor:pointer;margin:0;">✅ Confirmar</button>
+          <button id="btn-conf-ok" style="flex:1;background:${corBtn};color:#fff;border:none;border-radius:8px;padding:11px;font-size:1rem;cursor:pointer;margin:0;">✅ Confirmar</button>
           <button id="btn-conf-cancel" style="flex:1;background:#f5f5f5;color:#555;border:1px solid #ddd;border-radius:8px;padding:11px;font-size:1rem;cursor:pointer;margin:0;">Cancelar</button>
         </div>
       </div>`;
     document.body.appendChild(overlay);
-    overlay.querySelector('#btn-conf-ok').onclick = () => { document.body.removeChild(overlay); resolve(true); };
-    overlay.querySelector('#btn-conf-cancel').onclick = () => { document.body.removeChild(overlay); resolve(false); };
+    overlay.querySelector('#btn-conf-ok').onclick = () => {
+      const selMetodo = overlay.querySelector('#conf-metodo-pagamento');
+      const metodo = selMetodo ? selMetodo.value : '';
+      if (precisaMetodo && !metodo) {
+        overlay.querySelector('#conf-metodo-erro').style.display = 'block';
+        selMetodo.style.borderColor = '#c62828';
+        return;
+      }
+      document.body.removeChild(overlay);
+      resolve({ confirmado: true, metodo });
+    };
+    overlay.querySelector('#btn-conf-cancel').onclick = () => { document.body.removeChild(overlay); resolve({ confirmado: false, metodo: '' }); };
+  });
+}
+
+// =====================================================
+// CONCLUIR & PAGO — individual
+// =====================================================
+async function concluirEPago(id, precoFinal) {
+  const { pgmts, restante } = await buscarPagamentosERestante(id, precoFinal);
+  const { confirmado, metodo } = await confirmarPagamento({
+    icone: '✅',
+    titulo: 'Concluir e Marcar como Pago?',
+    mensagem: `Este pedido será marcado como <strong>Concluído</strong> e o valor de <strong style="color:#2e7d32;">€${Number(precoFinal).toFixed(2)}</strong> ficará registado como 100% pago.`,
+    valorAPagar: restante
   });
 
   if (!confirmado) return;
 
   try { await enviarEmailConclusao(id, supabase); } catch (e) { console.warn('Email falhou:', e); }
 
-  await registarPagamentoFinal(id, precoFinal, 'concluido');
+  await registarPagamentoFinal(id, precoFinal, 'concluido', metodo, pgmts);
   location.reload();
 }
 
@@ -1421,41 +1472,31 @@ async function concluirEPago(id, precoFinal) {
 // CONCLUIR, PAGO & ENTREGUE — individual
 // =====================================================
 window.concluirPagoEEntregue = async function (id, precoFinal) {
-  const confirmado = await new Promise(resolve => {
-    const overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
-    overlay.innerHTML = `
-      <div style="background:#fff;border-radius:14px;padding:28px 30px;max-width:360px;width:90%;box-shadow:0 10px 30px rgba(0,0,0,.2);text-align:center;">
-        <div style="font-size:2.5rem;margin-bottom:10px;">📦</div>
-        <h3 style="margin:0 0 8px;font-size:1.1rem;">Concluir, Pagar &amp; Entregar?</h3>
-        <p style="color:#666;font-size:0.9rem;margin-bottom:20px;">Este pedido será marcado como <strong>Entregue</strong> e o valor de <strong style="color:#2e7d32;">€${Number(precoFinal).toFixed(2)}</strong> ficará registado como 100% pago.</p>
-        <div style="display:flex;gap:10px;">
-          <button id="btn-conf-ok" style="flex:1;background:#2e7d32;color:#fff;border:none;border-radius:8px;padding:11px;font-size:1rem;cursor:pointer;margin:0;">✅ Confirmar</button>
-          <button id="btn-conf-cancel" style="flex:1;background:#f5f5f5;color:#555;border:1px solid #ddd;border-radius:8px;padding:11px;font-size:1rem;cursor:pointer;margin:0;">Cancelar</button>
-        </div>
-      </div>`;
-    document.body.appendChild(overlay);
-    overlay.querySelector('#btn-conf-ok').onclick = () => { document.body.removeChild(overlay); resolve(true); };
-    overlay.querySelector('#btn-conf-cancel').onclick = () => { document.body.removeChild(overlay); resolve(false); };
+  const { pgmts, restante } = await buscarPagamentosERestante(id, precoFinal);
+  const { confirmado, metodo } = await confirmarPagamento({
+    icone: '📦',
+    titulo: 'Concluir, Pagar & Entregar?',
+    mensagem: `Este pedido será marcado como <strong>Entregue</strong> e o valor de <strong style="color:#2e7d32;">€${Number(precoFinal).toFixed(2)}</strong> ficará registado como 100% pago.`,
+    valorAPagar: restante
   });
 
   if (!confirmado) return;
 
   try { await enviarEmailConclusao(id, supabase); } catch (e) { console.warn('Email falhou:', e); }
 
-  await registarPagamentoFinal(id, precoFinal, 'entregue');
+  await registarPagamentoFinal(id, precoFinal, 'entregue', metodo, pgmts);
   location.reload();
 };
 
 // Regista o pagamento final (100%) preservando histórico de pagamentos anteriores
-async function registarPagamentoFinal(id, precoFinal, novoStatus) {
-  const { data: p } = await supabase.from('pedidos').select('pagamentos, valor_adiantado').eq('id', id).single();
-  let pgmts = [];
-  try { pgmts = p && p.pagamentos ? (typeof p.pagamentos === 'string' ? JSON.parse(p.pagamentos) : p.pagamentos) : []; } catch(e) {}
+async function registarPagamentoFinal(id, precoFinal, novoStatus, metodo = '', pgmtsExistentes = null) {
+  let pgmts = pgmtsExistentes;
+  if (!pgmts) ({ pgmts } = await buscarPagamentosERestante(id, precoFinal));
+  pgmts = [...pgmts];
   const jaAdiantado = pgmts.reduce((s, x) => s + (parseFloat(x.valor) || 0), 0);
   const restante = Number(precoFinal) - jaAdiantado;
   if (restante > 0.01) {
-    pgmts.push({ valor: restante, data: formatarParaISO(new Date()), nota: 'Pagamento final' });
+    pgmts.push({ valor: restante, data: formatarParaISO(new Date()), nota: 'Pagamento final', metodo });
   }
   await supabase.from('pedidos').update({
     status: novoStatus,
@@ -1464,20 +1505,32 @@ async function registarPagamentoFinal(id, precoFinal, novoStatus) {
   }).eq('id', id);
 }
 
+// Opções reutilizadas nos selects de método de pagamento (MB Way / Dinheiro / Multibanco)
+function opcoesMetodoPagamento(selecionado = '') {
+  const metodos = [['', 'Método...'], ['mbway', 'MB Way'], ['dinheiro', 'Dinheiro'], ['multibanco', 'Multibanco']];
+  return metodos.map(([valor, label]) =>
+    `<option value="${valor}"${valor === (selecionado || '') ? ' selected' : ''}>${label}</option>`
+  ).join('');
+}
+
 // Funções UI de pagamentos no modal de edição
-window.adicionarLinhaPagamento = function(valor = '', data = '', nota = '') {
+window.adicionarLinhaPagamento = function(valor = '', data = '', nota = '', metodo = '') {
   const lista = document.getElementById('editor-pagamentos-lista');
   if (!lista) return;
   const hoje = formatarParaISO(new Date());
   const div = document.createElement('div');
   div.className = 'pgmt-linha';
-  div.style.cssText = 'display:flex; gap:6px; align-items:center;';
+  div.style.cssText = 'display:flex; gap:6px; align-items:center; flex-wrap:wrap;';
   div.innerHTML = `
     <input type="number" class="pgmt-valor" placeholder="€ Valor" value="${valor}" min="0" step="0.01"
       style="flex:1; padding:7px; border:1px solid #a5d6a7; border-radius:5px; font-size:0.9rem;"
       oninput="atualizarTotalPago()">
     <input type="date" class="pgmt-data" value="${data || hoje}"
       style="flex:1; padding:7px; border:1px solid #a5d6a7; border-radius:5px; font-size:0.9rem;">
+    <select class="pgmt-metodo"
+      style="flex:1; padding:7px; border:1px solid #a5d6a7; border-radius:5px; font-size:0.9rem; background:#fff;">
+      ${opcoesMetodoPagamento(metodo)}
+    </select>
     <input type="text" class="pgmt-nota" placeholder="Nota (opcional)" value="${nota}"
       style="flex:1.5; padding:7px; border:1px solid #ddd; border-radius:5px; font-size:0.9rem;">
     <button type="button" onclick="this.closest('.pgmt-linha').remove(); atualizarTotalPago();"
@@ -1497,13 +1550,24 @@ window.atualizarTotalPago = function() {
 };
 
 window.marcarComoPago = async function (id, total) {
-  const confirmado = await mostrarConfirmacao(`Deseja marcar este pedido como totalmente pago (€${Number(total).toFixed(2)})?`, "Confirmar Pagamento", "💶");
+  const { pgmts, restante } = await buscarPagamentosERestante(id, total);
+  const { confirmado, metodo } = await confirmarPagamento({
+    icone: '💶',
+    titulo: 'Marcar como Pago?',
+    mensagem: `Deseja marcar este pedido como totalmente pago (€${Number(total).toFixed(2)})?`,
+    valorAPagar: restante
+  });
   if (!confirmado) return;
+
+  const novosPgmts = [...pgmts];
+  if (restante > 0.01) {
+    novosPgmts.push({ valor: restante, data: formatarParaISO(new Date()), nota: 'Marcado como pago', metodo });
+  }
 
   try {
     const { error } = await supabase
       .from('pedidos')
-      .update({ valor_adiantado: total })
+      .update({ valor_adiantado: total, pagamentos: JSON.stringify(novosPgmts) })
       .eq('id', id);
 
     if (error) {
@@ -1861,7 +1925,7 @@ async function abrirEditorPedido(id) {
       }];
     }
 
-    pgmtsExistentes.forEach(p => adicionarLinhaPagamento(p.valor, p.data, p.nota));
+    pgmtsExistentes.forEach(p => adicionarLinhaPagamento(p.valor, p.data, p.nota, p.metodo || ''));
     atualizarTotalPago();
   }
 
@@ -2133,12 +2197,24 @@ async function abrirEditorPedido(id) {
     const linhas = document.querySelectorAll('#editor-pagamentos-lista .pgmt-linha');
     const novosPagamentos = [];
     let novoAdiantado = 0;
+    let faltaMetodo = false;
     linhas.forEach(linha => {
       const v = parseFloat(linha.querySelector('.pgmt-valor').value) || 0;
       const d = linha.querySelector('.pgmt-data').value || '';
       const n = linha.querySelector('.pgmt-nota').value || '';
-      if (v > 0) { novosPagamentos.push({ valor: v, data: d, nota: n }); novoAdiantado += v; }
+      const metodoSel = linha.querySelector('.pgmt-metodo');
+      const m = metodoSel ? metodoSel.value : '';
+      if (v > 0) {
+        if (!m) faltaMetodo = true;
+        novosPagamentos.push({ valor: v, data: d, nota: n, metodo: m });
+        novoAdiantado += v;
+      }
     });
+
+    if (faltaMetodo) {
+      await mostrarAviso("Escolha o método de pagamento (MB Way, Dinheiro ou Multibanco) em todas as linhas com valor.", "Campo Obrigatório", "⚠️");
+      return;
+    }
 
     // Se a edição deixou o pedido só com itens "pronto a vestir" (0 dias) e ele
     // ainda está pendente, conclui-o automaticamente para não ocupar vaga na fila.
