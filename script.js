@@ -2300,12 +2300,20 @@ async function limparPedidosAntigos() {
 
     let fezAlgo = false;
     if (idsParaApagar.length > 0) {
-      await window.supabaseClient.from('pedidos').delete().in('id', idsParaApagar);
-      fezAlgo = true;
+      const { error: errDel } = await window.supabaseClient.from('pedidos').delete().in('id', idsParaApagar);
+      if (errDel) {
+        console.error("Erro ao apagar pedidos antigos:", errDel);
+      } else {
+        fezAlgo = true;
+      }
     }
     if (idsParaArquivar.length > 0) {
-      await window.supabaseClient.from('pedidos').update({ status: 'arquivado' }).in('id', idsParaArquivar);
-      fezAlgo = true;
+      const { error: errUpdate } = await window.supabaseClient.from('pedidos').update({ status: 'arquivado' }).in('id', idsParaArquivar);
+      if (errUpdate) {
+        console.error("Erro ao arquivar pedidos:", errUpdate);
+      } else {
+        fezAlgo = true;
+      }
     }
 
     if (fezAlgo) {
