@@ -2279,7 +2279,7 @@ async function limparPedidosAntigos() {
   try {
     const { data: antigos, error: errBusca } = await window.supabaseClient
       .from('pedidos')
-      .select('id, preco_final, valor_adiantado')
+      .select('id, preco_final, valor_adiantado, status')
       .in('status', ['entregue', 'arquivado'])
       .lt('data_entrega', dataString);
 
@@ -2293,7 +2293,7 @@ async function limparPedidosAntigos() {
       const valorAdiantado = Number(p.valor_adiantado || 0);
       if (precoFinal > 0 && valorAdiantado >= precoFinal) {
         idsParaApagar.push(p.id);
-      } else {
+      } else if (p.status !== 'arquivado') {
         idsParaArquivar.push(p.id);
       }
     });
