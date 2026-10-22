@@ -435,14 +435,16 @@
         const tbody = document.getElementById('tbody-tecidos');
         tbody.innerHTML = `<tr><td colspan="4" class="empty"><div class="spinner" style="margin:0 auto;"></div></td></tr>`;
         
-        const { data, error } = await db.from('tecidos_aluguer').select('*').order('posicao', { ascending: true });
+        const { data, error } = await db.from('tecidos_aluguer').select('*');
 
         if (error) {
             tbody.innerHTML = `<tr><td colspan="4" class="empty" style="color:red">Erro: ${error.message}</td></tr>`;
             return;
         }
 
-        tecidosAtuais = data || [];
+        tecidosAtuais = (data || []).sort((a, b) => 
+            String(a.posicao).localeCompare(String(b.posicao), undefined, { numeric: true, sensitivity: 'base' })
+        );
         atualizarInterface();
     }
 
@@ -479,7 +481,7 @@
 
                 // ATUALIZAR MÓVEL
                 // Acha a base da prateleira (ex: '1A' -> '1', '10' -> '10')
-                const baseId = item.posicao.toString().replace(/[A-Z]/g, '');
+                const baseId = item.posicao.toString().replace(/[A-Za-z]/g, '').trim();
                 const pratEl = document.getElementById(`prat-${baseId}`);
                 
                 if (pratEl) {
@@ -524,13 +526,13 @@
 
     function abrirModal() {
         // Preencher o select de posições apenas com as disponíveis
-        const posOcupadas = tecidosAtuais.map(t => t.posicao.toString());
+        const posOcupadas = tecidosAtuais.map(t => String(t.posicao || '').trim().toUpperCase());
         const selPos = document.getElementById('pano-posicao');
         selPos.innerHTML = '';
         
         let temLivre = false;
         todasPosicoes.forEach(pos => {
-            if (!posOcupadas.includes(pos)) {
+            if (!posOcupadas.includes(pos.toUpperCase())) {
                 selPos.innerHTML += `<option value="${pos}">Posição ${pos}</option>`;
                 temLivre = true;
             }
@@ -561,14 +563,26 @@
     }
 
     async function salvarPano() {
-        const posicao = parseInt(document.getElementById('pano-posicao').value);
+        const posicao = document.getElementById('pano-posicao').value.trim();
         const dono = document.getElementById('pano-dono').value.trim();
         const valor = document.getElementById('pano-valor').value.trim();
         const foto = document.getElementById('pano-foto').value.trim();
         const dataPagTxt = document.getElementById('pano-data-pag').value;
 
+        if (!posicao) {
+            window.mostrarAviso?.("Selecione uma posição disponível.", "Atenção", "⚠️") || alert("Selecione uma posição.");
+            return;
+        }
+
         if (!dono || !valor || !dataPagTxt) {
             window.mostrarAviso?.("Preencha o Dono, Valor e Data de Pagamento.", "Atenção", "⚠️") || alert("Campos obrigatórios em falta.");
+            return;
+        }
+
+        // Validação extra: nunca permitir 2 tecidos na mesma posição
+        const ocupada = tecidosAtuais.some(t => String(t.posicao || '').trim().toUpperCase() === posicao.toUpperCase());
+        if (ocupada) {
+            window.mostrarAviso?.(`A posição ${posicao} já está ocupada por outro tecido!`, "Posição Ocupada", "⚠️") || alert("Posição já ocupada!");
             return;
         }
 
@@ -582,9 +596,24 @@
         btn.disabled = true;
         btn.textContent = 'A guardar...';
 
+        // Vincular ou criar dono se necessário
+        let dono_id = null;
+        try {
+            const { data: donos } = await db.from('tecidos_donos').select('id').eq('nome', dono);
+            if (!donos || donos.length === 0) {
+                const { data: newDono } = await db.from('tecidos_donos').insert([{ nome: dono }]).select();
+                if (newDono && newDono.length > 0) dono_id = newDono[0].id;
+            } else {
+                dono_id = donos[0].id;
+            }
+        } catch (e) {
+            console.warn("Erro ao associar dono:", e);
+        }
+
         const { error } = await db.from('tecidos_aluguer').insert([{
             posicao,
             nome_dono: dono,
+            dono_id: dono_id || null,
             valor_venda: valor,
             foto_url: foto || null,
             data_pagamento: dataPagTxt,
