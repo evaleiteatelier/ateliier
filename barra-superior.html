@@ -1,0 +1,576 @@
+<style>
+    /* ── Offset para o conteúdo não ficar escondido ── */
+    body {
+        padding-top: 90px !important;
+        margin: 0;
+    }
+
+    /* ── BARRA PRINCIPAL ── */
+    .top-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1000;
+        background: #ffffff;
+        box-shadow: 0 1px 0 rgba(212,175,55,.25), 0 4px 20px rgba(0,0,0,.06);
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    /* Linha dourada muito fina no topo */
+    .top-bar::before {
+        content: '';
+        display: block;
+        height: 3px;
+        background: linear-gradient(90deg, transparent 0%, #d4af37 30%, #f5e6a3 60%, #d4af37 80%, transparent 100%);
+    }
+
+    .header-content {
+        width: 100%;
+        max-width: 1300px;
+        margin: 0 auto;
+        height: 76px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 28px;
+        box-sizing: border-box;
+    }
+
+    /* ── LOGO ── */
+    .brand {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        flex-shrink: 0;
+    }
+
+    .nav-logo {
+        height: 52px;
+        width: auto;
+        display: block;
+        /* Filtro para imagem branca/cinza — remove se a logo já é escura */
+        filter: none;
+        transition: opacity 0.25s;
+    }
+
+    .brand:hover .nav-logo {
+        opacity: 0.8;
+    }
+
+    /* ── SEPARADOR VERTICAL ── */
+    .nav-divider {
+        width: 1px;
+        height: 28px;
+        background: #e0d5c1;
+        margin: 0 24px 0 32px;
+        flex-shrink: 0;
+    }
+
+    /* ── LINKS DE NAVEGAÇÃO ── */
+    .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex: 1;
+    }
+
+    .nav-links a {
+        text-decoration: none;
+        color: #555;
+        font-size: 0.82rem;
+        font-family: 'Inter', system-ui, sans-serif;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        padding: 6px 12px;
+        border-radius: 4px;
+        position: relative;
+        transition: color 0.25s, background 0.25s;
+        white-space: nowrap;
+    }
+
+    .nav-links a:hover {
+        color: #d4af37;
+        background: rgba(212,175,55,.07);
+    }
+
+    /* Sublinhado dourado ao passar */
+    .nav-links a::after {
+        content: '';
+        position: absolute;
+        bottom: 2px;
+        left: 12px;
+        right: 12px;
+        height: 1.5px;
+        background: #d4af37;
+        transform: scaleX(0);
+        transform-origin: center;
+        transition: transform 0.25s ease;
+        border-radius: 1px;
+    }
+
+    .nav-links a:hover::after,
+    .active-link::after {
+        transform: scaleX(1) !important;
+    }
+
+    /* Link activo */
+    .active-link {
+        color: #d4af37 !important;
+        font-weight: bold;
+    }
+
+    /* ── SEPARADOR ANTES DOS LINKS ADMIN ── */
+    .nav-admin-sep {
+        width: 1px;
+        height: 18px;
+        background: #ddd;
+        margin: 0 6px;
+        flex-shrink: 0;
+    }
+
+    /* Destaque especial para "+ Novo Pedido" */
+    .nav-links a.link-novo {
+        background: #1a1a2e;
+        color: #d4af37 !important;
+        border-radius: 20px;
+        padding: 6px 16px;
+        letter-spacing: 0.6px;
+        font-size: 0.8rem;
+    }
+
+    .nav-links a.link-novo:hover {
+        background: #2e2e4e;
+    }
+
+    .nav-links a.link-novo::after {
+        display: none;
+    }
+
+    /* ── LADO DIREITO: SAIR ── */
+    .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-shrink: 0;
+        margin-left: 16px;
+    }
+
+    .btn-logout {
+        background: transparent;
+        color: #999;
+        border: 1px solid #ddd;
+        padding: 7px 16px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.78rem;
+        font-family: 'Inter', system-ui, sans-serif;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        transition: all 0.25s;
+        margin: 0 !important;
+    }
+
+    .btn-logout:hover {
+        border-color: #c62828;
+        color: #c62828;
+        background: rgba(198,40,40,.05);
+    }
+
+    /* ── DROPDOWN GESTÃO ── */
+    .nav-dropdown {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+    }
+    .nav-dropdown-content {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #ffffff;
+        min-width: 170px;
+        box-shadow: 0 10px 25px rgba(0,0,0,.1);
+        z-index: 1001;
+        border-radius: 8px;
+        padding: 8px 0;
+        margin-top: 5px;
+        border: 1px solid #eee;
+    }
+    
+    /* ── PERFIL DROPDOWN ── */
+    .nav-profile {
+        position: relative;
+        flex-shrink: 0;
+    }
+    .nav-profile-btn {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 5px 8px;
+        border-radius: 10px;
+        transition: background 0.2s;
+        font-family: inherit;
+    }
+    .nav-profile-btn:hover { background: rgba(212,175,55,.08); }
+    .nav-profile-avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #d4af37, #b8860b);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #fff;
+        flex-shrink: 0;
+        border: 2px solid rgba(212,175,55,.3);
+    }
+    .nav-profile-name {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #333;
+        max-width: 110px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .nav-profile-role {
+        font-size: 0.7rem;
+        color: #aaa;
+        font-weight: 400;
+    }
+    .nav-profile-chevron {
+        font-size: 0.55rem;
+        color: #aaa;
+        transition: transform 0.2s;
+    }
+    .nav-profile.aberto .nav-profile-chevron { transform: rotate(180deg); }
+    .nav-profile-dropdown {
+        display: none;
+        position: absolute;
+        top: calc(100% + 10px);
+        right: 0;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0,0,0,.13);
+        border: 1px solid #ede9e3;
+        min-width: 200px;
+        z-index: 2000;
+        overflow: hidden;
+        animation: fadeIn 0.15s ease-out;
+    }
+    .nav-profile.aberto .nav-profile-dropdown { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+    .profile-dd-header {
+        padding: 14px 16px 10px;
+        border-bottom: 1px solid #f0ece5;
+    }
+    .profile-dd-email {
+        font-size: 0.78rem;
+        color: #aaa;
+        margin-top: 2px;
+        word-break: break-all;
+    }
+    .profile-dd-name {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #1a1a2e;
+    }
+    .profile-dd-badge {
+        display: inline-block;
+        font-size: 0.68rem;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 10px;
+        margin-top: 4px;
+        background: #fef9e7;
+        color: #b8860b;
+        border: 1px solid #f5e6a3;
+    }
+    .profile-dd-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 16px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #444;
+        cursor: pointer;
+        transition: background 0.15s;
+        text-decoration: none;
+        border: none;
+        background: none;
+        width: 100%;
+        font-family: inherit;
+    }
+    .profile-dd-item:hover { background: #faf9f7; }
+    .profile-dd-item.danger { color: #c62828; }
+    .profile-dd-item.danger:hover { background: #fdecea; }
+    .profile-dd-sep { height: 1px; background: #f0ece5; margin: 2px 0; }
+    .nav-dropdown:hover .nav-dropdown-content,
+    .nav-dropdown-content.aberto {
+        display: block;
+        animation: fadeIn 0.2s ease-out;
+    }
+    .nav-dropdown-content a {
+        color: #555 !important;
+        padding: 10px 16px !important;
+        text-decoration: none;
+        display: block;
+        font-size: 0.78rem;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        border-radius: 0 !important;
+        white-space: normal;
+        text-align: center;
+        background: transparent !important;
+    }
+    .nav-dropdown-content a:hover {
+        background-color: rgba(212,175,55,.05) !important;
+        color: #d4af37 !important;
+    }
+    .nav-dropdown-content a::after {
+        display: none !important;
+    }
+    .dropdown-icon {
+        font-size: 0.6rem;
+        transition: transform 0.2s;
+        margin-left: 3px;
+        color: inherit;
+    }
+    .nav-dropdown:hover .dropdown-icon,
+    .nav-dropdown.aberto .dropdown-icon {
+        transform: rotate(180deg);
+    }
+
+    /* ── WRAPPER: agrupa links + perfil para virarem um único painel deslizante no mobile ──
+       Em ecrã largo o "display:contents" torna este wrapper invisível ao layout,
+       por isso .nav-links e .nav-profile continuam a comportar-se como itens
+       diretos do .header-content (sem qualquer impacto no desktop). ── */
+    .nav-drawer-group { display: contents; }
+
+    /* ── BOTÃO HAMBÚRGUER (só aparece em ecrãs pequenos) ── */
+    .nav-hamburger {
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+        width: 40px;
+        height: 40px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        flex-shrink: 0;
+        padding: 0;
+        margin-left: 8px;
+        z-index: 1001;
+        position: relative;
+    }
+    .nav-hamburger span {
+        display: block;
+        width: 22px;
+        height: 2px;
+        background: #1a1a2e;
+        border-radius: 2px;
+        transition: transform .25s ease, opacity .2s ease;
+    }
+    .top-bar.menu-aberto .nav-hamburger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .top-bar.menu-aberto .nav-hamburger span:nth-child(2) { opacity: 0; }
+    .top-bar.menu-aberto .nav-hamburger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* ── OVERLAY ESCURO ATRÁS DO PAINEL MOBILE ── */
+    .nav-mobile-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15,15,25,.42);
+        z-index: 998;
+        opacity: 0;
+        transition: opacity .25s ease;
+    }
+    .top-bar.menu-aberto .nav-mobile-overlay { display: block; opacity: 1; }
+
+    /* ── RESPONSIVO: tablet e telemóvel passam a usar o painel deslizante ── */
+    @media (max-width: 1024px) {
+        body { padding-top: 68px !important; }
+        .header-content { height: 60px; padding: 0 16px; }
+        .nav-logo { height: 36px; }
+        .nav-divider { display: none; }
+        .nav-hamburger { display: flex; }
+
+        .nav-drawer-group {
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100dvh;
+            width: min(300px, 85vw);
+            background: #fff;
+            box-shadow: -10px 0 34px rgba(0,0,0,.18);
+            transform: translateX(100%);
+            transition: transform .3s cubic-bezier(.4,0,.2,1);
+            z-index: 999;
+            overflow-y: auto;
+            padding-top: 60px;
+            box-sizing: border-box;
+        }
+        .top-bar.menu-aberto .nav-drawer-group { transform: translateX(0); }
+
+        .nav-links, .nav-profile {
+            flex: none;
+            width: 100%;
+            margin: 0;
+        }
+
+        /* Perfil aparece primeiro no painel, com estilo de cabeçalho */
+        .nav-profile {
+            order: -1;
+            position: static;
+            padding: 14px 18px;
+            box-sizing: border-box;
+            border-bottom: 1px solid #f0ece5;
+        }
+        .nav-profile-btn { width: 100%; justify-content: flex-start; padding: 6px; }
+        .nav-profile-name { max-width: none; }
+        .nav-profile-chevron { display: none; }
+        .nav-profile-dropdown {
+            display: block !important;
+            position: static;
+            box-shadow: none;
+            border: none;
+            border-radius: 0;
+            min-width: 0;
+            margin-top: 10px;
+            animation: none;
+        }
+        .profile-dd-header { padding: 0 0 10px; }
+
+        /* Lista de links vira coluna, ocupando toda a largura do painel */
+        .nav-links {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0;
+            padding: 8px 0 20px;
+        }
+        .nav-links a {
+            white-space: normal;
+            padding: 13px 20px;
+            font-size: 0.85rem;
+            border-radius: 0 !important;
+            letter-spacing: .4px;
+        }
+        .nav-links a::after { display: none; }
+        .nav-links a.link-novo {
+            margin: 6px 16px;
+            padding: 12px;
+            text-align: center;
+        }
+        .nav-admin-sep { display: none; }
+
+        /* Dropdown "Administração" fica sempre expandido, encaixado na coluna */
+        .nav-dropdown { display: block; width: 100%; }
+        .nav-dropdown-content {
+            display: block !important;
+            position: static;
+            transform: none;
+            box-shadow: none;
+            border: none;
+            border-radius: 0;
+            min-width: 0;
+            margin: 0;
+            padding: 0;
+            background: #faf8f2;
+        }
+        .nav-dropdown-content a {
+            text-align: left !important;
+            padding: 12px 20px 12px 36px !important;
+        }
+        .dropdown-icon { display: none; }
+    }
+</style>
+
+<header class="top-bar">
+    <div class="header-content">
+
+        <!-- LOGO -->
+        <a href="lista-espera.html" class="brand">
+            <img src="img/logo.png" alt="Eva Leite Atelier" class="nav-logo">
+        </a>
+
+        <!-- SEPARADOR VERTICAL -->
+        <div class="nav-divider"></div>
+
+        <!-- LINKS + PERFIL — agrupados para virarem um único painel no mobile -->
+        <div class="nav-drawer-group">
+            <nav class="nav-links">
+                <a href="lista-espera.html"  data-page="lista-espera.html">Lista de Espera</a>
+                <a href="concluidos.html"    data-page="concluidos.html">Concluídos</a>
+
+                <!-- Links apenas para Admin -->
+                <span class="admin-only-group" style="display:contents">
+                    <div class="nav-admin-sep"></div>
+                    <a href="adicionar-pedido.html" data-page="adicionar-pedido.html" class="link-novo">+ Novo Pedido</a>
+                    <a href="entregues.html"  data-page="entregues.html">Histórico</a>
+                    <a href="vouchers.html"   data-page="vouchers.html">Vouchers</a>
+
+                    <!-- Dropdown de Gestão -->
+                    <div class="nav-dropdown" id="nav-dropdown-admin">
+                        <a href="#" style="cursor:pointer; user-select:none;">Administração <span class="dropdown-icon">▼</span></a>
+                        <div class="nav-dropdown-content" id="nav-dropdown-content-admin">
+                            <a href="gerir-produtos.html" data-page="gerir-produtos.html">Gerir Produtos</a>
+                            <a href="dashboard.html" data-page="dashboard.html" class="full-admin-only">Dashboard</a>
+                            <a href="contas.html" data-page="contas.html" class="full-admin-only">Contas</a>
+                            <a href="financas.html"   data-page="financas.html">Finanças</a>
+                            <a href="lista-compras.html" data-page="lista-compras.html">🛒 Lista de Compras</a>
+                            <a href="gestao-tecidos.html" data-page="gestao-tecidos.html">🧵 Gestão de Tecidos</a>
+                            <a href="precificador.html" data-page="precificador.html">Precificador</a>
+                            <a href="fidelidade.html" data-page="fidelidade.html">🎁 Fidelidade</a>
+                            <a href="utilizadores.html" data-page="utilizadores.html">Utilizadores</a>
+                        </div>
+                    </div>
+                </span>
+            </nav>
+
+            <!-- PERFIL -->
+            <div class="nav-profile admin-only-group" id="nav-profile">
+                <button class="nav-profile-btn" id="btn-perfil" onclick="togglePerfilDropdown()">
+                    <div class="nav-profile-avatar" id="avatar-iniciais">?</div>
+                    <div style="text-align:left;">
+                        <div class="nav-profile-name" id="perfil-nome">Utilizador</div>
+                        <div class="nav-profile-role" id="perfil-role">Admin</div>
+                    </div>
+                    <span class="nav-profile-chevron">&#9660;</span>
+                </button>
+                <div class="nav-profile-dropdown" id="perfil-dropdown">
+                    <div class="profile-dd-header">
+                        <div class="profile-dd-name" id="dd-nome">Utilizador</div>
+                        <div class="profile-dd-email" id="dd-email"></div>
+                        <span class="profile-dd-badge" id="dd-badge">Admin</span>
+                    </div>
+                    <a href="utilizadores.html" class="profile-dd-item">&#128100; Gerir Utilizadores</a>
+                    <a href="meu-perfil.html" class="profile-dd-item">&#9881; Meu Perfil</a>
+                    <div class="profile-dd-sep"></div>
+                    <button class="profile-dd-item danger" onclick="sair()">&#128682; Sair da conta</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- HAMBÚRGUER (tablet/telemóvel) -->
+        <button class="nav-hamburger" id="btn-hamburguer" onclick="toggleMenuMobile()" aria-label="Abrir menu">
+            <span></span><span></span><span></span>
+        </button>
+
+    </div>
+
+    <!-- OVERLAY do painel mobile -->
+    <div class="nav-mobile-overlay" id="nav-mobile-overlay" onclick="fecharMenuMobile()"></div>
+</header>
+

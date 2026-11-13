@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Precificador - Eva Leite Atelier</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="auth-guard.js"></script>
+    <script src="navbar.js" defer></script>
+    <style>
+        :root {
+            --prec-bg: #f5f1ea;
+            --prec-ink: #242424;
+            --prec-muted: #77736d;
+            --prec-line: #e8e0d5;
+            --prec-accent: #b7a58c;
+        }
+        body { background: var(--prec-bg); color: var(--prec-ink); }
+        .prec-wrapper { max-width: 1050px; margin: 34px auto; padding: 0 22px 60px; }
+        .prec-header { margin-bottom: 24px; }
+        .prec-header h1 { margin: 0 0 7px; font-size: 1.8rem; color: #25231f; }
+        .prec-header p { margin: 0; color: var(--prec-muted); font-size: .95rem; }
+        .prec-layout { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(290px, .9fr); gap: 22px; align-items: start; }
+        .prec-card { background: #fff; border: 1px solid var(--prec-line); border-radius: 16px; padding: 26px; box-shadow: 0 5px 22px rgba(40,32,20,.045); }
+        .prec-card h2 { margin: 0 0 7px; font-size: 1.12rem; }
+        .prec-description { margin: 0 0 22px; color: var(--prec-muted); font-size: .86rem; line-height: 1.5; }
+        .prec-field { margin-bottom: 19px; }
+        .prec-field label { display: block; margin-bottom: 7px; font-weight: 650; font-size: .88rem; }
+        .prec-field input { width: 100%; box-sizing: border-box; padding: 12px 13px; border: 1px solid #dcd5cb; border-radius: 9px; font: inherit; font-size: .98rem; background: #fff; color: var(--prec-ink); outline: none; }
+        .prec-field input:focus { border-color: var(--prec-accent); box-shadow: 0 0 0 3px rgba(183,165,140,.15); }
+        .prec-help { margin-top: 6px; color: var(--prec-muted); font-size: .77rem; line-height: 1.4; }
+        .prec-result { background: #f8f6f2; border: 1px solid var(--prec-line); border-radius: 13px; padding: 21px; }
+        .prec-result-label { color: var(--prec-muted); font-size: .83rem; }
+        .prec-price { font-size: clamp(2rem, 5vw, 2.7rem); font-weight: 750; letter-spacing: -.04em; margin: 5px 0 17px; }
+        .prec-breakdown { display: grid; gap: 11px; }
+        .prec-row { display: flex; justify-content: space-between; gap: 12px; font-size: .86rem; }
+        .prec-row span:first-child { color: var(--prec-muted); }
+        .prec-row strong { font-weight: 650; text-align: right; }
+        .prec-divider { height: 1px; background: var(--prec-line); margin: 4px 0; }
+        .prec-formula { margin-top: 18px; padding: 13px; border-radius: 9px; background: #fff; border: 1px dashed #d8cbbb; color: #625b51; font-size: .79rem; line-height: 1.55; overflow-wrap: anywhere; }
+        .prec-note { margin-top: 18px; color: var(--prec-muted); font-size: .78rem; line-height: 1.5; }
+        .prec-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:20px; }
+        .prec-btn { border:0; border-radius:9px; padding:11px 16px; cursor:pointer; font:inherit; font-size:.86rem; font-weight:650; }
+        .prec-btn-primary { background:#292722; color:#fff; }
+        .prec-btn-secondary { background:#eee9e1; color:#38342e; }
+        @media(max-width:760px) { .prec-layout { grid-template-columns:1fr; } .prec-card { padding:20px; } .prec-wrapper { margin-top:24px; } }
+    </style>
+</head>
+<body>
+<main class="prec-wrapper">
+    <header class="prec-header">
+        <h1>Precificador</h1>
+        <p>Calcula o preço final de uma peça com base nos dias de trabalho e no custo dos materiais.</p>
+    </header>
+
+    <div class="prec-layout">
+        <section class="prec-card" aria-labelledby="dados-title">
+            <h2 id="dados-title">Dados do trabalho</h2>
+            <p class="prec-description">Indica quantos dias a costureira vai dedicar à peça e o valor total dos tecidos e materiais utilizados.</p>
+
+            <div class="prec-field">
+                <label for="dias-trabalho">Dias de trabalho</label>
+                <input type="number" id="dias-trabalho" min="0" step="0.5" value="1" inputmode="decimal">
+                <div class="prec-help">Cada dia corresponde a 8 horas efetivas de trabalho, das 09:00 às 18:00, com 1 hora de almoço.</div>
+            </div>
+
+            <div class="prec-field">
+                <label for="valor-materiais">Tecidos / Materiais (€)</label>
+                <input type="number" id="valor-materiais" min="0" step="0.01" placeholder="Ex.: 35,00" inputmode="decimal">
+                <div class="prec-help">Insere o custo total dos materiais utilizados na peça.</div>
+            </div>
+
+            <div class="prec-actions">
+                <button type="button" class="prec-btn prec-btn-primary" id="limpar-precificador">Limpar valores</button>
+                <button type="button" class="prec-btn prec-btn-secondary" id="copiar-preco">Copiar cálculo</button>
+            </div>
+        </section>
+
+        <section class="prec-card" aria-labelledby="resultado-title">
+            <h2 id="resultado-title">Resultado do orçamento</h2>
+            <p class="prec-description">O preço é atualizado automaticamente à medida que alteras os valores.</p>
+
+            <div class="prec-result" aria-live="polite">
+                <div class="prec-result-label">Preço final recomendado</div>
+                <div class="prec-price" id="preco-final">0,00 €</div>
+                <div class="prec-breakdown">
+                    <div class="prec-row"><span>Horas de trabalho</span><strong id="resultado-horas">0 h</strong></div>
+                    <div class="prec-row"><span>Custo da mão de obra</span><strong id="resultado-mao-obra">0,00 €</strong></div>
+                    <div class="prec-row"><span>Tecidos / Materiais</span><strong id="resultado-materiais">0,00 €</strong></div>
+                    <div class="prec-divider"></div>
+                    <div class="prec-row"><span>Subtotal</span><strong id="resultado-subtotal">0,00 €</strong></div>
+                    <div class="prec-row"><span>Divisor da fórmula</span><strong>0,70</strong></div>
+                </div>
+            </div>
+
+            <div class="prec-formula">
+                <strong>Fórmula aplicada</strong><br>
+                Preço Final = (Materiais + (Horas × 4,36 €)) ÷ 0,70
+            </div>
+            <p class="prec-note">O cálculo considera 8 horas efetivas por dia (09:00–18:00, com 1 hora de almoço), à taxa de 4,36 €/hora. Se existir uma pausa não incluída no horário efetivo de trabalho, ajusta os dias/horas considerados para refletir apenas as horas trabalhadas.</p>
+        </section>
+    </div>
+</main>
+
+<script>
+(() => {
+    const HORAS_POR_DIA = 8;
+    const VALOR_HORA = 4.36;
+    const DIVISOR = 0.70;
+
+    const diasInput = document.getElementById('dias-trabalho');
+    const materiaisInput = document.getElementById('valor-materiais');
+
+    const euro = valor => new Intl.NumberFormat('pt-PT', {
+        style: 'currency', currency: 'EUR'
+    }).format(Number.isFinite(valor) ? valor : 0);
+
+    const numero = input => {
+        const valor = Number.parseFloat(input.value);
+        return Number.isFinite(valor) && valor >= 0 ? valor : 0;
+    };
+
+    function calcular() {
+        const dias = numero(diasInput);
+        const materiais = numero(materiaisInput);
+        const horas = dias * HORAS_POR_DIA;
+        const maoObra = horas * VALOR_HORA;
+        const subtotal = materiais + maoObra;
+        const precoFinal = subtotal / DIVISOR;
+
+        document.getElementById('preco-final').textContent = euro(precoFinal);
+        document.getElementById('resultado-horas').textContent =
+            new Intl.NumberFormat('pt-PT', { maximumFractionDigits: 2 }).format(horas) + (horas === 1 ? ' h' : ' h');
+        document.getElementById('resultado-mao-obra').textContent = euro(maoObra);
+        document.getElementById('resultado-materiais').textContent = euro(materiais);
+        document.getElementById('resultado-subtotal').textContent = euro(subtotal);
+
+        window.precificadorAtual = { dias, horas, materiais, maoObra, subtotal, precoFinal };
+    }
+
+    [diasInput, materiaisInput].forEach(input => input.addEventListener('input', calcular));
+
+    document.getElementById('limpar-precificador').addEventListener('click', () => {
+        diasInput.value = '';
+        materiaisInput.value = '';
+        calcular();
+        diasInput.focus();
+    });
+
+    document.getElementById('copiar-preco').addEventListener('click', async () => {
+        const c = window.precificadorAtual;
+        const texto = [
+            'Eva Leite Atelier — Cálculo de preço',
+            `Dias de trabalho: ${c.dias}`,
+            `Horas: ${c.horas}`,
+            `Tecidos / Materiais: ${euro(c.materiais)}`,
+            `Mão de obra: ${euro(c.maoObra)}`,
+            `Preço final: ${euro(c.precoFinal)}`,
+            'Fórmula: (Materiais + (Horas × 4,36 €)) ÷ 0,70'
+        ].join('\n');
+        try {
+            await navigator.clipboard.writeText(texto);
+            if (window.mostrarAviso) await window.mostrarAviso('O cálculo foi copiado.', 'Copiado', '✓');
+            else alert('Cálculo copiado.');
+        } catch (e) {
+            alert(texto);
+        }
+    });
+
+    calcular();
+})();
+</script>
+</body>
+</html>
