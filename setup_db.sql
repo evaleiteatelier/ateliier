@@ -568,4 +568,32 @@ BEGIN
 END;
 $$;
 
+-- ==========================================
+-- 14. CENTRAL DE CLIENTES, ARQUIVO DE HISTÓRICO & VIEW PARA BOT WHATSAPP
+-- ==========================================
+
+-- Permite ocultar pedidos do mural de Histórico (Entregues) mantendo-os no sistema para Finanças e Ficha do Cliente
+ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS oculto_historico BOOLEAN DEFAULT false;
+
+-- Coluna opcional dedicada para medidas (o sistema também suporta guardar na coluna morada automaticamente)
+ALTER TABLE public.clientes_financas ADD COLUMN IF NOT EXISTS medidas TEXT;
+ALTER TABLE public.clientes_financas DISABLE ROW LEVEL SECURITY;
+
+-- View pronta para integração com o futuro Bot de WhatsApp (n8n, Evolution API, Typebot, etc.)
+CREATE OR REPLACE VIEW public.vw_clientes_bot_zap AS
+SELECT
+    COALESCE(c.nome, TRIM(p.nome)) AS nome,
+    c.telefone,
+    COALESCE(c.email, MAX(p.email_cliente)) AS email,
+    c.nif,
+    COUNT(p.id) AS total_pedidos,
+    COALESCE(SUM(COALESCE(p.preco_final, p.preco_total, 0)), 0) AS valor_total_atelier,
+    MAX(COALESCE(p.data_real, p.data_pedido)) AS ultima_compra,
+    (CURRENT_DATE - MAX(COALESCE(p.data_real, p.data_pedido))) AS dias_sem_comprar
+FROM public.pedidos p
+FULL OUTER JOIN public.clientes_financas c
+    ON LOWER(TRIM(c.nome)) = LOWER(TRIM(p.nome))
+WHERE COALESCE(c.nome, TRIM(p.nome)) IS NOT NULL
+GROUP BY COALESCE(c.nome, TRIM(p.nome)), c.telefone, c.nif, c.email;
+
 -- (Fim do script)

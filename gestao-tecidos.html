@@ -42,26 +42,6 @@
         
         .saldo-positivo { color: #2e7d32; font-weight: bold; }
         .saldo-negativo { color: #c62828; font-weight: bold; }
-            --gold: #d4af37;
-            --dark: #1a1a2e;
-            --bg: #f5f1ea;
-            --text: #2d2d2d;
-            --text-muted: #888;
-            --radius: 14px;
-        }
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; }
-        .wrapper { max-width: 1200px; margin: 30px auto; padding: 0 20px 60px; }
-        
-        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 14px; }
-        .page-header h1 { margin: 0; font-size: 1.8rem; color: var(--dark); }
-        .page-header p { margin: 4px 0 0; color: var(--text-muted); font-size: 0.88rem; }
-
-        .btn-gold {
-            background: var(--gold); color: #fff; border: none; padding: 10px 20px;
-            border-radius: 8px; font-size: 0.88rem; font-weight: 600; cursor: pointer;
-            transition: background 0.2s; font-family: inherit;
-        }
-        .btn-gold:hover { background: #b8972e; }
 
         .layout-grid {
             display: grid;
@@ -511,6 +491,7 @@
                         ${statusBadge}
                     </td>
                     <td style="text-align: right;">
+                        <div class="acoes" style="justify-content: flex-end;">
                             <button class="btn-sm btn-gold" onclick="venderTecido('${item.id}', '${item.posicao}', '${item.nome_dono}', '${item.valor_venda}')">💰 Vender</button>
                             <button class="btn-sm btn-renovar" onclick="renovarMensalidade('${item.id}', '${item.data_vencimento}')">Renovar Mês</button>
                             <button class="btn-sm btn-del" onclick="apagarTecido('${item.id}', '${item.posicao}')">Remover</button>

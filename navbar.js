@@ -132,6 +132,7 @@ window.sair = function() {
     localStorage.removeItem("adminToken");
     localStorage.removeItem("adminNome");
     localStorage.removeItem("adminId");
+    localStorage.removeItem("sessaoExpira");
     if (window.supabaseClient && window.supabaseClient.auth) {
         window.supabaseClient.auth.signOut();
     }

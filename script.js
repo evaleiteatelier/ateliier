@@ -120,76 +120,46 @@ async function aplicarMasonryUI(statusDaPagina) {
 }
 
 // =====================================================
-// MODAL GLOBAL DE FATURAS
+// MODAL GLOBAL DE FATURAS (SIMPLIFICADO — APENAS LINK DA FATURA COMPLETA)
 // =====================================================
 document.addEventListener("DOMContentLoaded", () => {
     const modalHTML = `
-    <div class="modal-overlay" id="modal-fatura" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
-        <div style="background:#fff; width:90%; max-width:500px; padding:24px; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
-            <h3 style="margin-top:0; font-size:1.3rem; color:#1a1a2e; display:flex; align-items:center; gap:8px; border-bottom: 2px solid #eee; padding-bottom:10px;">
-                📄 Gestão de Fatura e Envio
+    <div class="modal-overlay" id="modal-fatura" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.55); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(3px);">
+        <div style="background:#fff; width:92%; max-width:440px; padding:26px; border-radius:14px; box-shadow:0 12px 40px rgba(0,0,0,0.22);">
+            <h3 style="margin-top:0; font-size:1.22rem; color:#1a1a2e; display:flex; align-items:center; gap:8px; border-bottom: 2px solid #f0ebe1; padding-bottom:12px; margin-bottom:16px;">
+                📄 Fatura Completa do Pedido
             </h3>
             
             <input type="hidden" id="fatura-pedido-id">
-            
-            <!-- ETAPA 1: LINKS -->
-            <div style="margin-bottom: 20px; background: #f9f9f9; padding: 15px; border-radius: 8px;">
-                <h4 style="margin:0 0 10px 0; font-size:1rem; color:#333;">1. Valores e Links</h4>
-                
-                <label style="font-size:0.85rem; font-weight:bold; color:#555;">Qual o valor total da(s) fatura(s)? (€)</label>
-                <input type="number" id="fatura-valor-input" placeholder="Ex: 150.00" step="0.01" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; margin-bottom:12px; box-sizing:border-box;">
 
-                <label style="font-size:0.85rem; font-weight:bold; color:#555;">Código da Fatura</label>
-                <input type="text" id="fatura-codigo-input" placeholder="Ex: FT 26/01" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; margin-bottom:12px; box-sizing:border-box;">
-
-                <label style="font-size:0.85rem; font-weight:bold; color:#555;">Link Fatura Simples (Ex: 50% Adjudicação)</label>
-                <div style="display:flex; gap:10px; margin-bottom:12px;">
-                    <input type="url" id="fatura-simples-input" placeholder="https://..." style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box;">
-                    <a id="fatura-simples-btn" href="#" target="_blank" style="display:none; padding:8px; background:#e0e0e0; border-radius:4px; color:#333; text-decoration:none; font-size:0.85rem;">Abrir</a>
-                </div>
-                
-                <label style="font-size:0.85rem; font-weight:bold; color:#555;">Link Fatura Final / Completa</label>
-                <div style="display:flex; gap:10px; margin-bottom:12px;">
-                    <input type="url" id="fatura-final-input" placeholder="https://..." style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box;">
-                    <a id="fatura-final-btn" href="#" target="_blank" style="display:none; padding:8px; background:#e0e0e0; border-radius:4px; color:#333; text-decoration:none; font-size:0.85rem;">Abrir</a>
-                </div>
-
-                <label style="font-size:0.85rem; font-weight:bold; color:#555;">Nº Página Livro Físico</label>
-                <input type="text" id="fatura-pagina-input" placeholder="Ex: Pag 24" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box;">
+            <!-- Resumo Automático do Pedido -->
+            <div id="fatura-resumo-info" style="background:#faf8f3; border:1px solid #e8dfd1; border-radius:10px; padding:12px 14px; margin-bottom:16px; font-size:0.88rem; color:#444; line-height:1.6;">
+                <div><strong>👤 Cliente:</strong> <span id="fatura-info-cliente">—</span></div>
+                <div><strong>🏢 NIF:</strong> <span id="fatura-info-nif" style="font-family:monospace; font-weight:700; color:#2e7d32;">—</span></div>
+                <div><strong>💶 Valor Total (Automático):</strong> <span id="fatura-info-valor" style="font-weight:700; color:#1a1a2e;">€0.00</span></div>
             </div>
 
-            <!-- ETAPA 2: ENVIO -->
-            <div style="margin-bottom: 20px; background: #f9f9f9; padding: 15px; border-radius: 8px;">
-                <h4 style="margin:0 0 10px 0; font-size:1rem; color:#333;">2. Partilha com o Cliente</h4>
-                
-                <label style="font-size:0.85rem; font-weight:bold; color:#555; display:block; margin-bottom:5px;">O cliente deseja receber a fatura?</label>
-                <select id="fatura-quer-receber" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; margin-bottom:12px;" onchange="toggleFaturaOpcoes()">
-                    <option value="nao">Não</option>
-                    <option value="sim">Sim</option>
-                </select>
-
-                <div id="fatura-opcoes-envio" style="display:none;">
-                    <label style="font-size:0.85rem; font-weight:bold; color:#555; display:block; margin-bottom:5px;">Método de Envio e Contacto</label>
-                    <div style="display:flex; gap:10px; margin-bottom:12px;">
-                        <select id="fatura-metodo-envio" style="width:100px; padding:8px; border:1px solid #ccc; border-radius:4px;">
-                            <option value="email">Email</option>
-                            <option value="sms">SMS</option>
-                            <option value="whatsapp">WhatsApp</option>
-                        </select>
-                        <input type="text" id="fatura-contato-envio" placeholder="Email ou Telemóvel..." style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px;">
-                    </div>
-                    
-                    <label style="font-size:0.85rem; font-weight:bold; color:#555; display:block; margin-bottom:5px;">Estado do Envio</label>
-                    <select id="fatura-status-envio" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; background:#fff8e1;">
-                        <option value="pendente">⏰ Vou enviar depois (Pendente)</option>
-                        <option value="enviado">✅ Já enviei</option>
-                    </select>
-                </div>
+            <!-- Botão Rápido se já existir fatura -->
+            <a id="fatura-final-btn" href="#" target="_blank" style="display:none; width:100%; box-sizing:border-box; text-align:center; padding:11px 14px; background:#e8f5e9; border:1.5px solid #a5d6a7; border-radius:8px; color:#2e7d32; text-decoration:none; font-size:0.92rem; font-weight:700; margin-bottom:16px; transition:all 0.2s;">
+                🔗 Abrir Fatura Atual numa Nova Aba
+            </a>
+            
+            <!-- Campo Único: Link da Fatura Completa -->
+            <div style="margin-bottom: 20px;">
+                <label style="font-size:0.86rem; font-weight:700; color:#333; display:block; margin-bottom:6px;">
+                    Link da Fatura Completa (PDF / Drive / Portal AT)
+                </label>
+                <input type="url" id="fatura-final-input" placeholder="Cole aqui o link https://..." 
+                    style="width:100%; padding:11px 12px; border:1.5px solid #d8d0c5; border-radius:8px; font-size:0.95rem; box-sizing:border-box; outline:none; font-family:inherit;"
+                    onfocus="this.style.borderColor='#d4af37'" onblur="this.style.borderColor='#d8d0c5'">
+                <small style="display:block; margin-top:6px; color:#888; font-size:0.78rem;">
+                    O valor, data e NIF do cliente são associados automaticamente ao guardar.
+                </small>
             </div>
 
             <div style="display:flex; justify-content:flex-end; gap:10px;">
-                <button onclick="document.getElementById('modal-fatura').style.display='none'" style="padding:10px 18px; background:#f5f5f5; border:none; border-radius:6px; cursor:pointer; color:#555;">Cancelar</button>
-                <button onclick="salvarModalFatura()" id="btn-salvar-fatura" style="padding:10px 18px; background:#d4af37; border:none; border-radius:6px; cursor:pointer; color:#fff; font-weight:bold;">Guardar Tudo</button>
+                <button type="button" onclick="document.getElementById('modal-fatura').style.display='none'" style="padding:10px 18px; background:#f2f2f2; border:none; border-radius:8px; cursor:pointer; color:#555; font-weight:600; margin:0;">Cancelar</button>
+                <button type="button" onclick="salvarModalFatura()" id="btn-salvar-fatura" style="padding:10px 20px; background:#d4af37; border:none; border-radius:8px; cursor:pointer; color:#fff; font-weight:700; margin:0;">💾 Guardar Fatura</button>
             </div>
         </div>
     </div>
@@ -197,84 +167,81 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 });
 
-function toggleFaturaOpcoes() {
-    const querReceber = document.getElementById('fatura-quer-receber').value === 'sim';
-    document.getElementById('fatura-opcoes-envio').style.display = querReceber ? 'block' : 'none';
-}
-
 async function abrirModalFatura(pedidoId) {
     const btn = document.getElementById('btn-salvar-fatura');
     btn.textContent = "A carregar...";
     btn.disabled = true;
     document.getElementById('modal-fatura').style.display = 'flex';
-    
     document.getElementById('fatura-pedido-id').value = pedidoId;
 
     try {
         const { data: p, error } = await supabase.from('pedidos').select('*').eq('id', pedidoId).single();
-        if(error) throw error;
+        if (error) throw error;
         
-        // Tentativa de carregar a fatura ligada a este pedido
-        const { data: f } = await supabase.from('faturas').select('*').eq('pedido_id', pedidoId).single();
+        const { data: f } = await supabase.from('faturas').select('*').eq('pedido_id', pedidoId).maybeSingle();
         const fatura = f || {};
 
-        document.getElementById('fatura-simples-input').value = fatura.simples_link || '';
-        document.getElementById('fatura-final-input').value = fatura.final_link || '';
-        document.getElementById('fatura-pagina-input').value = fatura.pagina_fisica || '';
-        document.getElementById('fatura-codigo-input').value = fatura.fatura_codigo || '';
-        document.getElementById('fatura-valor-input').value = fatura.valor_total !== undefined && fatura.valor_total !== null ? Number(fatura.valor_total).toFixed(2) : '';
-        document.getElementById('fatura-quer-receber').value = fatura.quer_receber ? 'sim' : 'nao';
-        document.getElementById('fatura-metodo-envio').value = fatura.metodo_envio || 'email';
-        document.getElementById('fatura-contato-envio').value = fatura.contato_envio || p.email_cliente || '';
-        document.getElementById('fatura-status-envio').value = fatura.status_envio || 'pendente';
+        // Buscar NIF do cliente
+        let nifCliente = fatura.nif || '999999990';
+        if (p.nome) {
+            const { data: cliData } = await supabase
+                .from('clientes_financas')
+                .select('nif')
+                .ilike('nome', `%${p.nome.trim()}%`)
+                .limit(1);
+            if (cliData && cliData.length > 0 && cliData[0].nif && cliData[0].nif.trim() !== '') {
+                nifCliente = cliData[0].nif.trim();
+            }
+        }
 
-        // Lógica dos botões de abrir
-        const sBtn = document.getElementById('fatura-simples-btn');
-        if(fatura.simples_link) { sBtn.href = fatura.simples_link; sBtn.style.display = 'block'; } else { sBtn.style.display = 'none'; }
+        const valorAuto = fatura.valor_total !== undefined && fatura.valor_total !== null
+            ? Number(fatura.valor_total)
+            : Number(p.preco_final || p.preco_total || 0);
+
+        document.getElementById('fatura-info-cliente').textContent = p.nome || 'Cliente';
+        document.getElementById('fatura-info-nif').textContent = nifCliente === '999999990' ? '999999990 (Consumidor Final)' : nifCliente;
+        document.getElementById('fatura-info-valor').textContent = `€${valorAuto.toFixed(2)}`;
+
+        const linkAtual = fatura.final_link || fatura.simples_link || p.fatura_final_link || p.fatura_simples_link || '';
+        document.getElementById('fatura-final-input').value = linkAtual;
 
         const fBtn = document.getElementById('fatura-final-btn');
-        if(fatura.final_link) { fBtn.href = fatura.final_link; fBtn.style.display = 'block'; } else { fBtn.style.display = 'none'; }
-
-        toggleFaturaOpcoes();
-    } catch(err) {
+        if (linkAtual) {
+            fBtn.href = linkAtual;
+            fBtn.style.display = 'block';
+        } else {
+            fBtn.style.display = 'none';
+        }
+    } catch (err) {
         console.error(err);
-        alert("Erro ao carregar dados do pedido.");
+        if (window.mostrarAviso) await window.mostrarAviso("Erro ao carregar dados da fatura.", "Erro", "❌");
+        else alert("Erro ao carregar dados do pedido.");
         document.getElementById('modal-fatura').style.display = 'none';
     } finally {
-        btn.textContent = "Guardar Tudo";
+        btn.textContent = "💾 Guardar Fatura";
         btn.disabled = false;
     }
 }
 
 async function salvarModalFatura() {
     const id = document.getElementById('fatura-pedido-id').value;
-    const simples = document.getElementById('fatura-simples-input').value.trim() || null;
-    const final = document.getElementById('fatura-final-input').value.trim() || null;
-    const pagina = document.getElementById('fatura-pagina-input').value.trim() || null;
-    const codigo = document.getElementById('fatura-codigo-input').value.trim() || null;
-    let valorStr = document.getElementById('fatura-valor-input').value.trim();
-    const valor = valorStr ? parseFloat(valorStr) : null;
-    
-    const querReceber = document.getElementById('fatura-quer-receber').value === 'sim';
-    const metodo = document.getElementById('fatura-metodo-envio').value;
-    const contato = document.getElementById('fatura-contato-envio').value.trim() || null;
-    const status = document.getElementById('fatura-status-envio').value;
+    const finalLink = document.getElementById('fatura-final-input').value.trim() || null;
 
     const btn = document.getElementById('btn-salvar-fatura');
     btn.textContent = "A guardar...";
     btn.disabled = true;
 
     try {
-        // Puxamos o nome e a data_real do pedido
-        const { data: p } = await supabase.from('pedidos').select('nome, data_real').eq('id', id).single();
+        const { data: p } = await supabase.from('pedidos').select('*').eq('id', id).single();
         const nomeCliente = p ? p.nome : null;
+        const valorTotal = p ? Number(p.preco_final || p.preco_total || 0) : 0;
         let nifAtual = '999999990';
         
         if (nomeCliente) {
             const nomeLimpo = nomeCliente.trim();
             const { data: cliData } = await supabase.from('clientes_financas').select('nif').ilike('nome', `%${nomeLimpo}%`).limit(1);
             if (cliData && cliData.length > 0 && cliData[0].nif && cliData[0].nif.trim() !== '') {
-                nifAtual = cliData[0].nif;
+                nifAtual = cliData[0].nif.trim();
             }
         }
 
@@ -282,17 +249,18 @@ async function salvarModalFatura() {
             pedido_id: id,
             nome_cliente: nomeCliente,
             nif: nifAtual,
-            simples_link: simples,
-            final_link: final,
-            pagina_fisica: pagina,
-            fatura_codigo: codigo,
-            valor_total: valor !== null ? valor : 0,
-            quer_receber: querReceber,
-            metodo_envio: metodo,
-            contato_envio: contato,
-            status_envio: status,
+            final_link: finalLink,
+            simples_link: null,
+            valor_total: valorTotal,
+            status_envio: finalLink ? 'enviado' : 'pendente',
             data_emissao: p ? (p.data_real ? new Date(p.data_real).toISOString() : new Date().toISOString()) : new Date().toISOString()
         };
+
+        // Atualiza também no registo do pedido para compatibilidade
+        await supabase.from('pedidos').update({
+            fatura_final_link: finalLink,
+            fatura_valor_total: valorTotal
+        }).eq('id', id);
 
         // Verifica se a fatura já existe para este pedido
         const { data: existingData } = await supabase.from('faturas').select('id').eq('pedido_id', id).limit(1);
@@ -300,30 +268,26 @@ async function salvarModalFatura() {
         
         if (existing && existing.id) {
             const { error } = await supabase.from('faturas').update(payload).eq('id', existing.id);
-            if(error) throw error;
-        } else {
+            if (error) throw error;
+        } else if (finalLink) {
             const { error } = await supabase.from('faturas').insert([payload]);
-            if(error) throw error;
+            if (error) throw error;
         }
         
         document.getElementById('modal-fatura').style.display = 'none';
         
-        // Atualiza a página atual
         if (window.location.pathname.includes('financas')) {
-            if(typeof carregarFaturasFisicas === 'function') carregarFaturasFisicas();
-            if(typeof carregarDashboardFaturas === 'function') carregarDashboardFaturas(); // Nova função do dashboard
+            if (typeof carregarFaturasFisicas === 'function') carregarFaturasFisicas();
+            if (typeof carregarDashboardFaturas === 'function') carregarDashboardFaturas();
         } else {
-            if(typeof _ultimoCarregarPedidos === 'function') {
-               _ultimoCarregarPedidos();
-            } else {
-               location.reload();
-            }
+            location.reload();
         }
     } catch (err) {
         console.error("Erro ao guardar fatura:", err);
-        alert("Erro ao guardar dados: " + (err.message || JSON.stringify(err)));
+        if (window.mostrarAviso) await window.mostrarAviso("Erro ao guardar fatura: " + (err.message || ''), "Erro", "❌");
+        else alert("Erro ao guardar dados: " + (err.message || JSON.stringify(err)));
     } finally {
-        btn.textContent = "Guardar Tudo";
+        btn.textContent = "💾 Guardar Fatura";
         btn.disabled = false;
     }
 }
@@ -390,6 +354,152 @@ if (document.getElementById('form-pedido')) {
       e.preventDefault();
     }
   });
+
+  // --- AUTOCOMPLETE E PRÉ-PREENCHIMENTO DE CLIENTES ---
+  let _clientesCachePedido = [];
+  (async function inicializarAutocompleteClientes() {
+    const inputNome = document.getElementById('nome');
+    const inputTel = document.getElementById('telefone_cliente');
+    const inputEmail = document.getElementById('email_cliente');
+    const inputNif = document.getElementById('nif_cliente');
+    const boxSugestoes = document.getElementById('cliente-sugestoes-lista');
+    const boxMedidas = document.getElementById('cliente-medidas-alerta');
+
+    // 1. Preencher via parâmetros de URL (vindo da Central de Clientes)
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('nome') && inputNome) inputNome.value = params.get('nome');
+    if (params.get('telefone') && inputTel) inputTel.value = params.get('telefone');
+    if (params.get('email') && inputEmail) inputEmail.value = params.get('email');
+    if (params.get('nif') && inputNif) inputNif.value = params.get('nif');
+
+    // 2. Carregar clientes da base de dados (clientes_financas + histórico de pedidos)
+    try {
+      const [resCli, resPed] = await Promise.all([
+        supabase.from('clientes_financas').select('*').order('nome', { ascending: true }),
+        supabase.from('pedidos').select('nome, email_cliente, fatura_contato_envio').order('data_pedido', { ascending: false })
+      ]);
+
+      const mapa = new Map();
+      const norm = (str) => String(str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+
+      (resCli.data || []).forEach(c => {
+        const ch = norm(c.nome);
+        if (!ch) return;
+        let medidas = '';
+        if (c.morada && String(c.morada).includes('\n---MEDIDAS---\n')) {
+          medidas = String(c.morada).split('\n---MEDIDAS---\n').slice(1).join('\n').trim();
+        }
+        mapa.set(ch, {
+          nome: c.nome.trim(),
+          telefone: c.telefone || '',
+          email: c.email || '',
+          nif: (c.nif && c.nif !== '999999990') ? c.nif : '',
+          medidas: medidas,
+          pedidosCount: 0
+        });
+      });
+
+      (resPed.data || []).forEach(p => {
+        const ch = norm(p.nome);
+        if (!ch) return;
+        if (!mapa.has(ch)) {
+          mapa.set(ch, {
+            nome: p.nome.trim(),
+            telefone: p.fatura_contato_envio || '',
+            email: p.email_cliente || '',
+            nif: '',
+            medidas: '',
+            pedidosCount: 1
+          });
+        } else {
+          const item = mapa.get(ch);
+          item.pedidosCount += 1;
+          if (!item.email && p.email_cliente) item.email = p.email_cliente;
+          if (!item.telefone && p.fatura_contato_envio) item.telefone = p.fatura_contato_envio;
+        }
+      });
+
+      _clientesCachePedido = Array.from(mapa.values());
+
+      // Se veio com nome na URL e tem medidas, mostra alerta
+      if (params.get('nome')) {
+        const cliUrl = mapa.get(norm(params.get('nome')));
+        if (cliUrl && cliUrl.medidas && boxMedidas) {
+          boxMedidas.style.display = 'block';
+          boxMedidas.innerHTML = `📏 <strong>Medidas guardadas na ficha de ${cliUrl.nome}:</strong><br>${cliUrl.medidas.replace(/\n/g, '<br>')}`;
+        }
+      }
+    } catch (err) {
+      console.warn("Aviso ao carregar sugestões de clientes:", err);
+    }
+
+    if (!inputNome || !boxSugestoes) return;
+
+    inputNome.addEventListener('input', () => {
+      const termo = String(inputNome.value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+      if (!termo || termo.length < 1) {
+        boxSugestoes.style.display = 'none';
+        if (boxMedidas) boxMedidas.style.display = 'none';
+        return;
+      }
+
+      const matches = _clientesCachePedido.filter(c => {
+        const n = String(c.nome || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        const t = String(c.telefone || '').toLowerCase();
+        const nif = String(c.nif || '').toLowerCase();
+        return n.includes(termo) || t.includes(termo) || nif.includes(termo);
+      }).slice(0, 8);
+
+      if (matches.length === 0) {
+        boxSugestoes.style.display = 'none';
+        return;
+      }
+
+      boxSugestoes.innerHTML = matches.map((c, idx) => `
+        <div class="cliente-sugestao-item" data-idx="${idx}">
+          <div>
+            <strong>${c.nome}</strong>
+            <div style="font-size:0.78rem; color:#666;">
+              ${c.telefone ? `📱 ${c.telefone} ` : ''}
+              ${c.nif ? `| NIF: ${c.nif} ` : ''}
+              ${c.email ? `| ✉️ ${c.email}` : ''}
+            </div>
+          </div>
+          <span style="font-size:0.75rem; background:#f5efe2; color:#8d6b20; padding:3px 8px; border-radius:99px; font-weight:600;">
+            ${c.pedidosCount} pedido(s)
+          </span>
+        </div>
+      `).join('');
+
+      boxSugestoes.querySelectorAll('.cliente-sugestao-item').forEach((el, idx) => {
+        el.addEventListener('click', () => {
+          const escolhido = matches[idx];
+          inputNome.value = escolhido.nome;
+          if (inputTel && escolhido.telefone) inputTel.value = escolhido.telefone;
+          if (inputEmail && escolhido.email) inputEmail.value = escolhido.email;
+          if (inputNif && escolhido.nif) inputNif.value = escolhido.nif;
+          boxSugestoes.style.display = 'none';
+
+          if (boxMedidas) {
+            if (escolhido.medidas) {
+              boxMedidas.style.display = 'block';
+              boxMedidas.innerHTML = `📏 <strong>Medidas guardadas na ficha de ${escolhido.nome}:</strong><br>${escolhido.medidas.replace(/\n/g, '<br>')}`;
+            } else {
+              boxMedidas.style.display = 'none';
+            }
+          }
+        });
+      });
+
+      boxSugestoes.style.display = 'block';
+    });
+
+    document.addEventListener('click', (ev) => {
+      if (!inputNome.contains(ev.target) && !boxSugestoes.contains(ev.target)) {
+        boxSugestoes.style.display = 'none';
+      }
+    });
+  })();
 
   let _submittingPedido = false;
   document.getElementById('form-pedido').addEventListener('submit', async (e) => {
@@ -493,6 +603,9 @@ if (document.getElementById('form-pedido')) {
         nif_cliente = '999999990';
     }
 
+    const tel_el = document.getElementById('telefone_cliente');
+    const telefone_cliente = (tel_el && tel_el.value) ? tel_el.value.trim() : null;
+
     const pedidoObj = {
       nome,
       data_pedido: formatarParaISO(dataInicioReal),
@@ -506,7 +619,8 @@ if (document.getElementById('form-pedido')) {
       desconto_percentagem: desconto_percentagem,
       valor_adiantado: valorFinalAdiantado,
       pagamentos: JSON.stringify(pagamentosInicial),
-      email_cliente: email_cliente
+      email_cliente: email_cliente,
+      fatura_contato_envio: telefone_cliente
     };
 
     try {
@@ -524,12 +638,21 @@ if (document.getElementById('form-pedido')) {
         _submittingPedido = false;
         if (btnSalvar) { btnSalvar.disabled = false; btnSalvar.textContent = '✓ Salvar Pedido'; }
       } else {
-        // Regista o cliente na tabela clientes_financas
-        await supabase.rpc('registar_cliente_financas', {
+        // Regista/atualiza o cliente na tabela clientes_financas (evitando conflito de NIF 999999990)
+        const nifParaFicha = (nif_cliente && nif_cliente !== '999999990') ? nif_cliente : '';
+        const { data: resCliRpc } = await supabase.rpc('registar_cliente_financas', {
             p_nome: nome,
-            p_email: email_cliente,
-            p_nif: nif_cliente
+            p_email: email_cliente || '',
+            p_nif: nifParaFicha
         });
+
+        if (telefone_cliente) {
+            if (resCliRpc && resCliRpc.id) {
+                await supabase.from('clientes_financas').update({ telefone: telefone_cliente }).eq('id', resCliRpc.id);
+            } else {
+                await supabase.from('clientes_financas').update({ telefone: telefone_cliente }).ilike('nome', nome);
+            }
+        }
 
         // Tenta enviar o email de confirmação se não for pronto-a-vestir
         if (!isProntoAVestir) {
@@ -542,7 +665,7 @@ if (document.getElementById('form-pedido')) {
         if (cupaoIdEl && cupaoIdEl.value) {
           await supabase
             .from('vouchers')
-            .update({ estado: 'utilizado', data_estado_mudado: new Date().toISOString() })
+            .update({ estado: 'utilizado', data_estado_muda: new Date().toISOString() })
             .eq('id', cupaoIdEl.value);
         }
 
@@ -1366,17 +1489,13 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
             <button class="admin-only btn-editar" onclick="abrirEditorPedido('${p.id}')">Editar</button>
             <button class="admin-only btn-excluir" onclick="excluirPedido('${p.id}')">Excluir</button>
           ` : ''}
-          ${p.fatura_final_link ? `
-            <button class="admin-only" onclick="abrirModalFatura('${p.id}')" style="background-color: #d4af37 !important; color: #fff !important; font-weight: bold; border: none;" title="Ver ou Editar Faturas e Envio">
+          ${(p.fatura_final_link || p.fatura_simples_link) ? `
+            <button class="admin-only" onclick="abrirModalFatura('${p.id}')" style="background-color: #d4af37 !important; color: #fff !important; font-weight: bold; border: none;" title="Ver ou atualizar link da fatura completa">
               📄 Ver Fatura
             </button>
-          ` : p.fatura_simples_link ? `
-            <button class="admin-only" onclick="abrirModalFatura('${p.id}')" style="background-color: #f57c00 !important; color: #fff !important; font-weight: bold; border: none;" title="Já tem fatura simples anexada — falta a fatura final/completa">
-              📄 Completar Fatura
-            </button>
           ` : `
-            <button class="admin-only" onclick="abrirModalFatura('${p.id}')" style="background-color: #f5f5f5 !important; color: #555 !important; border: 1px solid #ccc; font-weight: bold;" title="Tratar da emissão ou envio da fatura">
-              📄 Emitir Fatura
+            <button class="admin-only" onclick="abrirModalFatura('${p.id}')" style="background-color: #f5f5f5 !important; color: #555 !important; border: 1px solid #ccc; font-weight: bold;" title="Anexar o link da fatura completa">
+              📄 Anexar Fatura
             </button>
           `}
           <button class="admin-only" onclick="verInformacoesCliente('${p.nome ? p.nome.replace(/'/g, "\\'") : ''}', '${p.email_cliente ? p.email_cliente.replace(/'/g, "\\'") : ''}')" style="background-color: #607d8b !important; color: white !important; font-weight: bold; border: none;" title="Ver email e NIF do cliente">

@@ -123,21 +123,21 @@
             </div>
         </div>
 
-        <!-- NOVA SECÇÃO: FATURAS FÍSICAS -->
+        <!-- SECÇÃO: FATURAS EMITIDAS -->
         <div class="faturas-list" style="margin-bottom: 30px; border: 2px solid #e0d5c1;">
             <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--gold); margin-bottom: 16px; display:flex; align-items:center; gap:8px;">
-                📖 Registo de Faturas Físicas
+                📄 Faturas Emitidas
             </h3>
-            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:-10px; margin-bottom:15px;">Aqui estão listadas todas as encomendas que já têm uma fatura emitida (link guardado). Indique a página do seu livro físico onde a guardou.</p>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:-10px; margin-bottom:15px;">Lista de todas as faturas completas emitidas e guardadas no sistema.</p>
             
             <table class="table-custom">
                 <thead>
                     <tr>
                         <th>Cliente</th>
-                        <th>Código Fatura</th>
-                        <th>Tipo / Envio</th>
-                        <th>Nº Página Física</th>
-                        <th>Ações</th>
+                        <th>NIF</th>
+                        <th>Data</th>
+                        <th>Valor Total</th>
+                        <th>Fatura</th>
                     </tr>
                 </thead>
                 <tbody id="faturas-fisicas-tbody">
@@ -185,50 +185,36 @@
         </div>
     </div>
 
-    <!-- MODAL FATURA ANTIGA / AVULSA -->
+    <!-- MODAL FATURA ANTIGA / AVULSA (SIMPLIFICADO) -->
     <div class="modal-overlay" id="modal-fatura-antiga" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
-        <div style="background:#fff; width:90%; max-width:500px; padding:24px; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
-            <h3 style="margin-top:0; font-size:1.3rem; color:#1a1a2e; border-bottom: 2px solid #eee; padding-bottom:10px;">
-                + Inserir Fatura Antiga
+        <div style="background:#fff; width:90%; max-width:440px; padding:24px; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
+            <h3 style="margin-top:0; font-size:1.25rem; color:#1a1a2e; border-bottom: 2px solid #eee; padding-bottom:10px;">
+                + Inserir Fatura Avulsa / Antiga
             </h3>
             
-            <label style="font-size:0.85rem; font-weight:bold; color:#555;">Nome do Cliente</label>
-            <input type="text" id="fa-nome" placeholder="Ex: Maria Joaquina" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; margin-bottom:12px; box-sizing:border-box;">
+            <label style="font-size:0.85rem; font-weight:bold; color:#555;">Nome do Cliente *</label>
+            <input type="text" id="fa-nome" placeholder="Ex: Maria Joaquina" style="width:100%; padding:9px; border:1px solid #ccc; border-radius:6px; margin-bottom:12px; box-sizing:border-box;">
 
             <div style="display:flex; gap:10px; margin-bottom:12px;">
                 <div style="flex:1;">
-                    <label style="font-size:0.85rem; font-weight:bold; color:#555;">NIF</label>
-                    <input type="text" id="fa-nif" placeholder="999999990" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box;">
+                    <label style="font-size:0.85rem; font-weight:bold; color:#555;">NIF (Opcional)</label>
+                    <input type="text" id="fa-nif" placeholder="999999990" style="width:100%; padding:9px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
                 </div>
                 <div style="flex:1;">
-                    <label style="font-size:0.85rem; font-weight:bold; color:#555;">Data de Emissão</label>
-                    <input type="date" id="fa-data" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box;">
+                    <label style="font-size:0.85rem; font-weight:bold; color:#555;">Valor Total (€) *</label>
+                    <input type="number" id="fa-valor" placeholder="150.00" step="0.01" style="width:100%; padding:9px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
                 </div>
             </div>
 
-            <div style="display:flex; gap:10px; margin-bottom:12px;">
-                <div style="flex:1;">
-                    <label style="font-size:0.85rem; font-weight:bold; color:#555;">Valor Total (€)</label>
-                    <input type="number" id="fa-valor" placeholder="150.00" step="0.01" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box;">
-                </div>
-                <div style="flex:1;">
-                    <label style="font-size:0.85rem; font-weight:bold; color:#555;">Código Fatura</label>
-                    <input type="text" id="fa-codigo" placeholder="FT 25/01" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box;">
-                </div>
-            </div>
+            <label style="font-size:0.85rem; font-weight:bold; color:#555;">Data de Emissão *</label>
+            <input type="date" id="fa-data" style="width:100%; padding:9px; border:1px solid #ccc; border-radius:6px; margin-bottom:12px; box-sizing:border-box;">
 
-            <label style="font-size:0.85rem; font-weight:bold; color:#555;">Link Fatura Simplificada</label>
-            <input type="url" id="fa-simples" placeholder="https://..." style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; margin-bottom:12px; box-sizing:border-box;">
-
-            <label style="font-size:0.85rem; font-weight:bold; color:#555;">Link Fatura PDF</label>
-            <input type="url" id="fa-final" placeholder="https://..." style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; margin-bottom:12px; box-sizing:border-box;">
-
-            <label style="font-size:0.85rem; font-weight:bold; color:#555;">Nº Página Livro Físico</label>
-            <input type="text" id="fa-pagina" placeholder="Ex: Pag 12" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; margin-bottom:20px; box-sizing:border-box;">
+            <label style="font-size:0.85rem; font-weight:bold; color:#555;">Link da Fatura Completa *</label>
+            <input type="url" id="fa-final" placeholder="https://..." style="width:100%; padding:9px; border:1px solid #ccc; border-radius:6px; margin-bottom:20px; box-sizing:border-box;">
 
             <div style="display:flex; justify-content:flex-end; gap:10px;">
                 <button onclick="document.getElementById('modal-fatura-antiga').style.display='none'" style="padding:10px 18px; background:#f5f5f5; border:none; border-radius:6px; cursor:pointer; color:#555;">Cancelar</button>
-                <button onclick="salvarFaturaAntiga()" id="btn-salvar-fa" style="padding:10px 18px; background:#d4af37; border:none; border-radius:6px; cursor:pointer; color:#fff; font-weight:bold;">Adicionar Fatura</button>
+                <button onclick="salvarFaturaAntiga()" id="btn-salvar-fa" style="padding:10px 18px; background:#d4af37; border:none; border-radius:6px; cursor:pointer; color:#fff; font-weight:bold;">Guardar Fatura</button>
             </div>
         </div>
     </div>
@@ -309,33 +295,18 @@
             }
 
             tbody.innerHTML = faturasFiltradas.map(f => {
-                const temSimples = !!f.simples_link;
-                const temFinal = !!f.final_link;
-                
-                let faturaTag = '';
-                if(temSimples && temFinal) faturaTag = '<span style="background:#e8f5e9;color:#2e7d32;padding:4px 8px;border-radius:4px;font-size:0.8rem;font-weight:600;">Completa</span>';
-                else if(temSimples) faturaTag = '<span style="background:#e3f2fd;color:#1565c0;padding:4px 8px;border-radius:4px;font-size:0.8rem;font-weight:600;">Simples</span>';
-                else if(temFinal) faturaTag = '<span style="background:#fff8e1;color:#f57f17;padding:4px 8px;border-radius:4px;font-size:0.8rem;font-weight:600;">Final</span>';
-
-                let envioIcon = '';
-                if(f.status_envio === 'enviado') envioIcon = '<span title="Enviado ao Cliente">✅</span>';
-                else if(f.status_envio === 'pendente') envioIcon = '<span title="Por Enviar">⏳</span>';
+                const link = f.final_link || f.simples_link;
+                const dataFormatada = f.data_emissao ? new Date(f.data_emissao).toLocaleDateString('pt-PT') : '-';
+                const valorFormatado = f.valor_total !== undefined && f.valor_total !== null ? `€${Number(f.valor_total).toFixed(2)}` : '-';
 
                 return `
                     <tr>
                         <td style="font-weight:600;">${f.nome_cliente || '-'}</td>
-                        <td>${f.fatura_codigo || '-'}</td>
-                        <td>${faturaTag} ${envioIcon}</td>
+                        <td style="font-family:monospace; color:#555;">${f.nif || '999999990'}</td>
+                        <td>${dataFormatada}</td>
+                        <td style="font-weight:700; color:#2e7d32;">${valorFormatado}</td>
                         <td>
-                            <input type="text" 
-                                   value="${f.pagina_fisica || ''}" 
-                                   placeholder="Nº Página" 
-                                   class="inp-pagina"
-                                   onchange="guardarPaginaFisica('${f.id}', this)" />
-                        </td>
-                        <td>
-                            ${temSimples ? `<a href="${f.simples_link}" target="_blank" class="btn-action" title="Ver Fatura Simples">👁️</a>` : ''}
-                            ${temFinal ? `<a href="${f.final_link}" target="_blank" class="btn-action" title="Ver Fatura Final">👁️</a>` : ''}
+                            ${link ? `<a href="${link}" target="_blank" class="btn-action" style="text-decoration:none; background:#fff8e1; border:1px solid #ffe082; padding:5px 10px; border-radius:6px; color:#b8972e; font-weight:700; font-size:0.82rem;" title="Abrir Fatura Completa">🔗 Abrir PDF</a>` : '-'}
                         </td>
                     </tr>
                 `;
@@ -448,14 +419,13 @@
         // FATURAS ANTIGAS / AVULSAS
         // =====================================
         function abrirModalFaturaAntiga() {
+            const hoje = new Date();
+            const dataLocal = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}-${String(hoje.getDate()).padStart(2,'0')}`;
             document.getElementById('fa-nome').value = '';
             document.getElementById('fa-nif').value = '';
-            document.getElementById('fa-data').value = new Date().toISOString().split('T')[0];
+            document.getElementById('fa-data').value = dataLocal;
             document.getElementById('fa-valor').value = '';
-            document.getElementById('fa-codigo').value = '';
-            document.getElementById('fa-simples').value = '';
             document.getElementById('fa-final').value = '';
-            document.getElementById('fa-pagina').value = '';
             document.getElementById('modal-fatura-antiga').style.display = 'flex';
         }
 
@@ -464,14 +434,11 @@
             let nif = document.getElementById('fa-nif').value.trim();
             const dataEmissao = document.getElementById('fa-data').value;
             const valor = parseFloat(document.getElementById('fa-valor').value) || 0;
-            const codigo = document.getElementById('fa-codigo').value.trim() || null;
-            const simples = document.getElementById('fa-simples').value.trim() || null;
             const final = document.getElementById('fa-final').value.trim() || null;
-            const pagina = document.getElementById('fa-pagina').value.trim() || null;
 
             if(!nome) return alert("O Nome do Cliente é obrigatório.");
             if(!dataEmissao) return alert("A Data de Emissão é obrigatória.");
-            if(!simples && !final) return alert("Tem de fornecer pelo menos um Link de Fatura.");
+            if(!final) return alert("O Link da Fatura Completa é obrigatório.");
 
             if (!nif) nif = '999999990';
 
@@ -491,11 +458,10 @@
                 const payload = {
                     nome_cliente: nome,
                     nif: nif,
-                    simples_link: simples,
+                    simples_link: null,
                     final_link: final,
-                    pagina_fisica: pagina,
-                    fatura_codigo: codigo,
                     valor_total: valor,
+                    status_envio: 'enviado',
                     data_emissao: dataEmissao + "T12:00:00Z"
                 };
 
@@ -513,7 +479,7 @@
                 console.error(err);
                 alert("Erro ao adicionar fatura: " + (err.message || JSON.stringify(err)));
             } finally {
-                btn.textContent = "Adicionar Fatura";
+                btn.textContent = "Guardar Fatura";
                 btn.disabled = false;
             }
         }

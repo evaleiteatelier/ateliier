@@ -158,8 +158,16 @@
 
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    if (localStorage.getItem('adminToken')) {
+    const tokenExistente = localStorage.getItem('adminToken');
+    const expiraExistente = localStorage.getItem('sessaoExpira');
+    if (tokenExistente && (!expiraExistente || Date.now() < Number(expiraExistente))) {
       window.location.href = 'lista-espera.html';
+    } else if (expiraExistente && Date.now() >= Number(expiraExistente)) {
+      localStorage.removeItem('tipoUsuario');
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminNome');
+      localStorage.removeItem('adminId');
+      localStorage.removeItem('sessaoExpira');
     }
 
     // Acesso com senha (admin completo — Dashboard e Contas incluídos)
@@ -189,19 +197,22 @@
         return;
       }
 
-      localStorage.setItem('tipoUsuario', data.tipo);
+      localStorage.setItem('tipoUsuario', data.tipo || 'admin');
       localStorage.setItem('adminToken', data.email);
-      localStorage.setItem('adminNome', data.nome);
-      localStorage.setItem('adminId', data.id);
+      localStorage.setItem('adminNome', data.nome || 'Admin');
+      localStorage.setItem('adminId', data.id || '');
+      localStorage.setItem('sessaoExpira', String(Date.now() + 7 * 24 * 60 * 60 * 1000)); // 7 dias
       window.location.href = 'lista-espera.html';
     }
 
     // Acesso sem senha (básico — sem Dashboard nem Contas)
     function entrarSemSenha() {
       localStorage.setItem('tipoUsuario', 'basico');
+      localStorage.setItem('adminToken', 'equipa@atelier.local');
       localStorage.setItem('adminNome', 'Equipa Atelier');
+      localStorage.setItem('adminId', '');
+      localStorage.setItem('sessaoExpira', String(Date.now() + 24 * 60 * 60 * 1000)); // 24 horas
       window.location.href = 'lista-espera.html';
-
     }
   </script>
 

@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Central de Clientes - Eva Leite Atelier</title>
+    <link rel="icon" href="img/logo.png" type="image/png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="auth-guard.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="navbar.js"></script>
+    <style>
+        .clientes-wrapper {
+            max-width: 1280px;
+            margin: 28px auto;
+            padding: 0 20px 60px;
+            font-family: 'Inter', sans-serif;
+        }
+        .clientes-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #ece7df;
+        }
+        .clientes-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            color: #1a1a1a;
+            margin: 0 0 6px 0;
+        }
+        .clientes-header p {
+            margin: 0;
+            color: #666;
+            font-size: 0.92rem;
+        }
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn-gold {
+            background: #b8933a;
+            color: #fff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .btn-gold:hover {
+            background: #9f7d2d;
+            transform: translateY(-1px);
+        }
+        .btn-dark {
+            background: #1a1a1a;
+            color: #fff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .btn-dark:hover {
+            background: #333;
+            transform: translateY(-1px);
+        }
+        .btn-outline {
+            background: #fff;
+            color: #1a1a1a;
+            border: 1.5px solid #d9d2c5;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .btn-outline:hover {
+            border-color: #b8933a;
+            color: #b8933a;
+        }
+        .btn-whatsapp {
+            background: #25D366;
+            color: #fff;
+            border: none;
+            padding: 9px 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .btn-whatsapp:hover {
+            background: #1da851;
+            transform: translateY(-1px);
+        }
+
+        /* KPI Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .kpi-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            border: 1px solid #f0ece4;
+            border-left: 4px solid #b8933a;
+        }
+        .kpi-card.kpi-bot {
+            border-left-color: #e65100;
+        }
+        .kpi-card.kpi-active {
+            border-left-color: #2e7d32;
+        }
+        .kpi-card.kpi-revenue {
+            border-left-color: #1a1a1a;
+        }
+        .kpi-label {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: #777;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        .kpi-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+        }
+        .kpi-sub {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        /* Search & Filters Bar */
+        .filters-panel {
+            background: #fff;
+            border-radius: 12px;
+            padding: 18px 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            border: 1px solid #f0ece4;
+            margin-bottom: 20px;
+        }
+        .search-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+        .search-box {
+            flex: 1;
+            min-width: 260px;
+            position: relative;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 11px 14px 11px 38px;
+            border: 1.5px solid #e0d9ce;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-box input:focus {
+            border-color: #b8933a;
+        }
+        .search-box .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+            font-size: 1rem;
+        }
+        .sort-select {
+            padding: 10px 14px;
+            border: 1.5px solid #e0d9ce;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background: #fff;
+            color: #333;
+            font-weight: 500;
+            cursor: pointer;
+            outline: none;
+        }
+        .filter-pills {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .filter-pill {
+            background: #f6f3ee;
+            color: #555;
+            border: 1px solid #e5dec9;
+            padding: 7px 14px;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.18s;
+        }
+        .filter-pill:hover {
+            background: #ece5d8;
+            color: #1a1a1a;
+        }
+        .filter-pill.active {
+            background: #1a1a1a;
+            color: #fff;
+            border-color: #1a1a1a;
+        }
+
+        /* Clients Table */
+        .table-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            border: 1px solid #f0ece4;
+            overflow: hidden;
+        }
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+        .clientes-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        .clientes-table th {
+            background: #faf8f5;
+            color: #555;
+            font-size: 0.76rem;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            font-weight: 700;
+            padding: 14px 16px;
+            border-bottom: 1.5px solid #eee8de;
+        }
+        .clientes-table td {
+            padding: 15px 16px;
+            border-bottom: 1px solid #f2eee7;
+            vertical-align: middle;
+            font-size: 0.9rem;
+            color: #333;
+        }
+        .clientes-table tbody tr {
+            transition: background 0.15s;
+            cursor: pointer;
+        }
+        .clientes-table tbody tr:hover {
+            background: #fdfbf7;
+        }
+        .cliente-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .cliente-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #b8933a, #8d6b20);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+        }
+        .cliente-nome {
+            font-weight: 700;
+            color: #1a1a1a;
+            font-size: 0.96rem;
+            margin-bottom: 2px;
+        }
+        .cliente-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .tag-mini {
+            font-size: 0.7rem;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .tag-vip {
+            background: #fff8e1;
+            color: #b8860b;
+            border: 1px solid #ffe082;
+        }
+        .tag-medidas {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .tag-fidelidade {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        /* Status Recency Badges */
+        .badge-recencia {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+        .recencia-ativo {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .recencia-atencao {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+        .recencia-inativo {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .recencia-sem-compra {
+            background: #f1f3f5;
+            color: #666;
+        }
+
+        .row-actions {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .btn-icon-sm {
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border: 1px solid #e0d9ce;
+            background: #fff;
+            color: #222;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-icon-sm:hover {
+            border-color: #b8933a;
+            background: #faf6ee;
+        }
+
+        /* Modal Ficha Completa */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.65);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            overflow-y: auto;
+        }
+        .modal-ficha {
+            background: #fff;
+            width: 100%;
+            max-width: 960px;
+            max-height: 92vh;
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: modalFadeIn 0.2s ease;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .ficha-header {
+            background: #1a1a1a;
+            color: #fff;
+            padding: 20px 26px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 14px;
+            border-bottom: 3px solid #b8933a;
+        }
+        .ficha-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .ficha-avatar-lg {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: #b8933a;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            font-weight: 700;
+            font-family: 'Playfair Display', serif;
+        }
+        .ficha-header h2 {
+            margin: 0 0 4px 0;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.45rem;
+            color: #fff;
+        }
+        .ficha-header-sub {
+            font-size: 0.83rem;
+            color: #ccc;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .ficha-close {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .ficha-close:hover {
+            background: rgba(255,255,255,0.22);
+        }
+        .ficha-body {
+            padding: 24px 26px;
+            overflow-y: auto;
+            flex: 1;
+            background: #fbf9f6;
+        }
+        .ficha-kpis {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+        .ficha-kpi-box {
+            background: #fff;
+            border: 1px solid #ece6dc;
+            border-radius: 10px;
+            padding: 14px 16px;
+        }
+        .ficha-kpi-box .lbl {
+            font-size: 0.74rem;
+            text-transform: uppercase;
+            color: #777;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .ficha-kpi-box .val {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            font-family: 'Playfair Display', serif;
+        }
+        .ficha-kpi-box .sub {
+            font-size: 0.78rem;
+            color: #666;
+            margin-top: 3px;
+        }
+
+        .ficha-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.35fr;
+            gap: 20px;
+        }
+        @media (max-width: 820px) {
+            .ficha-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .ficha-section {
+            background: #fff;
+            border: 1px solid #ece6dc;
+            border-radius: 12px;
+            padding: 18px 20px;
+        }
+        .ficha-section h3 {
+            margin: 0 0 14px 0;
+            font-size: 1.02rem;
+            color: #1a1a1a;
+            border-bottom: 1px solid #f0ece2;
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .form-field {
+            margin-bottom: 12px;
+        }
+        .form-field label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 4px;
+        }
+        .form-field input,
+        .form-field textarea {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid #dcd4c6;
+            border-radius: 7px;
+            font-size: 0.9rem;
+            font-family: 'Inter', sans-serif;
+            box-sizing: border-box;
+        }
+        .form-field textarea {
+            resize: vertical;
+            min-height: 78px;
+        }
+        .form-row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        /* Order history cards inside client profile */
+        .historico-lista {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 460px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .hist-pedido-card {
+            border: 1px solid #ece6dc;
+            border-radius: 10px;
+            padding: 12px 14px;
+            background: #fdfcfa;
+            transition: border-color 0.15s;
+        }
+        .hist-pedido-card:hover {
+            border-color: #b8933a;
+        }
+        .hist-pedido-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .hist-status {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+        .st-espera { background: #fff3e0; color: #e65100; }
+        .st-concluido { background: #e3f2fd; color: #1565c0; }
+        .st-entregue { background: #e8f5e9; color: #2e7d32; }
+        .st-arquivado { background: #eceff1; color: #546e7a; }
+
+        .hist-pecas {
+            font-size: 0.86rem;
+            color: #333;
+            margin: 6px 0;
+            padding-left: 16px;
+        }
+        .hist-pecas li {
+            margin-bottom: 2px;
+        }
+        .hist-pedido-foot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed #e6dfd3;
+            font-size: 0.82rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="navbar-placeholder"></div>
+
+    <div class="clientes-wrapper">
+        <div class="clientes-header">
+            <div>
+                <h1>👥 Central de Clientes</h1>
+                <p>Fichas completas, histórico de compras, valor acumulado no Atelier e inteligência para o Bot de WhatsApp.</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-outline" onclick="abrirModalBotZap()">🤖 Painel Bot WhatsApp / Exportar</button>
+                <button class="btn-gold" onclick="abrirModalNovoCliente()">+ Novo Cliente</button>
+            </div>
+        </div>
+
+        <!-- KPIs -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-label">Total de Clientes</div>
+                <div class="kpi-value" id="kpi-total-clientes">0</div>
+                <div class="kpi-sub" id="kpi-sub-contactos">0 com telefone/WhatsApp</div>
+            </div>
+            <div class="kpi-card kpi-active">
+                <div class="kpi-label">Clientes Ativos (&lt; 60 dias)</div>
+                <div class="kpi-value" id="kpi-clientes-ativos">0</div>
+                <div class="kpi-sub">Compraram recentemente no Atelier</div>
+            </div>
+            <div class="kpi-card kpi-bot">
+                <div class="kpi-label">Ausentes (&gt; 90 dias - Bot Zap)</div>
+                <div class="kpi-value" id="kpi-clientes-ausentes">0</div>
+                <div class="kpi-sub">Prontos para mensagem de reativação</div>
+            </div>
+            <div class="kpi-card kpi-revenue">
+                <div class="kpi-label">Valor Total Faturado / Pedidos</div>
+                <div class="kpi-value" id="kpi-receita-total">€0.00</div>
+                <div class="kpi-sub" id="kpi-ticket-medio">Ticket médio por cliente: €0.00</div>
+            </div>
+        </div>
+
+        <!-- Pesquisa e Filtros -->
+        <div class="filters-panel">
+            <div class="search-row">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="input-pesquisa-cliente" placeholder="Pesquisar por nome, telefone/WhatsApp, email ou NIF..." oninput="renderizarTabelaClientes()">
+                </div>
+                <select id="select-ordenacao" class="sort-select" onchange="renderizarTabelaClientes()">
+                    <option value="ultima_compra_desc">Ordenar: Última Compra (Mais recente)</option>
+                    <option value="inatividade_desc">Ordenar: Mais tempo sem comprar (Alvo Bot Zap)</option>
+                    <option value="total_gasto_desc">Ordenar: Maior Valor Gasto no Atelier (€)</option>
+                    <option value="total_pedidos_desc">Ordenar: Mais Pedidos Realizados</option>
+                    <option value="nome_asc">Ordenar: Nome (A - Z)</option>
+                </select>
+            </div>
+            <div class="filter-pills">
+                <button class="filter-pill active" data-filtro="todos" onclick="selecionarFiltro('todos', this)">Todos os Clientes</button>
+                <button class="filter-pill" data-filtro="bot_zap" onclick="selecionarFiltro('bot_zap', this)">🤖 Alvo Bot Zap (&gt; 90 dias sem comprar)</button>
+                <button class="filter-pill" data-filtro="ativos" onclick="selecionarFiltro('ativos', this)">🟢 Ativos (&lt; 60 dias)</button>
+                <button class="filter-pill" data-filtro="atencao" onclick="selecionarFiltro('atencao', this)">🟡 Atenção (60 a 90 dias)</button>
+                <button class="filter-pill" data-filtro="vip" onclick="selecionarFiltro('vip', this)">👑 VIPs (+€150 gastos)</button>
+                <button class="filter-pill" data-filtro="com_whatsapp" onclick="selecionarFiltro('com_whatsapp', this)">📱 Com Telefone / WhatsApp</button>
+            </div>
+        </div>
+
+        <!-- Tabela de Clientes -->
+        <div class="table-card">
+            <div class="table-responsive">
+                <table class="clientes-table">
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Contacto / NIF</th>
+                            <th>Última Compra</th>
+                            <th>Tempo s/ Comprar</th>
+                            <th>Pedidos</th>
+                            <th>Total no Atelier</th>
+                            <th style="text-align:right;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-clientes">
+                        <tr>
+                            <td colspan="7" style="text-align:center; padding:40px; color:#888;">A carregar base de dados de clientes e histórico...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: FICHA COMPLETA DO CLIENTE -->
+    <div class="modal-backdrop" id="modal-ficha-cliente">
+        <div class="modal-ficha">
+            <div class="ficha-header">
+                <div class="ficha-header-left">
+                    <div class="ficha-avatar-lg" id="ficha-avatar">EL</div>
+                    <div>
+                        <h2 id="ficha-titulo-nome">Nome do Cliente</h2>
+                        <div class="ficha-header-sub">
+                            <span id="ficha-badge-recencia"></span>
+                            <span id="ficha-sub-resumo"></span>
+                        </div>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                    <a id="ficha-btn-whatsapp" href="#" target="_blank" class="btn-whatsapp" style="display:none;">💬 WhatsApp</a>
+                    <button class="btn-gold" onclick="criarPedidoParaClienteAtual()">+ Novo Pedido</button>
+                    <button class="ficha-close" onclick="fecharModalFicha()" title="Fechar">✕</button>
+                </div>
+            </div>
+
+            <div class="ficha-body">
+                <!-- Mini KPIs do Cliente -->
+                <div class="ficha-kpis">
+                    <div class="ficha-kpi-box">
+                        <div class="lbl">Valor Total no Atelier</div>
+                        <div class="val" id="ficha-kpi-total">€0.00</div>
+                        <div class="sub" id="ficha-kpi-pago">Pago: €0.00</div>
+                    </div>
+                    <div class="ficha-kpi-box">
+                        <div class="lbl">Última Compra</div>
+                        <div class="val" id="ficha-kpi-ultima">—</div>
+                        <div class="sub" id="ficha-kpi-dias">Sem registo</div>
+                    </div>
+                    <div class="ficha-kpi-box">
+                        <div class="lbl">Total de Pedidos</div>
+                        <div class="val" id="ficha-kpi-pedidos">0</div>
+                        <div class="sub" id="ficha-kpi-pecas">0 peças confecionadas</div>
+                    </div>
+                    <div class="ficha-kpi-box">
+                        <div class="lbl">Fidelidade & Vouchers</div>
+                        <div class="val" id="ficha-kpi-fidelidade">0 pts</div>
+                        <div class="sub" id="ficha-kpi-vouchers">0 vouchers</div>
+                    </div>
+                </div>
+
+                <div class="ficha-grid">
+                    <!-- Coluna Esquerda: Dados Cadastrais & Medidas -->
+                    <div class="ficha-section">
+                        <h3>
+                            <span>📝 Dados da Ficha & Medidas</span>
+                            <span id="ficha-db-badge" style="font-size:0.72rem; font-weight:600; color:#2e7d32;"></span>
+                        </h3>
+                        <form id="form-ficha-cliente" onsubmit="guardarFichaCliente(event)">
+                            <div class="form-field">
+                                <label>Nome Completo *</label>
+                                <input type="text" id="ficha-input-nome" required placeholder="Nome da cliente">
+                            </div>
+                            <div class="form-row-2">
+                                <div class="form-field">
+                                    <label>Telefone / WhatsApp</label>
+                                    <input type="text" id="ficha-input-telefone" placeholder="Ex: +351 912 345 678">
+                                </div>
+                                <div class="form-field">
+                                    <label>NIF (Faturação)</label>
+                                    <input type="text" id="ficha-input-nif" placeholder="Ex: 123456789" maxlength="15">
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <label>Email</label>
+                                <input type="email" id="ficha-input-email" placeholder="cliente@email.com">
+                            </div>
+                            <div class="form-field">
+                                <label>Morada / Endereço</label>
+                                <input type="text" id="ficha-input-morada" placeholder="Rua, Código Postal, Cidade">
+                            </div>
+                            <div class="form-field">
+                                <label>📏 Medidas de Costura & Preferências da Cliente</label>
+                                <textarea id="ficha-input-medidas" placeholder="Ex: Busto: 92cm | Cintura: 74cm | Anca: 98cm | Altura: 1.65m&#10;Preferências: Gosta de bainha ligeiramente subida..."></textarea>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:14px;">
+                                <button type="button" id="btn-eliminar-registo-cliente" class="btn-outline" style="color:#c62828; border-color:#f5c6cb; padding:8px 12px; font-size:0.8rem;" onclick="eliminarRegistoClienteAtual()">🗑️ Apagar Registo</button>
+                                <button type="submit" class="btn-gold" style="flex:1; justify-content:center;">💾 Guardar Ficha do Cliente</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Coluna Direita: Histórico Completo de Pedidos -->
+                    <div class="ficha-section">
+                        <h3>
+                            <span>👗 Histórico Completo no Atelier</span>
+                            <span id="ficha-count-historico" style="font-size:0.8rem; color:#777; font-weight:500;">0 pedidos</span>
+                        </h3>
+                        <div class="historico-lista" id="ficha-lista-pedidos">
+                            <!-- Preenchido via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PAINEL BOT WHATSAPP & EXPORTAÇÃO -->
+    <div class="modal-backdrop" id="modal-bot-zap">
+        <div class="modal-ficha" style="max-width: 680px;">
+            <div class="ficha-header">
+                <div>
+                    <h2>🤖 Central de Inteligência para Bot WhatsApp</h2>
+                    <div class="ficha-header-sub">Filtre clientes ausentes e exporte dados ou conecte o seu Bot diretamente ao Supabase</div>
+                </div>
+                <button class="ficha-close" onclick="fecharModalBotZap()">✕</button>
+            </div>
+            <div class="ficha-body">
+                <div class="ficha-section" style="margin-bottom:16px;">
+                    <h3>⚙️ Configurar Regra de Inatividade (Saudade)</h3>
+                    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:12px;">
+                        <label style="font-size:0.9rem; font-weight:600;">Mostrar clientes que não compram há mais de:</label>
+                        <select id="bot-dias-filtro" class="sort-select" onchange="atualizarPreviaBotZap()">
+                            <option value="30">30 dias</option>
+                            <option value="60">60 dias (2 meses)</option>
+                            <option value="90" selected>90 dias (3 meses - Recomendado)</option>
+                            <option value="120">120 dias (4 meses)</option>
+                            <option value="180">180 dias (6 meses)</option>
+                        </select>
+                    </div>
+                    <p id="bot-resumo-alvo" style="font-size:0.9rem; color:#2e7d32; font-weight:600; margin:8px 0;"></p>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
+                        <button class="btn-gold" onclick="exportarClientesBot('csv')">📥 Descarregar Lista CSV (Excel / Bot)</button>
+                        <button class="btn-dark" onclick="exportarClientesBot('json')">📋 Copiar JSON para API do Bot</button>
+                    </div>
+                </div>
+
+                <div class="ficha-section">
+                    <h3>🔌 Integração Direta do Bot com a Base de Dados</h3>
+                    <p style="font-size:0.84rem; color:#555; line-height:1.5; margin-top:0;">
+                        O seu futuro Bot de WhatsApp (n8n, Evolution API, Typebot ou Node.js) pode consultar diretamente a View SQL <code>vw_clientes_bot_zap</code> ou a tabela <code>clientes_financas</code> + <code>pedidos</code> no Supabase para saber automaticamente:
+                    </p>
+                    <ul style="font-size:0.83rem; color:#444; line-height:1.6;">
+                        <li><strong>nome</strong> e <strong>telefone</strong> (formatado para WhatsApp)</li>
+                        <li><strong>ultima_compra</strong> e <strong>dias_sem_comprar</strong></li>
+                        <li><strong>total_gasto</strong> e <strong>total_pedidos</strong> (para mensagens personalizadas a clientes VIP)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://cixjmwfkfmeedajpmzmp.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeGptd2ZrZm1lZWRhanBtem1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MzM5ODIsImV4cCI6MjA2OTEwOTk4Mn0.vFvgRMK_oabG19FNauNaBu_CoQTL8QRSXcptyfY6rbM';
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let listaClientesConsolidada = [];
+        let filtroAtivo = 'todos';
+        let clienteSelecionadoAtual = null;
+
+        // Separador interno para guardar Morada + Medidas na coluna "morada" do clientes_financas sem precisar alterar schema
+        const MEDIDAS_SEPARATOR = "\n---MEDIDAS---\n";
+
+        function normalizarChaveNome(nome) {
+            return String(nome || '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .trim()
+                .toLowerCase();
+        }
+
+        function extrairMoradaEMedidas(textoBruto) {
+            if (!textoBruto) return { morada: '', medidas: '' };
+            const str = String(textoBruto);
+            if (str.includes(MEDIDAS_SEPARATOR)) {
+                const partes = str.split(MEDIDAS_SEPARATOR);
+                return {
+                    morada: (partes[0] || '').trim(),
+                    medidas: partes.slice(1).join(MEDIDAS_SEPARATOR).trim()
+                };
+            }
+            return { morada: str.trim(), medidas: '' };
+        }
+
+        function combinarMoradaEMedidas(morada, medidas) {
+            const m = String(morada || '').trim();
+            const med = String(medidas || '').trim();
+            if (!med) return m || null;
+            return `${m}${MEDIDAS_SEPARATOR}${med}`;
+        }
+
+        function formatarNumeroWhatsApp(telefone) {
+            if (!telefone) return '';
+            let limpo = String(telefone).replace(/[^\d+]/g, '');
+            if (limpo.startsWith('+')) limpo = limpo.slice(1);
+            if (limpo.startsWith('00')) limpo = limpo.slice(2);
+            // Se tiver 9 dígitos e começar por 9 (Portugal), adiciona 351
+            if (limpo.length === 9 && limpo.startsWith('9')) {
+                limpo = '351' + limpo;
+            }
+            return limpo;
+        }
+
+        function calcularDiasDesde(dataIso) {
+            if (!dataIso) return null;
+            const d = new Date(dataIso + 'T12:00:00');
+            if (isNaN(d.getTime())) return null;
+            const hoje = new Date();
+            const diffMs = hoje.getTime() - d.getTime();
+            const dias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            return Math.max(0, dias);
+        }
+
+        function formatarDataPT(dataIso) {
+            if (!dataIso) return '—';
+            const partes = String(dataIso).split('T')[0].split('-');
+            if (partes.length !== 3) return dataIso;
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+
+        function obterIniciais(nome) {
+            const partes = String(nome || 'Cliente').trim().split(/\s+/);
+            if (partes.length === 1) return partes[0].substring(0, 2).toUpperCase();
+            return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
+        }
+
+        async function carregarDadosCentralClientes() {
+            try {
+                const [resClientes, resPedidos, resFaturas, resFidelidade, resVouchers] = await Promise.all([
+                    sb.from('clientes_financas').select('*').order('nome', { ascending: true }),
+                    sb.from('pedidos').select('*').order('data_pedido', { ascending: false }),
+                    sb.from('faturas').select('*'),
+                    sb.from('loyalty_cards').select('*'),
+                    sb.from('vouchers').select('*')
+                ]);
+
+                const clientesDB = resClientes.data || [];
+                const pedidosDB = resPedidos.data || [];
+                const faturasDB = resFaturas.data || [];
+                const fidelidadeDB = resFidelidade.data || [];
+                const vouchersDB = resVouchers.data || [];
+
+                let idsOcultosLocal = [];
+                try {
+                    idsOcultosLocal = JSON.parse(localStorage.getItem('pedidos_ocultos_historico') || '[]').map(String);
+                } catch (e) {}
+
+                // Mapear faturas por pedido_id
+                const faturasPorPedido = {};
+                faturasDB.forEach(f => {
+                    if (f.pedido_id) faturasPorPedido[f.pedido_id] = f;
+                });
+
+                // Mapear clientes por chave normalizada
+                const mapaClientes = new Map();
+
+                // 1. Inserir clientes registados na tabela clientes_financas
+                clientesDB.forEach(c => {
+                    const chave = normalizarChaveNome(c.nome);
+                    if (!chave) return;
+                    const { morada, medidas } = extrairMoradaEMedidas(c.morada);
+                    mapaClientes.set(chave, {
+                        chave,
+                        db_id: c.id,
+                        nome: c.nome.trim(),
+                        nif: c.nif || '',
+                        email: c.email || '',
+                        telefone: c.telefone || '',
+                        morada: morada,
+                        medidas: c.medidas || medidas || '',
+                        criado_em: c.criado_em,
+                        pedidos: [],
+                        faturas: [],
+                        pontosFidelidade: 0,
+                        vouchersCount: 0,
+                        totalGasto: 0,
+                        totalPago: 0,
+                        totalPecas: 0,
+                        ultimaCompra: null,
+                        diasSemComprar: null
+                    });
+                });
+
+                // 2. Cruzar todos os pedidos (mesmo de clientes ainda não guardados em clientes_financas)
+                pedidosDB.forEach(p => {
+                    const nomeBruto = (p.nome || p.nome_cliente || '').trim();
+                    if (!nomeBruto) return;
+                    const chave = normalizarChaveNome(nomeBruto);
+
+                    const fatAssociada = faturasPorPedido[p.id] || null;
+                    const nifDoPedido = (fatAssociada && fatAssociada.nif && fatAssociada.nif !== '999999990') ? fatAssociada.nif : '';
+
+                    let registo = mapaClientes.get(chave);
+                    if (!registo && nifDoPedido) {
+                        for (const item of mapaClientes.values()) {
+                            if (item.nif && item.nif === nifDoPedido.trim()) {
+                                registo = item;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!registo) {
+                        registo = {
+                            chave,
+                            db_id: null,
+                            nome: nomeBruto,
+                            nif: nifDoPedido,
+                            email: p.email_cliente || '',
+                            telefone: p.fatura_contato_envio || '',
+                            morada: '',
+                            medidas: '',
+                            criado_em: p.data_real || p.data_pedido,
+                            pedidos: [],
+                            faturas: [],
+                            pontosFidelidade: 0,
+                            vouchersCount: 0,
+                            totalGasto: 0,
+                            totalPago: 0,
+                            totalPecas: 0,
+                            ultimaCompra: null,
+                            diasSemComprar: null
+                        };
+                        mapaClientes.set(chave, registo);
+                    } else {
+                        if (!registo.email && p.email_cliente) registo.email = p.email_cliente;
+                        if (!registo.nif && nifDoPedido) registo.nif = nifDoPedido;
+                    }
+
+                    // Parse itens JSON do pedido
+                    let listaItens = [];
+                    try {
+                        if (Array.isArray(p.itens)) listaItens = p.itens;
+                        else if (typeof p.itens === 'string' && p.itens.trim()) listaItens = JSON.parse(p.itens);
+                    } catch (e) {}
+
+                    // Calcular valor pago (pagamentos JSON ou valor_adiantado)
+                    const valorPedido = parseFloat(p.preco_final ?? p.preco_total ?? 0) || 0;
+                    let valorPago = parseFloat(p.valor_adiantado ?? 0) || 0;
+                    try {
+                        const pgmts = typeof p.pagamentos === 'string' ? JSON.parse(p.pagamentos) : p.pagamentos;
+                        if (Array.isArray(pgmts) && pgmts.length > 0) {
+                            const somaPg = pgmts.reduce((acc, pg) => acc + (parseFloat(pg.valor) || 0), 0);
+                            if (somaPg > valorPago) valorPago = somaPg;
+                        }
+                    } catch (e) {}
+                    if (p.status === 'entregue' && valorPago === 0 && valorPedido > 0) {
+                        valorPago = valorPedido;
+                    }
+
+                    const dataRef = p.data_real || p.data_pedido || null;
+                    const qtdPecas = listaItens.reduce((acc, it) => acc + (parseInt(it.quantidade) || 1), 0);
+                    const isArquivado = p.status === 'arquivado' || p.oculto_historico === true || idsOcultosLocal.includes(String(p.id));
+
+                    registo.pedidos.push({
+                        ...p,
+                        itensParsed: listaItens,
+                        valorCalculado: valorPedido,
+                        valorPagoCalculado: valorPago,
+                        dataReferencia: dataRef,
+                        isArquivado,
+                        faturaAssociada: fatAssociada
+                    });
+
+                    registo.totalGasto += valorPedido;
+                    registo.totalPago += valorPago;
+                    registo.totalPecas += qtdPecas;
+
+                    if (dataRef) {
+                        if (!registo.ultimaCompra || dataRef > registo.ultimaCompra) {
+                            registo.ultimaCompra = dataRef;
+                        }
+                    }
+                });
+
+                // 3. Cruzar Cartões de Fidelidade e Vouchers (também enriquece telefone/email)
+                fidelidadeDB.forEach(fid => {
+                    const chave = normalizarChaveNome(fid.client_name);
+                    const reg = mapaClientes.get(chave);
+                    if (reg) {
+                        reg.pontosFidelidade += (parseInt(fid.current_services ?? fid.points) || 0);
+                        if (!reg.telefone && fid.client_phone) reg.telefone = fid.client_phone;
+                    }
+                });
+
+                vouchersDB.forEach(v => {
+                    const chave = normalizarChaveNome(v.nome_cliente || v.client_name);
+                    const reg = mapaClientes.get(chave);
+                    if (reg) {
+                        reg.vouchersCount += 1;
+                        if (!reg.telefone && v.numero_cliente) reg.telefone = v.numero_cliente;
+                        if (!reg.email && v.email_cliente) reg.email = v.email_cliente;
+                    }
+                });
+
+                // 4. Calcular dias sem comprar e ordenar pedidos internos de cada cliente
+                listaClientesConsolidada = Array.from(mapaClientes.values()).map(c => {
+                    c.diasSemComprar = calcularDiasDesde(c.ultimaCompra);
+                    c.pedidos.sort((a, b) => {
+                        const dA = a.dataReferencia || '';
+                        const dB = b.dataReferencia || '';
+                        return dB.localeCompare(dA);
+                    });
+                    return c;
+                });
+
+                atualizarKPIsTopo();
+                renderizarTabelaClientes();
+            } catch (err) {
+                console.error("Erro ao carregar Central de Clientes:", err);
+                document.getElementById('tbody-clientes').innerHTML = `
+                    <tr><td colspan="7" style="text-align:center; padding:30px; color:#c62828;">
+                        Erro ao carregar clientes: ${err.message || err}
+                    </td></tr>`;
+            }
+        }
+
+        function atualizarKPIsTopo() {
+            const total = listaClientesConsolidada.length;
+            const comTel = listaClientesConsolidada.filter(c => c.telefone && c.telefone.trim().length >= 6).length;
+            const ativos = listaClientesConsolidada.filter(c => c.diasSemComprar !== null && c.diasSemComprar <= 60).length;
+            const ausentesBot = listaClientesConsolidada.filter(c => c.diasSemComprar !== null && c.diasSemComprar > 90).length;
+            const receitaTotal = listaClientesConsolidada.reduce((acc, c) => acc + c.totalGasto, 0);
+            const clientesComCompra = listaClientesConsolidada.filter(c => c.totalGasto > 0).length;
+            const ticketMedio = clientesComCompra > 0 ? (receitaTotal / clientesComCompra) : 0;
+
+            document.getElementById('kpi-total-clientes').textContent = total;
+            document.getElementById('kpi-sub-contactos').textContent = `${comTel} com telefone/WhatsApp registado`;
+            document.getElementById('kpi-clientes-ativos').textContent = ativos;
+            document.getElementById('kpi-clientes-ausentes').textContent = ausentesBot;
+            document.getElementById('kpi-receita-total').textContent = `€${receitaTotal.toFixed(2)}`;
+            document.getElementById('kpi-ticket-medio').textContent = `Ticket médio por cliente: €${ticketMedio.toFixed(2)}`;
+        }
+
+        function selecionarFiltro(novoFiltro, btnEl) {
+            filtroAtivo = novoFiltro;
+            document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+            if (btnEl) btnEl.classList.add('active');
+            renderizarTabelaClientes();
+        }
+
+        function obterBadgeRecenciaHTML(dias) {
+            if (dias === null || dias === undefined) {
+                return `<span class="badge-recencia recencia-sem-compra">Sem compras</span>`;
+            }
+            if (dias === 0) {
+                return `<span class="badge-recencia recencia-ativo">🟢 Comprou hoje</span>`;
+            }
+            if (dias <= 60) {
+                return `<span class="badge-recencia recencia-ativo">🟢 Há ${dias} dias</span>`;
+            }
+            if (dias <= 90) {
+                return `<span class="badge-recencia recencia-atencao">🟡 Há ${dias} dias</span>`;
+            }
+            return `<span class="badge-recencia recencia-inativo">🔴 Há ${dias} dias</span>`;
+        }
+
+        function renderizarTabelaClientes() {
+            const termo = normalizarChaveNome(document.getElementById('input-pesquisa-cliente').value);
+            const ordenacao = document.getElementById('select-ordenacao').value;
+
+            let filtrados = listaClientesConsolidada.filter(c => {
+                if (termo) {
+                    const matchNome = normalizarChaveNome(c.nome).includes(termo);
+                    const matchTel = (c.telefone || '').toLowerCase().includes(termo);
+                    const matchEmail = (c.email || '').toLowerCase().includes(termo);
+                    const matchNif = (c.nif || '').toLowerCase().includes(termo);
+                    if (!matchNome && !matchTel && !matchEmail && !matchNif) return false;
+                }
+
+                if (filtroAtivo === 'bot_zap') return c.diasSemComprar !== null && c.diasSemComprar > 90;
+                if (filtroAtivo === 'ativos') return c.diasSemComprar !== null && c.diasSemComprar <= 60;
+                if (filtroAtivo === 'atencao') return c.diasSemComprar !== null && c.diasSemComprar > 60 && c.diasSemComprar <= 90;
+                if (filtroAtivo === 'vip') return c.totalGasto >= 150;
+                if (filtroAtivo === 'com_whatsapp') return Boolean(c.telefone && c.telefone.trim().length >= 6);
+                return true;
+            });
+
+            filtrados.sort((a, b) => {
+                if (ordenacao === 'ultima_compra_desc') {
+                    return (b.ultimaCompra || '').localeCompare(a.ultimaCompra || '');
+                }
+                if (ordenacao === 'inatividade_desc') {
+                    const dA = a.diasSemComprar ?? -1;
+                    const dB = b.diasSemComprar ?? -1;
+                    return dB - dA;
+                }
+                if (ordenacao === 'total_gasto_desc') {
+                    return b.totalGasto - a.totalGasto;
+                }
+                if (ordenacao === 'total_pedidos_desc') {
+                    return b.pedidos.length - a.pedidos.length;
+                }
+                return a.nome.localeCompare(b.nome, 'pt');
+            });
+
+            const tbody = document.getElementById('tbody-clientes');
+            if (filtrados.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align:center; padding:40px; color:#888;">
+                            Nenhum cliente encontrado para os filtros selecionados.
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtrados.map(c => {
+                const iniciais = obterIniciais(c.nome);
+                const chaveEscapada = c.chave.replace(/'/g, "\\'");
+                const numZap = formatarNumeroWhatsApp(c.telefone);
+                const msgZap = encodeURIComponent(`Olá ${c.nome.split(' ')[0]}! Tudo bem? Aqui é do Eva Leite Atelier ✨`);
+
+                const tags = [];
+                if (c.totalGasto >= 150) tags.push(`<span class="tag-mini tag-vip">👑 VIP</span>`);
+                if (c.medidas) tags.push(`<span class="tag-mini tag-medidas">📏 Com Medidas</span>`);
+                if (c.pontosFidelidade > 0) tags.push(`<span class="tag-mini tag-fidelidade">🎁 ${c.pontosFidelidade} pts</span>`);
+
+                const contactoHTML = `
+                    <div style="font-size:0.84rem; line-height:1.4;">
+                        ${c.telefone ? `<div>📱 <strong>${c.telefone}</strong></div>` : `<div style="color:#aaa;">Sem telefone</div>`}
+                        ${c.email ? `<div style="color:#666;">✉️ ${c.email}</div>` : ''}
+                        ${c.nif ? `<div style="color:#777; font-size:0.78rem;">NIF: ${c.nif}</div>` : ''}
+                    </div>
+                `;
+
+                return `
+                    <tr onclick="abrirFichaCliente('${chaveEscapada}')">
+                        <td>
+                            <div class="cliente-cell">
+                                <div class="cliente-avatar">${iniciais}</div>
+                                <div>
+                                    <div class="cliente-nome">${c.nome}</div>
+                                    <div class="cliente-tags">${tags.join('')}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${contactoHTML}</td>
+                        <td><strong>${formatarDataPT(c.ultimaCompra)}</strong></td>
+                        <td>${obterBadgeRecenciaHTML(c.diasSemComprar)}</td>
+                        <td>
+                            <strong>${c.pedidos.length}</strong> pedido(s)
+                            <div style="font-size:0.76rem; color:#777;">${c.totalPecas} peça(s)</div>
+                        </td>
+                        <td>
+                            <strong style="color:#1a1a1a; font-size:0.98rem;">€${c.totalGasto.toFixed(2)}</strong>
+                            ${c.pedidos.length > 0 ? `<div style="font-size:0.75rem; color:#2e7d32;">Pago: €${c.totalPago.toFixed(2)}</div>` : ''}
+                        </td>
+                        <td style="text-align:right;" onclick="event.stopPropagation();">
+                            <div class="row-actions" style="justify-content:flex-end;">
+                                ${numZap ? `<a href="https://wa.me/${numZap}?text=${msgZap}" target="_blank" class="btn-icon-sm" style="color:#1da851; border-color:#b9eccb;" title="Enviar WhatsApp">💬 Zap</a>` : ''}
+                                <button class="btn-icon-sm" onclick="abrirFichaCliente('${chaveEscapada}')">📋 Ver Ficha</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function abrirFichaCliente(chave) {
+            const cliente = listaClientesConsolidada.find(c => c.chave === chave);
+            if (!cliente) return;
+            clienteSelecionadoAtual = cliente;
+
+            document.getElementById('ficha-avatar').textContent = obterIniciais(cliente.nome);
+            document.getElementById('ficha-titulo-nome').textContent = cliente.nome;
+            document.getElementById('ficha-badge-recencia').innerHTML = obterBadgeRecenciaHTML(cliente.diasSemComprar);
+            document.getElementById('ficha-sub-resumo').textContent = cliente.nif ? `NIF: ${cliente.nif}` : 'Consumidor Final';
+
+            // Botão WhatsApp no topo da ficha
+            const btnZap = document.getElementById('ficha-btn-whatsapp');
+            const numZap = formatarNumeroWhatsApp(cliente.telefone);
+            if (numZap) {
+                const saudacao = encodeURIComponent(`Olá ${cliente.nome.split(' ')[0]}! Aqui é do Eva Leite Atelier ✨`);
+                btnZap.href = `https://wa.me/${numZap}?text=${saudacao}`;
+                btnZap.style.display = 'inline-flex';
+            } else {
+                btnZap.style.display = 'none';
+            }
+
+            // KPIs da Ficha
+            document.getElementById('ficha-kpi-total').textContent = `€${cliente.totalGasto.toFixed(2)}`;
+            const faltaPagar = Math.max(0, cliente.totalGasto - cliente.totalPago);
+            document.getElementById('ficha-kpi-pago').innerHTML = faltaPagar > 0.01
+                ? `Pago: €${cliente.totalPago.toFixed(2)} <span style="color:#c62828; font-weight:600;">(Falta €${faltaPagar.toFixed(2)})</span>`
+                : `100% Liquidado (€${cliente.totalPago.toFixed(2)})`;
+
+            document.getElementById('ficha-kpi-ultima').textContent = formatarDataPT(cliente.ultimaCompra);
+            document.getElementById('ficha-kpi-dias').textContent = cliente.diasSemComprar !== null
+                ? (cliente.diasSemComprar === 0 ? 'Comprou hoje!' : `Há ${cliente.diasSemComprar} dias sem comprar`)
+                : 'Ainda sem pedidos registados';
+
+            document.getElementById('ficha-kpi-pedidos').textContent = cliente.pedidos.length;
+            document.getElementById('ficha-kpi-pecas').textContent = `${cliente.totalPecas} peça(s) no histórico`;
+            document.getElementById('ficha-kpi-fidelidade').textContent = `${cliente.pontosFidelidade} pts`;
+            document.getElementById('ficha-kpi-vouchers').textContent = `${cliente.vouchersCount} voucher(s) emitido(s)`;
+
+            // Formulário Editável
+            document.getElementById('ficha-input-nome').value = cliente.nome || '';
+            document.getElementById('ficha-input-telefone').value = cliente.telefone || '';
+            document.getElementById('ficha-input-nif').value = cliente.nif || '';
+            document.getElementById('ficha-input-email').value = cliente.email || '';
+            document.getElementById('ficha-input-morada').value = cliente.morada || '';
+            document.getElementById('ficha-input-medidas').value = cliente.medidas || '';
+
+            document.getElementById('ficha-db-badge').textContent = cliente.db_id ? '✓ Ficha Guardada' : '⚡ Gerada pelo Histórico';
+            document.getElementById('btn-eliminar-registo-cliente').style.display = cliente.db_id ? 'inline-flex' : 'none';
+
+            // Lista de Histórico de Pedidos
+            document.getElementById('ficha-count-historico').textContent = `${cliente.pedidos.length} pedido(s)`;
+            const containerPedidos = document.getElementById('ficha-lista-pedidos');
+
+            if (cliente.pedidos.length === 0) {
+                containerPedidos.innerHTML = `
+                    <div style="text-align:center; padding:35px 15px; color:#888; font-size:0.9rem;">
+                        Esta cliente ainda não tem pedidos registados.<br><br>
+                        <button class="btn-gold" onclick="criarPedidoParaClienteAtual()">+ Criar Primeiro Pedido</button>
+                    </div>`;
+            } else {
+                containerPedidos.innerHTML = cliente.pedidos.map(p => {
+                    let statusBadge = `<span class="hist-status st-espera">Em Lista de Espera</span>`;
+                    if (p.status === 'concluido') statusBadge = `<span class="hist-status st-concluido">Concluído</span>`;
+                    if (p.status === 'entregue') statusBadge = `<span class="hist-status st-entregue">Entregue</span>`;
+
+                    const arqBadge = p.isArquivado
+                        ? `<span class="hist-status st-arquivado" title="Ocultado do mural de entregues mas preservado na ficha e finanças">Arquivado</span>`
+                        : '';
+
+                    const itensHTML = (p.itensParsed || []).map(it => {
+                        const nomePeca = it.subtipo || it.peca || 'Peça';
+                        const obs = it.observacoes ? ` <em style="color:#777;">(${it.observacoes})</em>` : '';
+                        return `<li><strong>${nomePeca}</strong> (${it.quantidade || 1}x)${obs}</li>`;
+                    }).join('');
+
+                    const linkFatura = (p.faturaAssociada && (p.faturaAssociada.final_link || p.faturaAssociada.simples_link)) || p.fatura_final_link || p.fatura_simples_link || '';
+                    const faturaBtn = linkFatura
+                        ? `<a href="${linkFatura}" target="_blank" class="btn-icon-sm" style="background:#d4af37; color:#fff; border:none;">📄 Ver Fatura</a>`
+                        : '';
+
+                    return `
+                        <div class="hist-pedido-card">
+                            <div class="hist-pedido-top">
+                                <div style="font-size:0.82rem; color:#555;">
+                                    📅 Pedido: <strong>${formatarDataPT(p.dataReferencia)}</strong>
+                                    ${p.data_entrega ? ` | Entrega: <strong>${formatarDataPT(p.data_entrega)}</strong>` : ''}
+                                </div>
+                                <div style="display:flex; gap:5px;">${statusBadge}${arqBadge}</div>
+                            </div>
+                            <ul class="hist-pecas">${itensHTML || '<li>Sem peças detalhadas</li>'}</ul>
+                            <div class="hist-pedido-foot">
+                                <div>
+                                    Total: <strong>€${p.valorCalculado.toFixed(2)}</strong>
+                                    <span style="color:#2e7d32; margin-left:8px;">Pago: €${p.valorPagoCalculado.toFixed(2)}</span>
+                                </div>
+                                <div style="display:flex; gap:6px;">
+                                    ${faturaBtn}
+                                    <a href="editar-pedido.html?id=${p.id}" class="btn-icon-sm">✏️ Ver/Editar</a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('modal-ficha-cliente').style.display = 'flex';
+        }
+
+        function abrirModalNovoCliente() {
+            clienteSelecionadoAtual = {
+                chave: null,
+                db_id: null,
+                nome: '',
+                telefone: '',
+                nif: '',
+                email: '',
+                morada: '',
+                medidas: '',
+                pedidos: [],
+                totalGasto: 0,
+                totalPago: 0,
+                totalPecas: 0,
+                pontosFidelidade: 0,
+                vouchersCount: 0,
+                ultimaCompra: null,
+                diasSemComprar: null
+            };
+
+            document.getElementById('ficha-avatar').textContent = '➕';
+            document.getElementById('ficha-titulo-nome').textContent = 'Novo Registo de Cliente';
+            document.getElementById('ficha-badge-recencia').innerHTML = '';
+            document.getElementById('ficha-sub-resumo').textContent = 'Preencha os dados e medidas da cliente';
+            document.getElementById('ficha-btn-whatsapp').style.display = 'none';
+
+            document.getElementById('ficha-kpi-total').textContent = '€0.00';
+            document.getElementById('ficha-kpi-pago').textContent = 'Novo cliente';
+            document.getElementById('ficha-kpi-ultima').textContent = '—';
+            document.getElementById('ficha-kpi-dias').textContent = 'Sem compras';
+            document.getElementById('ficha-kpi-pedidos').textContent = '0';
+            document.getElementById('ficha-kpi-pecas').textContent = '0 peças';
+            document.getElementById('ficha-kpi-fidelidade').textContent = '0 pts';
+            document.getElementById('ficha-kpi-vouchers').textContent = '0 vouchers';
+
+            document.getElementById('ficha-input-nome').value = '';
+            document.getElementById('ficha-input-telefone').value = '';
+            document.getElementById('ficha-input-nif').value = '';
+            document.getElementById('ficha-input-email').value = '';
+            document.getElementById('ficha-input-morada').value = '';
+            document.getElementById('ficha-input-medidas').value = '';
+            document.getElementById('ficha-db-badge').textContent = 'Novo Registo';
+            document.getElementById('btn-eliminar-registo-cliente').style.display = 'none';
+
+            document.getElementById('ficha-count-historico').textContent = '0 pedidos';
+            document.getElementById('ficha-lista-pedidos').innerHTML = `
+                <div style="text-align:center; padding:35px 15px; color:#888; font-size:0.9rem;">
+                    Guarde a ficha da cliente primeiro ou clique em <strong>+ Novo Pedido</strong> no topo.
+                </div>`;
+
+            document.getElementById('modal-ficha-cliente').style.display = 'flex';
+        }
+
+        function fecharModalFicha() {
+            document.getElementById('modal-ficha-cliente').style.display = 'none';
+        }
+
+        async function guardarFichaCliente(event) {
+            event.preventDefault();
+            const nome = document.getElementById('ficha-input-nome').value.trim();
+            const telefone = document.getElementById('ficha-input-telefone').value.trim();
+            const nifRaw = document.getElementById('ficha-input-nif').value.trim();
+            const email = document.getElementById('ficha-input-email').value.trim();
+            const moradaPura = document.getElementById('ficha-input-morada').value.trim();
+            const medidasPuras = document.getElementById('ficha-input-medidas').value.trim();
+
+            if (!nome) {
+                alert('Por favor, indique o nome da cliente.');
+                return;
+            }
+
+            // Evita conflito de UNIQUE constraint quando NIF está vazio ou é Consumidor Final
+            const nifLimpo = (nifRaw && nifRaw !== '999999990') ? nifRaw : null;
+            const moradaCombinada = combinarMoradaEMedidas(moradaPura, medidasPuras);
+
+            const payload = {
+                nome,
+                telefone: telefone || null,
+                nif: nifLimpo,
+                email: email || null,
+                morada: moradaCombinada
+            };
+
+            try {
+                let dbId = clienteSelecionadoAtual?.db_id || null;
+
+                if (dbId) {
+                    const { error } = await sb.from('clientes_financas').update(payload).eq('id', dbId);
+                    if (error) throw error;
+                } else {
+                    const { data, error } = await sb.from('clientes_financas').insert([payload]).select().single();
+                    if (error) throw error;
+                    dbId = data.id;
+                }
+
+                // Se este cliente já tinha pedidos, sincronizar nome/email nos pedidos dele e NIF nas faturas
+                if (clienteSelecionadoAtual && clienteSelecionadoAtual.pedidos && clienteSelecionadoAtual.pedidos.length > 0) {
+                    const idsPedidos = clienteSelecionadoAtual.pedidos.map(p => p.id);
+                    const updatePedidos = { nome: nome };
+                    if (email) updatePedidos.email_cliente = email;
+                    await sb.from('pedidos').update(updatePedidos).in('id', idsPedidos);
+                    if (nifLimpo) {
+                        await sb.from('faturas').update({ nif: nifLimpo, nome_cliente: nome }).in('pedido_id', idsPedidos);
+                    }
+                }
+
+                alert('✅ Ficha do cliente guardada com sucesso!');
+                await carregarDadosCentralClientes();
+                const novaChave = normalizarChaveNome(nome);
+                abrirFichaCliente(novaChave);
+            } catch (err) {
+                console.error("Erro ao guardar ficha do cliente:", err);
+                alert('Erro ao guardar cliente: ' + (err.message || 'Verifique se o NIF já está atribuído a outro cliente.'));
+            }
+        }
+
+        async function eliminarRegistoClienteAtual() {
+            if (!clienteSelecionadoAtual || !clienteSelecionadoAtual.db_id) return;
+            if (!confirm(`Tem a certeza que deseja apagar o registo de cadastro de "${clienteSelecionadoAtual.nome}"? (Os pedidos existentes não serão apagados)`)) return;
+
+            try {
+                const { error } = await sb.from('clientes_financas').delete().eq('id', clienteSelecionadoAtual.db_id);
+                if (error) throw error;
+                fecharModalFicha();
+                await carregarDadosCentralClientes();
+            } catch (err) {
+                alert('Erro ao apagar registo: ' + err.message);
+            }
+        }
+
+        function criarPedidoParaClienteAtual() {
+            const nome = document.getElementById('ficha-input-nome').value.trim() || (clienteSelecionadoAtual?.nome || '');
+            const telefone = document.getElementById('ficha-input-telefone').value.trim() || (clienteSelecionadoAtual?.telefone || '');
+            const email = document.getElementById('ficha-input-email').value.trim() || (clienteSelecionadoAtual?.email || '');
+            const nif = document.getElementById('ficha-input-nif').value.trim() || (clienteSelecionadoAtual?.nif || '');
+
+            const params = new URLSearchParams();
+            if (nome) params.set('nome', nome);
+            if (telefone) params.set('telefone', telefone);
+            if (email) params.set('email', email);
+            if (nif) params.set('nif', nif);
+
+            window.location.href = `adicionar-pedido.html?${params.toString()}`;
+        }
+
+        // Painel Bot WhatsApp
+        function abrirModalBotZap() {
+            atualizarPreviaBotZap();
+            document.getElementById('modal-bot-zap').style.display = 'flex';
+        }
+
+        function fecharModalBotZap() {
+            document.getElementById('modal-bot-zap').style.display = 'none';
+        }
+
+        function obterListaAlvoBot() {
+            const diasMin = parseInt(document.getElementById('bot-dias-filtro').value) || 90;
+            return listaClientesConsolidada.filter(c => c.diasSemComprar !== null && c.diasSemComprar >= diasMin);
+        }
+
+        function atualizarPreviaBotZap() {
+            const alvos = obterListaAlvoBot();
+            const comZap = alvos.filter(c => formatarNumeroWhatsApp(c.telefone).length >= 9);
+            document.getElementById('bot-resumo-alvo').textContent =
+                `Encontrados ${alvos.length} clientes ausentes (${comZap.length} com número de WhatsApp pronto para disparo).`;
+        }
+
+        function exportarClientesBot(formato) {
+            const alvos = obterListaAlvoBot().map(c => ({
+                nome: c.nome,
+                primeiro_nome: c.nome.split(' ')[0],
+                telefone_whatsapp: formatarNumeroWhatsApp(c.telefone),
+                telefone_original: c.telefone || '',
+                email: c.email || '',
+                nif: c.nif || '',
+                ultima_compra: c.ultimaCompra,
+                dias_sem_comprar: c.diasSemComprar,
+                total_pedidos: c.pedidos.length,
+                valor_total_atelier: Number(c.totalGasto.toFixed(2)),
+                pontos_fidelidade: c.pontosFidelidade
+            }));
+
+            if (formato === 'json') {
+                const jsonStr = JSON.stringify(alvos, null, 2);
+                navigator.clipboard.writeText(jsonStr).then(() => {
+                    alert(`✅ JSON com ${alvos.length} clientes copiado para a área de transferência! Pronto para colar no seu fluxo do Bot.`);
+                });
+                return;
+            }
+
+            // Exportar CSV
+            const cabecalhos = ['Nome', 'Primeiro_Nome', 'WhatsApp', 'Email', 'NIF', 'Ultima_Compra', 'Dias_Sem_Comprar', 'Total_Pedidos', 'Valor_Total_EUR'];
+            const linhas = alvos.map(a => [
+                `"${(a.nome || '').replace(/"/g, '""')}"`,
+                `"${(a.primeiro_nome || '').replace(/"/g, '""')}"`,
+                `"${a.telefone_whatsapp}"`,
+                `"${a.email}"`,
+                `"${a.nif}"`,
+                `"${a.ultima_compra || ''}"`,
+                a.dias_sem_comprar,
+                a.total_pedidos,
+                a.valor_total_atelier
+            ].join(','));
+
+            const csvContent = '\uFEFF' + [cabecalhos.join(','), ...linhas].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `clientes_bot_whatsapp_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        document.addEventListener('DOMContentLoaded', carregarDadosCentralClientes);
+    </script>
+</body>
+</html>
