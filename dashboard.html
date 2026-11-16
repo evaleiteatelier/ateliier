@@ -5,26 +5,29 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - Eva Leite Atelier</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     :root {
-      --gold: #d4af37;
-      --gold-light: #f5e6a3;
-      --dark: #1a1a2e;
+      --gold: #b8933a;
+      --gold-soft: #d4af37;
+      --dark: #1a1a1a;
       --card-bg: #ffffff;
-      --text: #2d2d2d;
-      --text-muted: #888;
-      --green: #2e7d32;
-      --green-light: #e8f5e9;
-      --red: #c62828;
-      --red-light: #fce8e6;
-      --blue: #1565c0;
-      --blue-light: #e3f2fd;
+      --text: #22201d;
+      --text-muted: #7c7569;
+      --line: #e6e0d6;
+      --green: #16a34a;
+      --green-light: #eef7ee;
+      --red: #dc2626;
+      --red-light: #fef2f2;
+      --blue: #2563eb;
+      --blue-light: #eff6ff;
+      --amber: #d97706;
+      --amber-light: #fffbeb;
       --bg: #f5f1ea;
-      --radius: 14px;
-      --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --radius: 16px;
+      --shadow: 0 2px 12px rgba(20, 18, 14, 0.035);
     }
 
     body {
@@ -36,163 +39,168 @@
     }
 
     .dash-wrapper {
-      max-width: 1300px;
+      max-width: 1320px;
       margin: 0 auto;
-      padding: 30px 20px 60px;
+      padding: 14px 20px 60px;
     }
 
-    /* ---- PAGE HEADER ---- */
-    .dash-header {
-      display: flex;
+    /* ---- PERIOD PICKER (INTEGRADO NA BARRA LIQUID GLASS) ---- */
+    .month-picker,
+    .liquid-left .month-picker {
+      display: inline-flex;
       align-items: center;
-      justify-content: space-between;
-      margin-bottom: 30px;
-      flex-wrap: wrap;
-      gap: 15px;
-    }
-
-    .dash-header h1 {
-      margin: 0;
-      font-size: 2rem;
-      text-align: left;
-      color: var(--dark);
-    }
-
-    .dash-header h1 span {
-      color: var(--gold);
-    }
-
-    .month-picker {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: white;
-      border: 2px solid var(--gold);
-      border-radius: 30px;
-      padding: 10px 20px;
-      font-size: 0.85rem;
-      font-family: 'Inter', system-ui, sans-serif;
-      font-weight: 500;
+      gap: 6px;
+      height: 40px;
+      padding: 0 12px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.65);
+      border: 1px solid rgba(215, 208, 196, 0.85);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
       color: var(--text-muted);
       white-space: nowrap;
-      /* ← impede quebra de linha */
+      flex-shrink: 0;
+      box-sizing: border-box;
+    }
+
+    .month-picker svg {
+      width: 15px;
+      height: 15px;
+      stroke: #666;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
       flex-shrink: 0;
     }
 
     .month-picker select {
-      border: none;
-      background: transparent;
-      font-size: 0.9rem;
-      font-family: 'Inter', system-ui, sans-serif;
+      width: auto !important;
+      min-width: 0;
+      height: auto !important;
+      border: none !important;
+      background: transparent !important;
+      font-size: 0.84rem !important;
+      font-family: inherit;
       font-weight: 600;
-      color: var(--dark);
+      color: var(--dark) !important;
       cursor: pointer;
       outline: none;
-      padding: 0;
-      margin: 0;
+      padding: 2px 3px !important;
+      margin: 0 !important;
+      box-shadow: none !important;
     }
 
-    /* ---- KPI GRID ---- */
+    .month-picker-sep {
+      width: 1px;
+      height: 14px;
+      background: rgba(0, 0, 0, 0.12);
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 520px) {
+      .month-picker,
+      .liquid-left .month-picker {
+        padding: 0 8px;
+        gap: 3px;
+      }
+      .month-picker svg {
+        display: none;
+      }
+      .month-picker select {
+        font-size: 0.78rem !important;
+      }
+    }
+
+    /* ---- KPI GRID (3x2 EQUILIBRADO) ---- */
     .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 18px;
-      margin-bottom: 30px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 26px;
+    }
+
+    @media (max-width: 920px) {
+      .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 560px) {
+      .kpi-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     .kpi-card {
       background: var(--card-bg);
+      border: 1px solid var(--line);
       border-radius: var(--radius);
-      padding: 22px 24px;
+      padding: 18px 20px;
       box-shadow: var(--shadow);
-      border-left: 5px solid var(--gold);
       display: flex;
       flex-direction: column;
       gap: 8px;
       position: relative;
-      overflow: hidden;
-      transition: transform 0.2s;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
     }
 
     .kpi-card:hover {
-      transform: translateY(-3px);
+      transform: translateY(-2px);
+      border-color: #d6cec0;
+      box-shadow: 0 8px 22px rgba(20, 18, 14, 0.06);
     }
 
-    .kpi-card.green {
-      border-color: var(--green);
+    .kpi-card.is-highlight {
+      border-color: #ded2b6;
+      background: linear-gradient(180deg, #ffffff 0%, #fcfaf4 100%);
     }
 
-    .kpi-card.blue {
-      border-color: var(--blue);
-    }
-
-    .kpi-card.red {
-      border-color: var(--red);
-    }
-
-    .kpi-icon {
-      font-size: 2rem;
-      margin-bottom: 4px;
+    .kpi-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
     }
 
     .kpi-label {
-      font-size: 0.8rem;
+      font-size: 0.72rem;
+      font-weight: 700;
       color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.06em;
     }
+
+    .kpi-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--dark);
+      flex-shrink: 0;
+    }
+    .kpi-dot.gold { background: var(--gold-soft); }
+    .kpi-dot.green { background: var(--green); }
+    .kpi-dot.blue { background: var(--blue); }
+    .kpi-dot.amber { background: var(--amber); }
 
     .kpi-value {
-      font-size: 2rem;
-      font-weight: bold;
+      font-size: 1.85rem;
+      font-weight: 700;
       color: var(--dark);
-      line-height: 1;
-    }
-
-    .kpi-value.gold {
-      color: var(--gold);
-    }
-
-    .kpi-value.green {
-      color: var(--green);
-    }
-
-    .kpi-value.red {
-      color: var(--red);
-    }
-
-    .kpi-value.blue {
-      color: var(--blue);
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
     }
 
     .kpi-sub {
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       color: var(--text-muted);
-      margin-top: 4px;
-    }
-
-    .kpi-badge {
-      position: absolute;
-      top: 14px;
-      right: 14px;
-      font-size: 0.72rem;
-      font-weight: bold;
-      padding: 3px 8px;
-      border-radius: 20px;
-      background: var(--green-light);
-      color: var(--green);
-    }
-
-    .kpi-badge.neg {
-      background: var(--red-light);
-      color: var(--red);
     }
 
     /* ---- CHARTS GRID ---- */
     .charts-grid {
       display: grid;
       grid-template-columns: 2fr 1fr;
-      gap: 20px;
+      gap: 16px;
       margin-bottom: 24px;
     }
 
@@ -204,51 +212,64 @@
 
     .chart-card {
       background: var(--card-bg);
+      border: 1px solid var(--line);
       border-radius: var(--radius);
-      padding: 24px;
+      padding: 20px 22px;
       box-shadow: var(--shadow);
     }
 
     .chart-title {
-      font-size: 1rem;
-      font-weight: bold;
+      font-size: 0.94rem;
+      font-weight: 650;
       color: var(--dark);
-      margin: 0 0 18px 0;
+      margin: 0 0 16px 0;
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
+    .chart-title svg {
+      width: 16px;
+      height: 16px;
+      stroke: #666;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      flex-shrink: 0;
+    }
+
     .chart-title span {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       color: var(--text-muted);
-      font-weight: normal;
+      font-weight: 400;
     }
 
     .canvas-wrap {
       position: relative;
-      height: 260px;
+      height: 250px;
     }
 
     /* ---- SECOND ROW ---- */
     .second-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 20px;
+      gap: 16px;
       margin-bottom: 24px;
     }
 
-    @media (max-width: 700px) {
+    @media (max-width: 720px) {
       .second-row {
         grid-template-columns: 1fr;
       }
     }
 
-    /* ---- RECENT ORDERS TABLE ---- */
+    /* ---- TABLES ---- */
     .table-card {
       background: var(--card-bg);
+      border: 1px solid var(--line);
       border-radius: var(--radius);
-      padding: 24px;
+      padding: 20px 22px;
       box-shadow: var(--shadow);
       margin-bottom: 24px;
       overflow-x: auto;
@@ -257,23 +278,23 @@
     .recent-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.88rem;
+      font-size: 0.86rem;
     }
 
     .recent-table th {
       text-align: left;
-      padding: 10px 14px;
+      padding: 10px 12px;
       color: var(--text-muted);
-      font-weight: normal;
-      font-size: 0.75rem;
+      font-weight: 600;
+      font-size: 0.72rem;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      border-bottom: 2px solid #f0f0f0;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid #ece6dc;
     }
 
     .recent-table td {
-      padding: 12px 14px;
-      border-bottom: 1px solid #f7f7f7;
+      padding: 12px;
+      border-bottom: 1px solid #f4f0e8;
       vertical-align: middle;
     }
 
@@ -282,30 +303,48 @@
     }
 
     .recent-table tr:hover td {
-      background: #fafafa;
+      background: #faf8f4;
     }
 
     .status-pill {
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: bold;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.74rem;
+      font-weight: 600;
+      white-space: nowrap;
     }
 
     .pill-pendente {
-      background: #fff3e0;
-      color: #e65100;
+      background: var(--amber-light);
+      color: #b45309;
+      border: 1px solid #fde68a;
     }
 
     .pill-concluido {
       background: var(--blue-light);
-      color: var(--blue);
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
     }
 
     .pill-entregue {
       background: var(--green-light);
-      color: var(--green);
+      color: #15803d;
+      border: 1px solid #bbf7d0;
+    }
+
+    .urgencia-pill {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      background: var(--red-light);
+      color: var(--red);
+      border: 1px solid #fecaca;
     }
 
     /* ---- TOP ITEMS ---- */
@@ -316,8 +355,12 @@
       margin-bottom: 12px;
     }
 
+    .item-bar:last-child {
+      margin-bottom: 0;
+    }
+
     .item-bar-label {
-      font-size: 0.85rem;
+      font-size: 0.84rem;
       min-width: 110px;
       color: var(--text);
       text-transform: capitalize;
@@ -325,8 +368,8 @@
 
     .item-bar-track {
       flex: 1;
-      height: 8px;
-      background: #f0f0f0;
+      height: 7px;
+      background: #f2eee6;
       border-radius: 99px;
       overflow: hidden;
     }
@@ -334,120 +377,142 @@
     .item-bar-fill {
       height: 100%;
       border-radius: 99px;
-      background: linear-gradient(90deg, var(--gold), #f5c842);
-      transition: width 0.8s ease;
+      background: linear-gradient(90deg, #b8933a, #d4af37);
+      transition: width 0.6s ease;
     }
 
     .item-bar-count {
       font-size: 0.8rem;
+      font-weight: 600;
       color: var(--text-muted);
-      min-width: 30px;
+      min-width: 34px;
       text-align: right;
+      font-variant-numeric: tabular-nums;
     }
 
     /* ---- LOADING ---- */
     .loading-spinner {
       text-align: center;
-      padding: 40px;
+      padding: 36px;
       color: var(--text-muted);
-      font-size: 1rem;
+      font-size: 0.88rem;
     }
 
     .loading-spinner::before {
-      content: "⏳";
+      content: "";
       display: block;
-      font-size: 2rem;
-      margin-bottom: 10px;
-      animation: spin 1.5s linear infinite;
+      width: 22px;
+      height: 22px;
+      margin: 0 auto 10px;
+      border-radius: 50%;
+      border: 2.5px solid #e6e0d6;
+      border-top-color: var(--dark);
+      animation: spin 0.8s linear infinite;
     }
 
     @keyframes spin {
-      from {
-        transform: rotate(0deg);
-      }
-
-      to {
-        transform: rotate(360deg);
-      }
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
     }
 
     /* ---- UTIL ---- */
     .section-divider {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 1.5px;
+      letter-spacing: 0.08em;
       color: var(--text-muted);
-      margin: 10px 0 14px;
+      margin: 6px 0 14px;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
 
     .section-divider::after {
       content: '';
       flex: 1;
       height: 1px;
-      background: #e0e0e0;
+      background: #e3ddd2;
     }
 
     .empty-state {
       text-align: center;
-      padding: 30px;
+      padding: 28px 16px;
       color: var(--text-muted);
-      font-size: 0.9rem;
+      font-size: 0.88rem;
     }
   </style>
 </head>
 
 <body>
-  <div class="dash-wrapper">
-
-    <!-- HEADER -->
-    <div class="dash-header">
-      <h1>Dashboard</h1>
-      <div class="month-picker">
-        📅
+  <!-- Controlo de período absorvido pela Barra Liquid Glass -->
+  <div class="page-toolbar">
+    <h1>Dashboard</h1>
+    <div class="page-toolbar-controls">
+      <div class="filter-dropdown-wrap month-picker" title="Selecionar mês e ano">
+        <svg viewBox="0 0 24 24">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
         <select id="sel-mes" onchange="carregarDashboard()"></select>
+        <span class="month-picker-sep"></span>
         <select id="sel-ano" onchange="carregarDashboard()"></select>
       </div>
     </div>
+  </div>
 
-    <!-- KPI CARDS -->
+  <div class="dash-wrapper">
+
+    <!-- KPI CARDS (3x2) -->
     <div class="kpi-grid">
-      <div class="kpi-card gold">
-        <div class="kpi-icon">💰</div>
-        <div class="kpi-label">Receita Total do Mês</div>
-        <div class="kpi-value gold" id="kpi-receita">—</div>
+      <div class="kpi-card is-highlight">
+        <div class="kpi-top">
+          <div class="kpi-label">Receita Total do Mês</div>
+          <span class="kpi-dot gold"></span>
+        </div>
+        <div class="kpi-value" id="kpi-receita">—</div>
         <div class="kpi-sub" id="kpi-receita-sub">a carregar...</div>
       </div>
-      <div class="kpi-card green">
-        <div class="kpi-icon">✅</div>
-        <div class="kpi-label">Pedidos Concluídos</div>
-        <div class="kpi-value green" id="kpi-concluidos">—</div>
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-label">Pedidos Concluídos</div>
+          <span class="kpi-dot green"></span>
+        </div>
+        <div class="kpi-value" id="kpi-concluidos">—</div>
         <div class="kpi-sub" id="kpi-concluidos-sub">a carregar...</div>
       </div>
-      <div class="kpi-card blue">
-        <div class="kpi-icon">⏳</div>
-        <div class="kpi-label">Pedidos em Espera</div>
-        <div class="kpi-value blue" id="kpi-espera">—</div>
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-label">Pedidos em Espera</div>
+          <span class="kpi-dot blue"></span>
+        </div>
+        <div class="kpi-value" id="kpi-espera">—</div>
         <div class="kpi-sub" id="kpi-espera-sub">a carregar...</div>
       </div>
-      <div class="kpi-card red">
-        <div class="kpi-icon">📦</div>
-        <div class="kpi-label">Pedidos Entregues</div>
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-label">Pedidos Entregues</div>
+          <span class="kpi-dot"></span>
+        </div>
         <div class="kpi-value" id="kpi-entregues">—</div>
         <div class="kpi-sub" id="kpi-entregues-sub">a carregar...</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-icon">💶</div>
-        <div class="kpi-label">Já Recebido (Adiantamentos)</div>
-        <div class="kpi-value green" id="kpi-adiantado">—</div>
+        <div class="kpi-top">
+          <div class="kpi-label">Já Recebido (Adiantamentos)</div>
+          <span class="kpi-dot green"></span>
+        </div>
+        <div class="kpi-value" id="kpi-adiantado">—</div>
         <div class="kpi-sub" id="kpi-adiantado-sub">a carregar...</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-icon">🎟️</div>
-        <div class="kpi-label">Vouchers Utilizados</div>
-        <div class="kpi-value gold" id="kpi-vouchers">—</div>
+        <div class="kpi-top">
+          <div class="kpi-label">Vouchers Utilizados</div>
+          <span class="kpi-dot amber"></span>
+        </div>
+        <div class="kpi-value" id="kpi-vouchers">—</div>
         <div class="kpi-sub" id="kpi-vouchers-sub">a carregar...</div>
       </div>
     </div>
@@ -456,13 +521,19 @@
     <div class="section-divider">Análise Financeira</div>
     <div class="charts-grid">
       <div class="chart-card">
-        <div class="chart-title">📈 Receita Diária <span>— últimos 30 dias</span></div>
+        <div class="chart-title">
+          <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          Receita Diária <span>— últimos 30 dias</span>
+        </div>
         <div class="canvas-wrap">
           <canvas id="chart-receita-diaria"></canvas>
         </div>
       </div>
       <div class="chart-card">
-        <div class="chart-title">🍩 Status dos Pedidos <span>este mês</span></div>
+        <div class="chart-title">
+          <svg viewBox="0 0 24 24"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+          Status dos Pedidos <span>este mês</span>
+        </div>
         <div class="canvas-wrap">
           <canvas id="chart-status"></canvas>
         </div>
@@ -473,25 +544,37 @@
     <div class="section-divider">Produção e Serviços</div>
     <div class="second-row">
       <div class="chart-card">
-        <div class="chart-title">🏆 Itens Mais Encomendados</div>
+        <div class="chart-title">
+          <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+          Itens Mais Encomendados
+        </div>
         <div id="top-itens-list">
           <div class="loading-spinner"></div>
         </div>
       </div>
       <div class="chart-card">
-        <div class="chart-title">💰 Faturação por Tipo de Item</div>
+        <div class="chart-title">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          Faturação por Tipo de Item
+        </div>
         <div id="faturacao-itens-list">
           <div class="loading-spinner"></div>
         </div>
       </div>
       <div class="chart-card">
-        <div class="chart-title">📊 Pedidos por Mês <span>— últimos 6 meses</span></div>
+        <div class="chart-title">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+          Pedidos por Mês <span>— últimos 6 meses</span>
+        </div>
         <div class="canvas-wrap">
           <canvas id="chart-mensal"></canvas>
         </div>
       </div>
       <div class="chart-card">
-        <div class="chart-title">💰 Receita vs Recebido</div>
+        <div class="chart-title">
+          <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+          Receita vs Recebido
+        </div>
         <div class="canvas-wrap">
           <canvas id="chart-pago-falta"></canvas>
         </div>
@@ -501,7 +584,10 @@
     <!-- UPCOMING DELIVERIES -->
     <div class="section-divider">Entregas Próximas</div>
     <div class="table-card">
-      <div class="chart-title">📅 Próximas Entregas (próximos 14 dias)</div>
+      <div class="chart-title">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        Próximas Entregas (próximos 14 dias)
+      </div>
       <table class="recent-table" id="tabela-entregas">
         <thead>
           <tr>
@@ -525,7 +611,10 @@
     <!-- RECENT ORDERS -->
     <div class="section-divider">Pedidos Recentes</div>
     <div class="table-card">
-      <div class="chart-title">🕐 Pedidos Registados Este Mês</div>
+      <div class="chart-title">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        Pedidos Registados Este Mês
+      </div>
       <table class="recent-table">
         <thead>
           <tr>
@@ -552,7 +641,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="auth-guard.js"></script>
-  <script src="navbar.js"></script>
+  <script src="navbar.js?v=7"></script>
 
   <script>
     // ============================================================
@@ -646,9 +735,9 @@
       const pedidos = pedidosMes || [];
 
       // ---- KPIs ----
-      const concluidos = pedidos.filter(p => p.status === 'concluido' || p.status === 'entregue');
+      const concluidos = pedidos.filter(p => p.status === 'concluido' || p.status === 'entregue' || p.status === 'arquivado');
       const emEspera = todosPendentes || [];
-      const entregues = pedidos.filter(p => p.status === 'entregue');
+      const entregues = pedidos.filter(p => p.status === 'entregue' || p.status === 'arquivado');
 
       const receitaTotal = pedidos.reduce((s, p) => s + Number(p.preco_final || p.preco_total || 0), 0);
       const adiantadoTotal = pedidos.reduce((s, p) => s + Number(p.valor_adiantado || 0), 0);
@@ -968,7 +1057,7 @@
       const tbody = document.getElementById('tbody-entregas');
 
       if (proximas.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state">✅ Sem entregas para os próximos 14 dias.</div></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state">Sem entregas agendadas para os próximos 14 dias.</div></td></tr>`;
         return;
       }
 
@@ -978,8 +1067,8 @@
         const entrega = new Date(p.data_entrega + 'T00:00:00');
         const diffDias = Math.ceil((entrega - hoje) / (1000 * 60 * 60 * 24));
         const urgencia = diffDias <= 3
-          ? `<span style="color:#c62828; font-weight:bold;">em ${diffDias}d ⚠️</span>`
-          : `em ${diffDias}d`;
+          ? `<span class="urgencia-pill">em ${diffDias}d</span>`
+          : `<span style="color:#7c7569; font-size:0.8rem; margin-left:4px;">em ${diffDias}d</span>`;
 
         return `<tr>
           <td><strong>${p.nome}</strong></td>

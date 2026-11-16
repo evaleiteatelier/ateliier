@@ -1,578 +1,697 @@
 <style>
-    /* ── Offset para o conteúdo não ficar escondido ── */
-    body {
-        padding-top: 90px !important;
-        margin: 0;
-    }
+  /* =====================================================
+     BARRA SUPERIOR FLUTUANTE LIQUID GLASS (GLOBAL)
+     ===================================================== */
+  body {
+    padding-top: 96px !important;
+    margin: 0;
+  }
 
-    /* ── BARRA PRINCIPAL ── */
-    .top-bar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        z-index: 1000;
-        background: #ffffff;
-        box-shadow: 0 1px 0 rgba(212,175,55,.25), 0 4px 20px rgba(0,0,0,.06);
-        font-family: 'Inter', system-ui, sans-serif;
-    }
+  .liquid-topbar-wrap {
+    position: fixed;
+    top: 14px;
+    left: 20px;
+    right: 20px;
+    z-index: 1500;
+    pointer-events: none;
+  }
 
-    /* Linha dourada muito fina no topo */
-    .top-bar::before {
-        content: '';
-        display: block;
-        height: 3px;
-        background: linear-gradient(90deg, transparent 0%, #d4af37 30%, #f5e6a3 60%, #d4af37 80%, transparent 100%);
-    }
+  .liquid-topbar {
+    pointer-events: auto;
+    max-width: 1380px;
+    margin: 0 auto;
+    height: 62px;
+    padding: 0 14px;
+    border-radius: 20px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
 
-    .header-content {
-        width: 100%;
-        max-width: 1300px;
-        margin: 0 auto;
-        height: 76px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 28px;
-        box-sizing: border-box;
-    }
+  /* Camada de vidro da barra separada em ::before para permitir que os menus filhos apliquem blur real sobre o fundo da página */
+  .liquid-topbar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.72) 0%, rgba(250, 247, 242, 0.52) 100%);
+    backdrop-filter: blur(26px) saturate(190%);
+    -webkit-backdrop-filter: blur(26px) saturate(190%);
+    border: 1px solid rgba(255, 255, 255, 0.88);
+    box-shadow:
+      0 12px 34px rgba(20, 18, 14, 0.08),
+      0 2px 6px rgba(0, 0, 0, 0.03),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95),
+      inset 0 -1px 0 rgba(220, 212, 198, 0.35);
+    z-index: 0;
+    pointer-events: none;
+  }
 
-    /* ── LOGO ── */
-    .brand {
-        display: flex;
-        align-items: center;
-        text-decoration: none;
-        flex-shrink: 0;
-    }
+  /* ── ZONA ESQUERDA: ÍCONE DE MENU + BUSCA + FILTRO ── */
+  .liquid-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 2;
+    justify-self: start;
+    min-width: 0;
+    position: relative;
+  }
 
-    .nav-logo {
-        height: 52px;
-        width: auto;
-        display: block;
-        /* Filtro para imagem branca/cinza — remove se a logo já é escura */
-        filter: none;
-        transition: opacity 0.25s;
-    }
+  .liquid-dynamic-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
 
-    .brand:hover .nav-logo {
-        opacity: 0.8;
-    }
+  .liquid-menu-wrap {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+  }
 
-    /* ── SEPARADOR VERTICAL ── */
-    .nav-divider {
-        width: 1px;
-        height: 28px;
-        background: #e0d5c1;
-        margin: 0 24px 0 32px;
-        flex-shrink: 0;
-    }
+  /* Botão do Ícone/Logo que abre o Context Menu */
+  .liquid-brand-btn {
+    width: auto !important;
+    margin: 0 !important;
+    height: 42px !important;
+    padding: 0 12px !important;
+    border-radius: 13px !important;
+    background: rgba(255, 255, 255, 0.65) !important;
+    border: 1px solid rgba(226, 220, 208, 0.85) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03), inset 0 1px 0 #fff !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 9px !important;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    color: #1a1a1a !important;
+    box-sizing: border-box;
+    line-height: 1;
+    font-family: inherit;
+  }
+  .liquid-brand-btn:hover,
+  .liquid-brand-btn.aberto {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-color: #c8bfb0 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+  }
+  .liquid-brand-logo {
+    height: 28px;
+    width: auto;
+    display: block;
+  }
+  .liquid-menu-trigger-ico {
+    width: 15px;
+    height: 15px;
+    stroke: #555;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+    transition: transform 0.2s ease;
+  }
+  .liquid-brand-btn.aberto .liquid-menu-trigger-ico {
+    transform: rotate(90deg);
+    stroke: #1a1a1a;
+  }
 
-    /* ── LINKS DE NAVEGAÇÃO ── */
-    .nav-links {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        flex: 1;
-    }
+  /* ── CONTEXT MENU (ESTILO CLIQUE DIREITO DO WINDOWS 11) ── */
+  .liquid-context-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    width: 248px;
+    padding: 7px;
+    border-radius: 16px;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.78) 0%, rgba(248, 245, 238, 0.68) 100%);
+    backdrop-filter: blur(48px) saturate(210%);
+    -webkit-backdrop-filter: blur(48px) saturate(210%);
+    border: 1px solid rgba(255, 255, 255, 0.94);
+    box-shadow:
+      0 20px 50px rgba(15, 14, 12, 0.18),
+      0 4px 12px rgba(0, 0, 0, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.98);
+    z-index: 3500;
+    transform-origin: top left;
+    animation: winContextOpen 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: visible !important;
+    max-height: none !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    box-sizing: border-box;
+  }
+  .liquid-context-menu::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  .liquid-context-menu.aberto {
+    display: block;
+  }
+  @keyframes winContextOpen {
+    from { opacity: 0; transform: scale(0.95) translateY(-4px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
 
-    .nav-links a {
-        text-decoration: none;
-        color: #555;
-        font-size: 0.82rem;
-        font-family: 'Inter', system-ui, sans-serif;
-        letter-spacing: 0.8px;
-        text-transform: uppercase;
-        padding: 6px 12px;
-        border-radius: 4px;
-        position: relative;
-        transition: color 0.25s, background 0.25s;
-        white-space: nowrap;
-    }
+  .ctx-group-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #8a8377;
+    padding: 6px 10px 4px;
+    user-select: none;
+  }
 
-    .nav-links a:hover {
-        color: #d4af37;
-        background: rgba(212,175,55,.07);
-    }
+  .ctx-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 11px;
+    border-radius: 9px;
+    text-decoration: none;
+    color: #222;
+    font-size: 0.84rem;
+    font-weight: 500;
+    transition: background 0.12s ease, color 0.12s ease;
+    position: relative;
+  }
+  .ctx-item-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .ctx-item svg {
+    width: 16px;
+    height: 16px;
+    stroke: #555;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+    flex-shrink: 0;
+    transition: stroke 0.12s ease;
+  }
+  .ctx-item:hover {
+    background: rgba(26, 26, 26, 0.06);
+    color: #000;
+  }
+  .ctx-item:hover svg {
+    stroke: #111;
+  }
+  .ctx-item.ativo {
+    background: rgba(26, 26, 26, 0.08);
+    color: #111;
+    font-weight: 600;
+  }
+  .ctx-item.ativo svg {
+    stroke: #111;
+  }
+  .ctx-active-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #1a1a1a;
+    flex-shrink: 0;
+  }
 
-    /* Sublinhado dourado ao passar */
-    .nav-links a::after {
-        content: '';
-        position: absolute;
-        bottom: 2px;
-        left: 12px;
-        right: 12px;
-        height: 1.5px;
-        background: #d4af37;
-        transform: scaleX(0);
-        transform-origin: center;
-        transition: transform 0.25s ease;
-        border-radius: 1px;
-    }
+  .ctx-item.ctx-highlight {
+    background: #1a1a1a;
+    color: #fff !important;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .ctx-item.ctx-highlight svg {
+    stroke: #fff !important;
+  }
+  .ctx-item.ctx-highlight:hover {
+    background: #333;
+    color: #fff !important;
+  }
 
-    .nav-links a:hover::after,
-    .active-link::after {
-        transform: scaleX(1) !important;
-    }
+  .ctx-sep {
+    height: 1px;
+    background: rgba(0, 0, 0, 0.07);
+    margin: 5px 6px;
+  }
 
-    /* Link activo */
-    .active-link {
-        color: #d4af37 !important;
-        font-weight: bold;
-    }
+  /* ── PASTA / SUBMENU FLUTUANTE (WINDOWS 11 FLYOUT) ── */
+  .ctx-has-sub {
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+  }
+  .ctx-arrow {
+    width: 14px !important;
+    height: 14px !important;
+    stroke: #888 !important;
+    stroke-width: 2 !important;
+    fill: none;
+    transition: transform 0.15s ease, stroke 0.15s ease;
+  }
+  .ctx-has-sub:hover .ctx-arrow,
+  .ctx-has-sub.sub-aberto .ctx-arrow {
+    stroke: #111 !important;
+    transform: translateX(2px);
+  }
 
-    /* ── SEPARADOR ANTES DOS LINKS ADMIN ── */
-    .nav-admin-sep {
-        width: 1px;
-        height: 18px;
-        background: #ddd;
-        margin: 0 6px;
-        flex-shrink: 0;
-    }
+  .ctx-submenu {
+    display: none;
+    position: absolute;
+    top: -6px;
+    left: calc(100% + 8px);
+    width: 220px;
+    padding: 7px;
+    border-radius: 16px;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.84) 0%, rgba(248, 245, 238, 0.74) 100%);
+    backdrop-filter: blur(48px) saturate(210%);
+    -webkit-backdrop-filter: blur(48px) saturate(210%);
+    border: 1px solid rgba(255, 255, 255, 0.94);
+    box-shadow:
+      0 20px 50px rgba(15, 14, 12, 0.18),
+      0 4px 12px rgba(0, 0, 0, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.98);
+    z-index: 3600;
+    animation: winContextOpen 0.14s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: top left;
+    box-sizing: border-box;
+  }
+  /* Ponte invisível para o cursor não perder o hover no espaço entre os menus */
+  .ctx-submenu::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -12px;
+    width: 14px;
+    height: 100%;
+  }
+  .ctx-has-sub:hover > .ctx-submenu,
+  .ctx-has-sub.sub-aberto > .ctx-submenu {
+    display: block;
+  }
 
-    /* Destaque especial para "+ Novo Pedido" */
-    .nav-links a.link-novo {
-        background: #1a1a2e;
-        color: #d4af37 !important;
-        border-radius: 20px;
-        padding: 6px 16px;
-        letter-spacing: 0.6px;
-        font-size: 0.8rem;
-    }
+  /* ── BARRA DE PESQUISA + FILTRO NA ESQUERDA (DENTRO DA BARRA LIQUID) ── */
+  .liquid-left .toolbar-search-wrap,
+  .liquid-left .liquid-search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 220px;
+    max-width: 100%;
+  }
+  .liquid-left .toolbar-search-wrap svg,
+  .liquid-left .liquid-search-wrap svg {
+    position: absolute;
+    left: 12px;
+    width: 15px;
+    height: 15px;
+    stroke: #777;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+    pointer-events: none;
+  }
+  .liquid-left .toolbar-search-wrap input,
+  .liquid-left .liquid-search-wrap input {
+    width: 100% !important;
+    height: 40px !important;
+    margin: 0 !important;
+    padding: 0 14px 0 34px !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(215, 208, 196, 0.85) !important;
+    background: rgba(255, 255, 255, 0.65) !important;
+    color: #1a1a1a !important;
+    font-size: 0.85rem !important;
+    outline: none;
+    transition: all 0.18s ease;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.02) !important;
+    box-sizing: border-box;
+  }
+  .liquid-left .toolbar-search-wrap input:focus,
+  .liquid-left .liquid-search-wrap input:focus {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-color: #1a1a1a !important;
+    width: 250px !important;
+  }
 
-    .nav-links a.link-novo:hover {
-        background: #2e2e4e;
-    }
+  .liquid-left .filter-dropdown-wrap {
+    flex-shrink: 0;
+  }
+  .liquid-left .btn-filter-icon {
+    border-radius: 12px !important;
+    background: rgba(255, 255, 255, 0.65) !important;
+    border: 1px solid rgba(215, 208, 196, 0.85) !important;
+  }
+  .liquid-left .btn-filter-icon:hover,
+  .liquid-left .btn-filter-icon.ativo {
+    background: #1a1a1a !important;
+    border-color: #1a1a1a !important;
+    color: #fff !important;
+  }
+  .liquid-left .filter-popover {
+    left: 0 !important;
+    right: auto !important;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.82) 0%, rgba(248, 245, 238, 0.72) 100%) !important;
+    backdrop-filter: blur(48px) saturate(210%) !important;
+    -webkit-backdrop-filter: blur(48px) saturate(210%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.94) !important;
+    border-radius: 14px !important;
+    box-shadow: 0 20px 50px rgba(15, 14, 12, 0.18), 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+  }
 
-    .nav-links a.link-novo::after {
-        display: none;
-    }
+  /* ── ZONA CENTRAL: BOLHA LIQUID GLASS DO TÍTULO ── */
+  .liquid-center-bubble {
+    justify-self: center;
+    position: relative;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 24px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.88) 0%, rgba(244, 240, 232, 0.52) 100%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.96);
+    box-shadow:
+      0 4px 16px rgba(0, 0, 0, 0.06),
+      inset 0 1px 1px rgba(255, 255, 255, 1),
+      inset 0 -1px 1px rgba(210, 202, 188, 0.35);
+    pointer-events: auto;
+    white-space: nowrap;
+  }
+  .liquid-center-bubble h1 {
+    margin: 0 !important;
+    font-size: 0.96rem !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.01em;
+    color: #1a1a1a !important;
+    border: none !important;
+    padding: 0 !important;
+    line-height: 1.2 !important;
+    text-align: center !important;
+  }
+  .liquid-bubble-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #1a1a1a;
+    opacity: 0.75;
+    flex-shrink: 0;
+  }
 
-    /* ── LADO DIREITO: SAIR ── */
-    .nav-right {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex-shrink: 0;
-        margin-left: 16px;
-    }
+  /* ── ZONA DIREITA: AÇÃO RÁPIDA ── */
+  .liquid-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 2;
+    justify-self: end;
+    position: relative;
+  }
+  .liquid-dynamic-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .liquid-dynamic-right button {
+    width: auto !important;
+    margin: 0 !important;
+    height: 40px !important;
+    border-radius: 12px !important;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: inherit;
+    box-sizing: border-box;
+  }
+  .liquid-dynamic-right .ico {
+    width: 15px;
+    height: 15px;
+    stroke: currentColor;
+    stroke-width: 1.85;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+    flex-shrink: 0;
+  }
+  .liquid-action-btn {
+    height: 40px;
+    padding: 0 16px;
+    border-radius: 12px;
+    background: #1a1a1a;
+    color: #fff !important;
+    text-decoration: none;
+    font-size: 0.83rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    transition: all 0.18s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    white-space: nowrap;
+    box-sizing: border-box;
+  }
+  .liquid-action-btn:hover {
+    background: #333;
+    transform: translateY(-1px);
+  }
+  .liquid-action-btn svg {
+    width: 15px;
+    height: 15px;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+  }
 
-    .btn-logout {
-        background: transparent;
-        color: #999;
-        border: 1px solid #ddd;
-        padding: 7px 16px;
-        border-radius: 20px;
-        cursor: pointer;
-        font-size: 0.78rem;
-        font-family: 'Inter', system-ui, sans-serif;
-        letter-spacing: 0.6px;
-        text-transform: uppercase;
-        transition: all 0.25s;
-        margin: 0 !important;
+  @media (max-width: 1120px) {
+    .liquid-left .toolbar-search-wrap,
+    .liquid-left .liquid-search-wrap {
+      width: 165px;
     }
+    .liquid-left .toolbar-search-wrap input:focus,
+    .liquid-left .liquid-search-wrap input:focus {
+      width: 195px !important;
+    }
+    .liquid-center-bubble {
+      padding: 7px 16px;
+    }
+  }
 
-    .btn-logout:hover {
-        border-color: #c62828;
-        color: #c62828;
-        background: rgba(198,40,40,.05);
+  @media (max-width: 960px) {
+    .liquid-center-bubble {
+      padding: 6px 14px;
     }
+    .liquid-left .toolbar-search-wrap,
+    .liquid-left .liquid-search-wrap {
+      width: 140px;
+    }
+    .liquid-left .toolbar-search-wrap input:focus,
+    .liquid-left .liquid-search-wrap input:focus {
+      width: 165px !important;
+    }
+    .liquid-action-btn span {
+      display: none;
+    }
+    .liquid-action-btn {
+      padding: 0 12px;
+    }
+    .ctx-submenu {
+      left: 16px;
+      top: calc(100% + 4px);
+    }
+    .ctx-submenu::before {
+      top: -8px;
+      left: 0;
+      width: 100%;
+      height: 10px;
+    }
+  }
 
-    /* ── DROPDOWN GESTÃO ── */
-    .nav-dropdown {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
+  @media (max-width: 720px) {
+    .liquid-topbar-wrap {
+      left: 10px;
+      right: 10px;
     }
-    .nav-dropdown-content {
-        display: none;
-        position: absolute;
-        top: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: #ffffff;
-        min-width: 170px;
-        box-shadow: 0 10px 25px rgba(0,0,0,.1);
-        z-index: 1001;
-        border-radius: 8px;
-        padding: 8px 0;
-        margin-top: 5px;
-        border: 1px solid #eee;
+    .liquid-topbar {
+      display: flex;
+      justify-content: space-between;
     }
-    
-    /* ── PERFIL DROPDOWN ── */
-    .nav-profile {
-        position: relative;
-        flex-shrink: 0;
+    .liquid-center-bubble {
+      display: none;
     }
-    .nav-profile-btn {
-        display: flex;
-        align-items: center;
-        gap: 9px;
-        background: none;
-        border: none;
-        cursor: pointer;
-        padding: 5px 8px;
-        border-radius: 10px;
-        transition: background 0.2s;
-        font-family: inherit;
-    }
-    .nav-profile-btn:hover { background: rgba(212,175,55,.08); }
-    .nav-profile-avatar {
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #d4af37, #b8860b);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.9rem;
-        font-weight: 700;
-        color: #fff;
-        flex-shrink: 0;
-        border: 2px solid rgba(212,175,55,.3);
-    }
-    .nav-profile-name {
-        font-size: 0.82rem;
-        font-weight: 600;
-        color: #333;
-        max-width: 110px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    .nav-profile-role {
-        font-size: 0.7rem;
-        color: #aaa;
-        font-weight: 400;
-    }
-    .nav-profile-chevron {
-        font-size: 0.55rem;
-        color: #aaa;
-        transition: transform 0.2s;
-    }
-    .nav-profile.aberto .nav-profile-chevron { transform: rotate(180deg); }
-    .nav-profile-dropdown {
-        display: none;
-        position: absolute;
-        top: calc(100% + 10px);
-        right: 0;
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 8px 30px rgba(0,0,0,.13);
-        border: 1px solid #ede9e3;
-        min-width: 200px;
-        z-index: 2000;
-        overflow: hidden;
-        animation: fadeIn 0.15s ease-out;
-    }
-    .nav-profile.aberto .nav-profile-dropdown { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
-    .profile-dd-header {
-        padding: 14px 16px 10px;
-        border-bottom: 1px solid #f0ece5;
-    }
-    .profile-dd-email {
-        font-size: 0.78rem;
-        color: #aaa;
-        margin-top: 2px;
-        word-break: break-all;
-    }
-    .profile-dd-name {
-        font-size: 0.92rem;
-        font-weight: 700;
-        color: #1a1a2e;
-    }
-    .profile-dd-badge {
-        display: inline-block;
-        font-size: 0.68rem;
-        font-weight: 700;
-        padding: 2px 8px;
-        border-radius: 10px;
-        margin-top: 4px;
-        background: #fef9e7;
-        color: #b8860b;
-        border: 1px solid #f5e6a3;
-    }
-    .profile-dd-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 11px 16px;
-        font-size: 0.85rem;
-        font-weight: 500;
-        color: #444;
-        cursor: pointer;
-        transition: background 0.15s;
-        text-decoration: none;
-        border: none;
-        background: none;
-        width: 100%;
-        font-family: inherit;
-    }
-    .profile-dd-item:hover { background: #faf9f7; }
-    .profile-dd-item.danger { color: #c62828; }
-    .profile-dd-item.danger:hover { background: #fdecea; }
-    .profile-dd-sep { height: 1px; background: #f0ece5; margin: 2px 0; }
-    .nav-dropdown:hover .nav-dropdown-content,
-    .nav-dropdown-content.aberto {
-        display: block;
-        animation: fadeIn 0.2s ease-out;
-    }
-    .nav-dropdown-content a {
-        color: #555 !important;
-        padding: 10px 16px !important;
-        text-decoration: none;
-        display: block;
-        font-size: 0.78rem;
-        letter-spacing: 0.6px;
-        text-transform: uppercase;
-        border-radius: 0 !important;
-        white-space: normal;
-        text-align: center;
-        background: transparent !important;
-    }
-    .nav-dropdown-content a:hover {
-        background-color: rgba(212,175,55,.05) !important;
-        color: #d4af37 !important;
-    }
-    .nav-dropdown-content a::after {
-        display: none !important;
-    }
-    .dropdown-icon {
-        font-size: 0.6rem;
-        transition: transform 0.2s;
-        margin-left: 3px;
-        color: inherit;
-    }
-    .nav-dropdown:hover .dropdown-icon,
-    .nav-dropdown.aberto .dropdown-icon {
-        transform: rotate(180deg);
-    }
-
-    /* ── WRAPPER: agrupa links + perfil para virarem um único painel deslizante no mobile ──
-       Em ecrã largo o "display:contents" torna este wrapper invisível ao layout,
-       por isso .nav-links e .nav-profile continuam a comportar-se como itens
-       diretos do .header-content (sem qualquer impacto no desktop). ── */
-    .nav-drawer-group { display: contents; }
-
-    /* ── BOTÃO HAMBÚRGUER (só aparece em ecrãs pequenos) ── */
-    .nav-hamburger {
-        display: none;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 5px;
-        width: 40px;
-        height: 40px;
-        background: none;
-        border: none;
-        cursor: pointer;
-        flex-shrink: 0;
-        padding: 0;
-        margin-left: 8px;
-        z-index: 1001;
-        position: relative;
-    }
-    .nav-hamburger span {
-        display: block;
-        width: 22px;
-        height: 2px;
-        background: #1a1a2e;
-        border-radius: 2px;
-        transition: transform .25s ease, opacity .2s ease;
-    }
-    .top-bar.menu-aberto .nav-hamburger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-    .top-bar.menu-aberto .nav-hamburger span:nth-child(2) { opacity: 0; }
-    .top-bar.menu-aberto .nav-hamburger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
-
-    /* ── OVERLAY ESCURO ATRÁS DO PAINEL MOBILE ── */
-    .nav-mobile-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(15,15,25,.42);
-        z-index: 998;
-        opacity: 0;
-        transition: opacity .25s ease;
-    }
-    .top-bar.menu-aberto .nav-mobile-overlay { display: block; opacity: 1; }
-
-    /* ── RESPONSIVO: tablet e telemóvel passam a usar o painel deslizante ── */
-    @media (max-width: 1024px) {
-        body { padding-top: 68px !important; }
-        .header-content { height: 60px; padding: 0 16px; }
-        .nav-logo { height: 36px; }
-        .nav-divider { display: none; }
-        .nav-hamburger { display: flex; }
-
-        .nav-drawer-group {
-            display: flex;
-            flex-direction: column;
-            position: fixed;
-            top: 0;
-            right: 0;
-            height: 100dvh;
-            width: min(300px, 85vw);
-            background: #fff;
-            box-shadow: -10px 0 34px rgba(0,0,0,.18);
-            transform: translateX(100%);
-            transition: transform .3s cubic-bezier(.4,0,.2,1);
-            z-index: 999;
-            overflow-y: auto;
-            padding-top: 60px;
-            box-sizing: border-box;
-        }
-        .top-bar.menu-aberto .nav-drawer-group { transform: translateX(0); }
-
-        .nav-links, .nav-profile {
-            flex: none;
-            width: 100%;
-            margin: 0;
-        }
-
-        /* Perfil aparece primeiro no painel, com estilo de cabeçalho */
-        .nav-profile {
-            order: -1;
-            position: static;
-            padding: 14px 18px;
-            box-sizing: border-box;
-            border-bottom: 1px solid #f0ece5;
-        }
-        .nav-profile-btn { width: 100%; justify-content: flex-start; padding: 6px; }
-        .nav-profile-name { max-width: none; }
-        .nav-profile-chevron { display: none; }
-        .nav-profile-dropdown {
-            display: block !important;
-            position: static;
-            box-shadow: none;
-            border: none;
-            border-radius: 0;
-            min-width: 0;
-            margin-top: 10px;
-            animation: none;
-        }
-        .profile-dd-header { padding: 0 0 10px; }
-
-        /* Lista de links vira coluna, ocupando toda a largura do painel */
-        .nav-links {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 0;
-            padding: 8px 0 20px;
-        }
-        .nav-links a {
-            white-space: normal;
-            padding: 13px 20px;
-            font-size: 0.85rem;
-            border-radius: 0 !important;
-            letter-spacing: .4px;
-        }
-        .nav-links a::after { display: none; }
-        .nav-links a.link-novo {
-            margin: 6px 16px;
-            padding: 12px;
-            text-align: center;
-        }
-        .nav-admin-sep { display: none; }
-
-        /* Dropdown "Administração" fica sempre expandido, encaixado na coluna */
-        .nav-dropdown { display: block; width: 100%; }
-        .nav-dropdown-content {
-            display: block !important;
-            position: static;
-            transform: none;
-            box-shadow: none;
-            border: none;
-            border-radius: 0;
-            min-width: 0;
-            margin: 0;
-            padding: 0;
-            background: #faf8f2;
-        }
-        .nav-dropdown-content a {
-            text-align: left !important;
-            padding: 12px 20px 12px 36px !important;
-        }
-        .dropdown-icon { display: none; }
-    }
+  }
 </style>
 
-<header class="top-bar">
-    <div class="header-content">
+<!-- BARRA SUPERIOR FLUTUANTE LIQUID GLASS (GLOBAL) -->
+<div class="liquid-topbar-wrap" id="liquid-topbar-wrap">
+  <header class="liquid-topbar">
 
-        <!-- LOGO -->
-        <a href="lista-espera.html" class="brand">
-            <img src="img/logo.png" alt="Eva Leite Atelier" class="nav-logo">
-        </a>
+    <!-- ESQUERDA: Ícone de Menu (Context Menu) + Busca/Filtro da Página -->
+    <div class="liquid-left">
 
-        <!-- SEPARADOR VERTICAL -->
-        <div class="nav-divider"></div>
-
-        <!-- LINKS + PERFIL — agrupados para virarem um único painel no mobile -->
-        <div class="nav-drawer-group">
-            <nav class="nav-links">
-                <a href="lista-espera.html"  data-page="lista-espera.html">Lista de Espera</a>
-                <a href="concluidos.html"    data-page="concluidos.html">Concluídos</a>
-
-                <!-- Links apenas para Admin -->
-                <span class="admin-only-group" style="display:contents">
-                    <div class="nav-admin-sep"></div>
-                    <a href="adicionar-pedido.html" data-page="adicionar-pedido.html" class="link-novo">+ Novo Pedido</a>
-                    <a href="entregues.html"  data-page="entregues.html">Histórico</a>
-                    <a href="clientes.html"   data-page="clientes.html">Clientes</a>
-                    <a href="vouchers.html"   data-page="vouchers.html">Vouchers</a>
-
-                    <!-- Dropdown de Gestão -->
-                    <div class="nav-dropdown" id="nav-dropdown-admin">
-                        <a href="#" style="cursor:pointer; user-select:none;">Administração <span class="dropdown-icon">▼</span></a>
-                        <div class="nav-dropdown-content" id="nav-dropdown-content-admin">
-                            <a href="clientes.html" data-page="clientes.html">👥 Central de Clientes</a>
-                            <a href="gerir-produtos.html" data-page="gerir-produtos.html">Gerir Produtos</a>
-                            <a href="dashboard.html" data-page="dashboard.html" class="full-admin-only">Dashboard</a>
-                            <a href="contas.html" data-page="contas.html" class="full-admin-only">Contas</a>
-                            <a href="financas.html"   data-page="financas.html">Finanças</a>
-                            <a href="lista-compras.html" data-page="lista-compras.html">🛒 Lista de Compras</a>
-                            <a href="gestao-tecidos.html" data-page="gestao-tecidos.html">🧵 Gestão de Tecidos</a>
-                            <a href="precificador.html" data-page="precificador.html">Precificador</a>
-                            <a href="fidelidade.html" data-page="fidelidade.html">🎁 Fidelidade</a>
-                            <a href="utilizadores.html" data-page="utilizadores.html">Utilizadores</a>
-                        </div>
-                    </div>
-                </span>
-            </nav>
-
-            <!-- PERFIL -->
-            <div class="nav-profile admin-only-group" id="nav-profile">
-                <button class="nav-profile-btn" id="btn-perfil" onclick="togglePerfilDropdown()">
-                    <div class="nav-profile-avatar" id="avatar-iniciais">?</div>
-                    <div style="text-align:left;">
-                        <div class="nav-profile-name" id="perfil-nome">Utilizador</div>
-                        <div class="nav-profile-role" id="perfil-role">Admin</div>
-                    </div>
-                    <span class="nav-profile-chevron">&#9660;</span>
-                </button>
-                <div class="nav-profile-dropdown" id="perfil-dropdown">
-                    <div class="profile-dd-header">
-                        <div class="profile-dd-name" id="dd-nome">Utilizador</div>
-                        <div class="profile-dd-email" id="dd-email"></div>
-                        <span class="profile-dd-badge" id="dd-badge">Admin</span>
-                    </div>
-                    <a href="utilizadores.html" class="profile-dd-item">&#128100; Gerir Utilizadores</a>
-                    <a href="meu-perfil.html" class="profile-dd-item">&#9881; Meu Perfil</a>
-                    <div class="profile-dd-sep"></div>
-                    <button class="profile-dd-item danger" onclick="sair()">&#128682; Sair da conta</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- HAMBÚRGUER (tablet/telemóvel) -->
-        <button class="nav-hamburger" id="btn-hamburguer" onclick="toggleMenuMobile()" aria-label="Abrir menu">
-            <span></span><span></span><span></span>
+      <!-- Botão Logo/Menu -->
+      <div class="liquid-menu-wrap" id="liquid-menu-wrap">
+        <button type="button" class="liquid-brand-btn" id="btn-liquid-menu" onclick="toggleLiquidContextMenu(event)" title="Abrir Menu de Navegação">
+          <img src="img/logo.png" alt="Eva Leite Atelier" class="liquid-brand-logo">
+          <svg class="liquid-menu-trigger-ico" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+          </svg>
         </button>
+
+        <!-- Context Menu Estilo Windows 11 -->
+        <div class="liquid-context-menu" id="liquid-context-menu" role="menu" onclick="event.stopPropagation()">
+          <a href="adicionar-pedido.html" data-page="adicionar-pedido.html" class="ctx-item ctx-highlight">
+            <span class="ctx-item-left">
+              <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              Novo Pedido
+            </span>
+          </a>
+
+          <div class="ctx-sep"></div>
+          <div class="ctx-group-label">Pedidos</div>
+
+          <a href="lista-espera.html" data-page="lista-espera.html" class="ctx-item">
+            <span class="ctx-item-left">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              Lista de Espera
+            </span>
+          </a>
+          <a href="concluidos.html" data-page="concluidos.html" class="ctx-item">
+            <span class="ctx-item-left">
+              <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              Concluídos
+            </span>
+          </a>
+          <a href="entregues.html" data-page="entregues.html" class="ctx-item">
+            <span class="ctx-item-left">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+              Histórico
+            </span>
+          </a>
+
+          <div class="ctx-sep"></div>
+          <div class="ctx-group-label">Clientes & Benefícios</div>
+
+          <a href="clientes.html" data-page="clientes.html" class="ctx-item">
+            <span class="ctx-item-left">
+              <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              Central de Clientes
+            </span>
+          </a>
+          <a href="vouchers.html" data-page="vouchers.html" class="ctx-item">
+            <span class="ctx-item-left">
+              <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+              Vouchers
+            </span>
+          </a>
+
+          <div class="ctx-sep"></div>
+
+          <!-- PASTA / SUBMENU ADMINISTRAÇÃO (FLYOUT ESTILO WINDOWS 11) -->
+          <div class="ctx-item ctx-has-sub" id="item-sub-admin" onclick="toggleLiquidSubmenu(event, this)">
+            <span class="ctx-item-left">
+              <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+              Administração
+            </span>
+            <svg class="ctx-arrow" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+
+            <!-- SUBMENU FLUTUANTE EM VIDRO -->
+            <div class="ctx-submenu" onclick="event.stopPropagation()">
+              <a href="dashboard.html" data-page="dashboard.html" class="ctx-item">
+                <span class="ctx-item-left">
+                  <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+                  Dashboard
+                </span>
+              </a>
+              <a href="financas.html" data-page="financas.html" class="ctx-item">
+                <span class="ctx-item-left">
+                  <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                  Finanças
+                </span>
+              </a>
+              <a href="contas.html" data-page="contas.html" class="ctx-item">
+                <span class="ctx-item-left">
+                  <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                  Contas
+                </span>
+              </a>
+              <a href="gerir-produtos.html" data-page="gerir-produtos.html" class="ctx-item">
+                <span class="ctx-item-left">
+                  <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                  Gerir Produtos
+                </span>
+              </a>
+              <a href="gestao-tecidos.html" data-page="gestao-tecidos.html" class="ctx-item">
+                <span class="ctx-item-left">
+                  <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+                  Gestão de Tecidos
+                </span>
+              </a>
+              <a href="lista-compras.html" data-page="lista-compras.html" class="ctx-item">
+                <span class="ctx-item-left">
+                  <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                  Lista de Compras
+                </span>
+              </a>
+              <a href="precificador.html" data-page="precificador.html" class="ctx-item">
+                <span class="ctx-item-left">
+                  <svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="16" y1="14" x2="16" y2="18"></line><path d="M16 10h.01"></path><path d="M12 10h.01"></path><path d="M8 10h.01"></path><path d="M12 14h.01"></path><path d="M8 14h.01"></path><path d="M12 18h.01"></path><path d="M8 18h.01"></path></svg>
+                  Precificador
+                </span>
+              </a>
+              <a href="fidelidade.html" data-page="fidelidade.html" class="ctx-item">
+                <span class="ctx-item-left">
+                  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                  Fidelidade
+                </span>
+              </a>
+              <a href="tv-atelier.html" data-page="tv-atelier.html" class="ctx-item">
+                <span class="ctx-item-left">
+                  <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="18" x2="12" y2="21"></line></svg>
+                  TV do Atelier
+                </span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contentor dinâmico que recebe a Barra de Pesquisa + Botão de Filtro da página atual -->
+      <div class="liquid-dynamic-left" id="liquid-dynamic-left"></div>
 
     </div>
 
-    <!-- OVERLAY do painel mobile -->
-    <div class="nav-mobile-overlay" id="nav-mobile-overlay" onclick="fecharMenuMobile()"></div>
-</header>
+    <!-- CENTRO: Bolha Liquid Glass com o Título da Página -->
+    <div class="liquid-center-bubble" id="liquid-center-bubble">
+      <span class="liquid-bubble-dot"></span>
+      <h1 id="liquid-page-title">Eva Leite Atelier</h1>
+    </div>
 
+    <!-- DIREITA: Ações Rápidas da Página ou "+ Novo Pedido" -->
+    <div class="liquid-right" id="liquid-right">
+      <div class="liquid-dynamic-right" id="liquid-dynamic-right"></div>
+      <a href="adicionar-pedido.html" class="liquid-action-btn" id="liquid-default-action">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <span>Novo Pedido</span>
+      </a>
+    </div>
+
+  </header>
+</div>

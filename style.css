@@ -182,30 +182,288 @@ footer {
     flex-direction: column;
 }
 
-/* Força os botões para baixo se o cartão for mais alto */
+/* Linha de Total + bolinha indicadora de fatura anexada */
+.pedido-total-linha {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.fatura-valor-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #d4af37;
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.22);
+    flex-shrink: 0;
+}
+
+/* Eleva o cartão na pilha do Masonry quando o menu de opções está aberto */
+.pedido.menu-aberto {
+    z-index: 600 !important;
+}
+
+/* Barra compacta inferior de ações circulares */
 .pedido .acoes-pedido {
     margin-top: auto;
     display: flex;
-    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
     gap: 8px;
-    padding-top: 15px;
+    padding-top: 14px;
+    border-top: 1px solid #f0ece4;
 }
 
-/* Estilo para os botões de ação nos cards */
-.acoes-pedido button {
-    padding: 8px 16px;
-    font-size: 0.8rem;
-    border-radius: 25px;
-    margin-top: 0;
+.acoes-principais {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+/* Botões de ícone circulares minimalistas */
+.acoes-pedido .card-ico-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    max-width: 36px;
+    flex: 0 0 36px;
+    padding: 0;
+    margin: 0;
+    border-radius: 50%;
+    background: #f6f4ef;
+    color: #2c2a27;
+    border: 1px solid #e5dfd5;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
+    box-sizing: border-box;
+}
+
+.acoes-pedido .card-ico-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    stroke-width: 1.85;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+    pointer-events: none;
+}
+
+.acoes-pedido .card-ico-btn:hover {
+    background: #1a1a1a;
+    border-color: #1a1a1a;
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.acoes-pedido .card-ico-btn.btn-ico-primary {
+    background: #1a1a1a;
+    border-color: #1a1a1a;
+    color: #fff;
+}
+
+.acoes-pedido .card-ico-btn.btn-ico-primary:hover {
+    background: #2e7d32;
+    border-color: #2e7d32;
+    color: #fff;
+}
+
+.acoes-pedido .card-ico-btn.btn-ico-pay {
+    background: #eef7ee;
+    border-color: #c2e0c4;
+    color: #2e7d32;
+}
+
+.acoes-pedido .card-ico-btn.btn-ico-pay:hover {
+    background: #2e7d32;
+    border-color: #2e7d32;
+    color: #fff;
+}
+
+.acoes-pedido .card-ico-btn.btn-ico-locked {
+    background: #f4f2ee;
+    border-color: #e6e2da;
+    color: #9e988e;
+    cursor: not-allowed;
+}
+
+.acoes-pedido .card-ico-btn.btn-ico-locked:hover {
+    background: #eae6de;
+    border-color: #d8d2c7;
+    color: #777;
+    transform: none;
+    box-shadow: none;
+}
+
+.acoes-pedido .card-ico-btn.btn-ico-danger:hover {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: #fff;
+}
+
+.acoes-pedido .card-ico-btn.btn-ico-fatura.tem-fatura {
+    background: #fcf8eb;
+    border-color: #e5cb78;
+    color: #9a7414;
+}
+
+.acoes-pedido .card-ico-btn.btn-ico-fatura.tem-fatura:hover {
+    background: #d4af37;
+    border-color: #d4af37;
+    color: #fff;
+}
+
+.acoes-pedido .card-ico-btn.btn-ico-more.aberto {
+    background: #1a1a1a;
+    border-color: #1a1a1a;
+    color: #fff;
+}
+
+/* Menu popover Liquid Glass do botão •• */
+.card-more-wrap {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+}
+
+.card-more-wrap.aberto {
+    z-index: 650;
+}
+
+.card-more-menu {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: 0;
+    min-width: 224px;
+    max-width: calc(100vw - 56px);
+    padding: 6px;
+    border-radius: 15px;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 245, 238, 0.86) 100%);
+    backdrop-filter: blur(32px) saturate(190%);
+    -webkit-backdrop-filter: blur(32px) saturate(190%);
+    border: 1px solid rgba(255, 255, 255, 0.96);
+    box-shadow:
+        0 16px 38px rgba(15, 14, 12, 0.16),
+        0 3px 10px rgba(0, 0, 0, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.98);
+    z-index: 700;
+    transform-origin: bottom right;
+    animation: cardMenuPop 0.14s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
+}
+
+.card-more-menu.aberto {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+@keyframes cardMenuPop {
+    from { opacity: 0; transform: scale(0.95) translateY(4px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.card-more-menu .card-more-item {
+    width: 100%;
+    min-width: 0;
+    flex: none;
+    margin: 0;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: #222;
+    font-size: 0.82rem;
+    font-weight: 500;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 9px;
+    text-align: left;
+    cursor: pointer;
+    box-shadow: none;
+    transform: none;
+    transition: background-color 0.12s ease, color 0.12s ease;
+    white-space: nowrap;
+}
+
+.card-more-menu .card-more-item svg {
+    width: 15px;
+    height: 15px;
+    stroke: currentColor;
+    stroke-width: 1.85;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+    flex-shrink: 0;
+}
+
+.card-more-menu .card-more-item:hover {
+    background: rgba(26, 26, 26, 0.07);
+    color: #000;
+}
+
+.card-more-menu .card-more-item.is-success {
+    color: #256029;
+}
+.card-more-menu .card-more-item.is-success:hover {
+    background: rgba(46, 125, 50, 0.1);
+    color: #1b5e20;
+}
+
+.card-more-menu .card-more-item.is-info {
+    color: #1565c0;
+}
+.card-more-menu .card-more-item.is-info:hover {
+    background: rgba(21, 101, 192, 0.1);
+    color: #0d47a1;
+}
+
+.card-more-menu .card-more-item.is-warn {
+    color: #b45309;
+}
+.card-more-menu .card-more-item.is-warn:hover {
+    background: rgba(217, 119, 6, 0.1);
+    color: #92400e;
+}
+
+.card-more-menu .card-more-item.is-danger {
+    color: #c62828;
+}
+.card-more-menu .card-more-item.is-danger:hover {
+    background: rgba(220, 38, 38, 0.1);
+    color: #b71c1c;
+}
+
+.card-more-menu .card-more-item.tem-fatura {
+    color: #9a7414;
     font-weight: 600;
-    transition: all 0.2s ease;
-    flex: 1;
-    min-width: fit-content;
+}
+.card-more-menu .card-more-item.tem-fatura:hover {
+    background: rgba(212, 175, 55, 0.14);
 }
 
-.acoes-pedido button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+.card-more-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #d4af37;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.card-more-sep {
+    height: 1px;
+    background: rgba(0, 0, 0, 0.07);
+    margin: 3px 6px;
 }
 
 .btn-concluir-pago {
@@ -227,23 +485,6 @@ footer {
 .btn-remover-historico:hover {
     background-color: #fad2cf !important;
     color: #b71c1c !important;
-}
-
-.btn-lixeira-historico {
-    background: transparent;
-    border: none;
-    font-size: 1.25rem;
-    cursor: pointer;
-    padding: 3px 6px;
-    border-radius: 6px;
-    color: #c62828;
-    line-height: 1;
-    transition: transform 0.15s ease, background 0.15s ease;
-}
-
-.btn-lixeira-historico:hover {
-    background: #ffebee;
-    transform: scale(1.15);
 }
 
 .btn-editar {
@@ -515,4 +756,218 @@ footer {
     background-color: #555;
     color: #fff;
 }
+
+/* =========================================
+   BARRA DE TOPO DA PÁGINA (TÍTULO ESQ + FILTRO POPOVER & PESQUISA DIR)
+   ========================================= */
+.page-toolbar,
+.clientes-header {
+    display: none !important;
+}
+
+.page-toolbar h1 {
+    margin: 0 !important;
+    text-align: left !important;
+    font-size: 1.65rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #1a1a1a;
+}
+
+.page-toolbar-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Contentor relativo do botão de filtro + janelinha popover */
+.filter-dropdown-wrap {
+    position: relative;
+    display: inline-flex;
+}
+
+.btn-filter-icon {
+    width: 40px !important;
+    height: 40px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    color: #222 !important;
+    border: 1px solid #dcd6cc !important;
+    border-radius: 9px !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.18s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+
+.btn-filter-icon:hover,
+.btn-filter-icon.ativo {
+    border-color: #1a1a1a !important;
+    background: #1a1a1a !important;
+    color: #fff !important;
+}
+
+.btn-filter-icon svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+}
+
+.filter-badge-dot {
+    display: none;
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #b8933a;
+    border: 2px solid #f5f1ea;
+}
+
+.btn-filter-icon.tem-filtro .filter-badge-dot {
+    display: block;
+}
+
+/* Janelinha flutuante de filtros */
+.filter-popover {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 270px;
+    background: #fff;
+    border: 1px solid #e2dcd0;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
+    z-index: 3000;
+    animation: aparecerModal 0.16s ease-out;
+}
+
+.filter-popover.aberto {
+    display: block;
+}
+
+.filter-popover-section {
+    margin-bottom: 14px;
+}
+
+.filter-popover-section:last-child {
+    margin-bottom: 0;
+}
+
+.filter-popover-label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #777;
+    margin: 0 0 8px 0 !important;
+}
+
+.filter-popover-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.filter-popover-pills button {
+    width: auto !important;
+    margin: 0 !important;
+    flex: 1;
+    min-width: fit-content;
+    padding: 7px 11px !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    border-radius: 7px !important;
+    border: 1px solid #ddd !important;
+    background: #fff;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.filter-popover select {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 8px 10px !important;
+    font-size: 0.84rem !important;
+    border-radius: 7px !important;
+    border: 1px solid #dcd6cc !important;
+    background: #fdfcfa !important;
+    color: #333 !important;
+    outline: none;
+    cursor: pointer;
+}
+
+/* Barra de pesquisa na direita */
+.toolbar-search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 270px;
+    max-width: 100%;
+}
+
+.toolbar-search-wrap svg {
+    position: absolute;
+    left: 12px;
+    width: 16px;
+    height: 16px;
+    stroke: #888;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+    pointer-events: none;
+}
+
+.toolbar-search-wrap input {
+    width: 100% !important;
+    height: 40px !important;
+    margin: 0 !important;
+    padding: 8px 14px 8px 36px !important;
+    font-size: 0.88rem !important;
+    border: 1px solid #dcd6cc !important;
+    border-radius: 9px !important;
+    background: #fff !important;
+    color: #1a1a1a !important;
+    outline: none;
+    transition: border-color 0.18s;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+
+.toolbar-search-wrap input:focus {
+    border-color: #b8933a !important;
+}
+
+@media (max-width: 640px) {
+    .page-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .page-toolbar-controls {
+        width: 100%;
+    }
+    .toolbar-search-wrap {
+        flex: 1;
+        width: auto;
+    }
+    .filter-popover {
+        left: 0;
+        right: auto;
+    }
+}
+
 

@@ -3,29 +3,54 @@
 <head>
   <meta charset="UTF-8">
   <title>Pedidos Concluídos - Eva Leite Atelier</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2">
   <script src="auth-guard.js"></script>
 </head>
 <body>
 
-  <h1>Pedidos Concluídos</h1>
-  
-  <div style="max-width:700px; margin:0 auto 24px auto; display:flex; flex-direction:column; gap:12px;">
-    <input type="text" id="pesquisa" placeholder="Pesquisar cliente..." onkeyup="filtrarPedidos()"
-      style="width:100%; padding:10px 14px; border:1px solid #ddd; border-radius:8px;
-             font-size:0.95rem; box-sizing:border-box; outline:none; font-family:inherit;
-             transition:border-color .2s;"
-      onfocus="this.style.borderColor='#bba68a'" onblur="this.style.borderColor='#ddd'">
-    <div style="display:flex; justify-content:flex-end;">
-      <select id="ordem-pedidos" onchange="filtrarPedidos()"
-        style="padding:7px 12px; border-radius:8px; border:1.5px solid #ddd;
-               font-size:0.83rem; font-family:inherit; cursor:pointer; outline:none;
-               background:#fff; color:#555;">
-        <option value="data-desc">Mais recente</option>
-        <option value="data-asc">Mais antigo</option>
-        <option value="nome-az">A → Z</option>
-        <option value="nome-za">Z → A</option>
-      </select>
+  <div class="page-toolbar">
+    <h1>Pedidos Concluídos</h1>
+
+    <div class="page-toolbar-controls">
+      <div class="filter-dropdown-wrap">
+        <button type="button" class="btn-filter-icon" id="btn-filter-toggle" onclick="toggleFiltroPopover(event)" title="Filtros e Ordenação">
+          <svg viewBox="0 0 24 24">
+            <line x1="4" y1="6" x2="20" y2="6"></line>
+            <line x1="7" y1="12" x2="17" y2="12"></line>
+            <line x1="10" y1="18" x2="14" y2="18"></line>
+          </svg>
+          <span class="filter-badge-dot"></span>
+        </button>
+
+        <div class="filter-popover" id="filter-popover-box">
+          <div class="filter-popover-section">
+            <span class="filter-popover-label">Estado de Pagamento</span>
+            <div class="filter-popover-pills">
+              <button type="button" onclick="definirFiltroPagamento('todos')" id="filtro-btn-todos" style="background:#1a1a1a; color:#fff; border-color:#1a1a1a;">Todos</button>
+              <button type="button" onclick="definirFiltroPagamento('nao')" id="filtro-btn-nao">Não Pagos</button>
+              <button type="button" onclick="definirFiltroPagamento('sim')" id="filtro-btn-sim">Pagos</button>
+            </div>
+          </div>
+
+          <div class="filter-popover-section">
+            <span class="filter-popover-label">Ordenar por</span>
+            <select id="ordem-pedidos" onchange="filtrarPedidos()">
+              <option value="data-desc">Mais recente</option>
+              <option value="data-asc">Mais antigo</option>
+              <option value="nome-az">Nome (A → Z)</option>
+              <option value="nome-za">Nome (Z → A)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="toolbar-search-wrap">
+        <svg viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="pesquisa" placeholder="Pesquisar cliente..." onkeyup="filtrarPedidos()">
+      </div>
     </div>
   </div>
   
@@ -35,7 +60,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   
-  <script src="navbar.js"></script>
-  <script src="script.js"></script>
+  <script src="navbar.js?v=7"></script>
+  <script src="script.js?v=2"></script>
 </body>
 </html>

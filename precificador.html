@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <script src="auth-guard.js"></script>
-    <script src="navbar.js" defer></script>
+    <script src="navbar.js?v=7" defer></script>
     <style>
         :root {
             --prec-bg: #f5f1ea;
@@ -17,10 +17,7 @@
             --prec-accent: #b7a58c;
         }
         body { background: var(--prec-bg); color: var(--prec-ink); }
-        .prec-wrapper { max-width: 1050px; margin: 34px auto; padding: 0 22px 60px; }
-        .prec-header { margin-bottom: 24px; }
-        .prec-header h1 { margin: 0 0 7px; font-size: 1.8rem; color: #25231f; }
-        .prec-header p { margin: 0; color: var(--prec-muted); font-size: .95rem; }
+        .prec-wrapper { max-width: 1050px; margin: 14px auto; padding: 0 22px 60px; }
         .prec-layout { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(290px, .9fr); gap: 22px; align-items: start; }
         .prec-card { background: #fff; border: 1px solid var(--prec-line); border-radius: 16px; padding: 26px; box-shadow: 0 5px 22px rgba(40,32,20,.045); }
         .prec-card h2 { margin: 0 0 7px; font-size: 1.12rem; }
@@ -49,11 +46,6 @@
 </head>
 <body>
 <main class="prec-wrapper">
-    <header class="prec-header">
-        <h1>Precificador</h1>
-        <p>Calcula o preço final de uma peça com base nos dias de trabalho e no custo dos materiais.</p>
-    </header>
-
     <div class="prec-layout">
         <section class="prec-card" aria-labelledby="dados-title">
             <h2 id="dados-title">Dados do trabalho</h2>

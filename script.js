@@ -126,22 +126,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const modalHTML = `
     <div class="modal-overlay" id="modal-fatura" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.55); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(3px);">
         <div style="background:#fff; width:92%; max-width:440px; padding:26px; border-radius:14px; box-shadow:0 12px 40px rgba(0,0,0,0.22);">
-            <h3 style="margin-top:0; font-size:1.22rem; color:#1a1a2e; display:flex; align-items:center; gap:8px; border-bottom: 2px solid #f0ebe1; padding-bottom:12px; margin-bottom:16px;">
-                📄 Fatura Completa do Pedido
+            <h3 style="margin-top:0; font-size:1.15rem; color:#1a1a2e; display:flex; align-items:center; gap:8px; border-bottom: 1px solid #f0ebe1; padding-bottom:12px; margin-bottom:16px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                Fatura Completa do Pedido
             </h3>
             
             <input type="hidden" id="fatura-pedido-id">
 
             <!-- Resumo Automático do Pedido -->
-            <div id="fatura-resumo-info" style="background:#faf8f3; border:1px solid #e8dfd1; border-radius:10px; padding:12px 14px; margin-bottom:16px; font-size:0.88rem; color:#444; line-height:1.6;">
-                <div><strong>👤 Cliente:</strong> <span id="fatura-info-cliente">—</span></div>
-                <div><strong>🏢 NIF:</strong> <span id="fatura-info-nif" style="font-family:monospace; font-weight:700; color:#2e7d32;">—</span></div>
-                <div><strong>💶 Valor Total (Automático):</strong> <span id="fatura-info-valor" style="font-weight:700; color:#1a1a2e;">€0.00</span></div>
+            <div id="fatura-resumo-info" style="background:#faf8f3; border:1px solid #e8dfd1; border-radius:10px; padding:12px 14px; margin-bottom:16px; font-size:0.86rem; color:#444; line-height:1.65;">
+                <div><strong>Cliente:</strong> <span id="fatura-info-cliente">—</span></div>
+                <div><strong>NIF:</strong> <span id="fatura-info-nif" style="font-family:monospace; font-weight:700; color:#2e7d32;">—</span></div>
+                <div><strong>Valor Total:</strong> <span id="fatura-info-valor" style="font-weight:700; color:#1a1a2e;">€0.00</span></div>
             </div>
 
             <!-- Botão Rápido se já existir fatura -->
-            <a id="fatura-final-btn" href="#" target="_blank" style="display:none; width:100%; box-sizing:border-box; text-align:center; padding:11px 14px; background:#e8f5e9; border:1.5px solid #a5d6a7; border-radius:8px; color:#2e7d32; text-decoration:none; font-size:0.92rem; font-weight:700; margin-bottom:16px; transition:all 0.2s;">
-                🔗 Abrir Fatura Atual numa Nova Aba
+            <a id="fatura-final-btn" href="#" target="_blank" style="display:none; width:100%; box-sizing:border-box; text-align:center; padding:10px 14px; background:#f1f8f2; border:1px solid #b8deb9; border-radius:8px; color:#256029; text-decoration:none; font-size:0.88rem; font-weight:600; margin-bottom:16px; transition:all 0.2s;">
+                Abrir Fatura Atual numa Nova Aba
             </a>
             
             <!-- Campo Único: Link da Fatura Completa -->
@@ -159,7 +160,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             <div style="display:flex; justify-content:flex-end; gap:10px;">
                 <button type="button" onclick="document.getElementById('modal-fatura').style.display='none'" style="padding:10px 18px; background:#f2f2f2; border:none; border-radius:8px; cursor:pointer; color:#555; font-weight:600; margin:0;">Cancelar</button>
-                <button type="button" onclick="salvarModalFatura()" id="btn-salvar-fatura" style="padding:10px 20px; background:#d4af37; border:none; border-radius:8px; cursor:pointer; color:#fff; font-weight:700; margin:0;">💾 Guardar Fatura</button>
+                <button type="button" onclick="salvarModalFatura()" id="btn-salvar-fatura" style="padding:10px 20px; background:#d4af37; border:none; border-radius:8px; cursor:pointer; color:#fff; font-weight:700; margin:0;">Guardar Fatura</button>
             </div>
         </div>
     </div>
@@ -426,7 +427,7 @@ if (document.getElementById('form-pedido')) {
         const cliUrl = mapa.get(norm(params.get('nome')));
         if (cliUrl && cliUrl.medidas && boxMedidas) {
           boxMedidas.style.display = 'block';
-          boxMedidas.innerHTML = `📏 <strong>Medidas guardadas na ficha de ${cliUrl.nome}:</strong><br>${cliUrl.medidas.replace(/\n/g, '<br>')}`;
+          boxMedidas.innerHTML = `<strong>Medidas guardadas na ficha de ${cliUrl.nome}:</strong><br>${cliUrl.medidas.replace(/\n/g, '<br>')}`;
         }
       }
     } catch (err) {
@@ -460,9 +461,9 @@ if (document.getElementById('form-pedido')) {
           <div>
             <strong>${c.nome}</strong>
             <div style="font-size:0.78rem; color:#666;">
-              ${c.telefone ? `📱 ${c.telefone} ` : ''}
+              ${c.telefone ? `Tel: ${c.telefone} ` : ''}
               ${c.nif ? `| NIF: ${c.nif} ` : ''}
-              ${c.email ? `| ✉️ ${c.email}` : ''}
+              ${c.email ? `| ${c.email}` : ''}
             </div>
           </div>
           <span style="font-size:0.75rem; background:#f5efe2; color:#8d6b20; padding:3px 8px; border-radius:99px; font-weight:600;">
@@ -483,7 +484,7 @@ if (document.getElementById('form-pedido')) {
           if (boxMedidas) {
             if (escolhido.medidas) {
               boxMedidas.style.display = 'block';
-              boxMedidas.innerHTML = `📏 <strong>Medidas guardadas na ficha de ${escolhido.nome}:</strong><br>${escolhido.medidas.replace(/\n/g, '<br>')}`;
+              boxMedidas.innerHTML = `<strong>Medidas guardadas na ficha de ${escolhido.nome}:</strong><br>${escolhido.medidas.replace(/\n/g, '<br>')}`;
             } else {
               boxMedidas.style.display = 'none';
             }
@@ -1272,6 +1273,248 @@ window.verInformacoesCliente = async function(nome, emailClienteStr) {
     }
 }
 
+// =====================================================
+// AÇÕES CIRCULARES MINIMALISTAS & MENU (••) DOS CARDS DE PEDIDO
+// =====================================================
+const CARD_ACTION_ICONS = {
+  check: '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>',
+  checkCircle: '<svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>',
+  package: '<svg viewBox="0 0 24 24"><path d="M16.5 9.4l-9-5.19"></path><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>',
+  lock: '<svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>',
+  euro: '<svg viewBox="0 0 24 24"><path d="M4 10h12"></path><path d="M4 14h9"></path><path d="M19 6a7.7 7.7 0 0 0-5.2-2A7.9 7.9 0 0 0 6 12c0 4.4 3.5 8 7.8 8 2 0 3.8-.8 5.2-2"></path></svg>',
+  edit: '<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>',
+  info: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>',
+  trash: '<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>',
+  undo: '<svg viewBox="0 0 24 24"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg>',
+  file: '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>',
+  dots2: '<svg viewBox="0 0 24 24"><circle cx="8.5" cy="12" r="1.65" fill="currentColor" stroke="none"></circle><circle cx="15.5" cy="12" r="1.65" fill="currentColor" stroke="none"></circle></svg>'
+};
+
+function escaparAttrHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function escaparJsEmHtmlAttr(str) {
+  return String(str || '')
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\r?\n/g, ' ');
+}
+
+function criarBotaoIconeCard({ classeExtra = '', onclick, title, icone }) {
+  const label = escaparAttrHtml(title);
+  return `<button type="button" class="admin-only card-ico-btn ${classeExtra}" onclick="${onclick}" title="${label}" aria-label="${label}">${CARD_ACTION_ICONS[icone] || ''}</button>`;
+}
+
+function criarItemMenuCard({ classeExtra = '', onclick, icone, texto, dot = false }) {
+  return `<button type="button" class="card-more-item ${classeExtra}" onclick="fecharTodosMenusCards(); ${onclick}">${CARD_ACTION_ICONS[icone] || ''}<span>${texto}</span>${dot ? '<span class="card-more-dot" title="Fatura anexada"></span>' : ''}</button>`;
+}
+
+window.fecharTodosMenusCards = function() {
+  document.querySelectorAll('.card-more-menu.aberto').forEach(m => m.classList.remove('aberto'));
+  document.querySelectorAll('.card-more-wrap.aberto').forEach(w => w.classList.remove('aberto'));
+  document.querySelectorAll('.btn-ico-more.aberto').forEach(b => b.classList.remove('aberto'));
+  document.querySelectorAll('.pedido.menu-aberto').forEach(c => c.classList.remove('menu-aberto'));
+};
+
+window.toggleMenuAcoesCard = function(event, btn) {
+  if (event) event.stopPropagation();
+  if (!btn) return;
+  const wrap = btn.closest('.card-more-wrap');
+  const menu = wrap && wrap.querySelector('.card-more-menu');
+  const card = btn.closest('.pedido');
+  const jaAberto = menu && menu.classList.contains('aberto');
+
+  window.fecharTodosMenusCards();
+
+  if (!jaAberto && menu) {
+    menu.classList.add('aberto');
+    btn.classList.add('aberto');
+    if (wrap) wrap.classList.add('aberto');
+    if (card) card.classList.add('menu-aberto');
+  }
+};
+
+if (!window.__cardMenuListenersRegistrados) {
+  window.__cardMenuListenersRegistrados = true;
+  document.addEventListener('click', (e) => {
+    if (!e.target || !e.target.closest || !e.target.closest('.card-more-wrap')) {
+      window.fecharTodosMenusCards();
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      window.fecharTodosMenusCards();
+    }
+  });
+}
+
+function construirAcoesPedido({ p, filtro, botaoAcao, novoStatus, estaPago, finalValueRendered, temFatura }) {
+  const nomeJs = escaparJsEmHtmlAttr(p.nome);
+  const emailJs = escaparJsEmHtmlAttr(p.email_cliente);
+  const valorTotal = Number(p.preco_final || p.preco_total || 0);
+  const textoFatura = temFatura ? 'Ver Fatura' : 'Anexar Fatura';
+  const titleFatura = temFatura ? 'Ver ou atualizar link da fatura completa' : 'Anexar o link da fatura completa';
+
+  const principais = [];
+  const extras = [];
+
+  if (filtro === 'pendente') {
+    if (botaoAcao) {
+      principais.push(criarBotaoIconeCard({
+        classeExtra: 'btn-ico-primary',
+        onclick: `mudarStatus('${p.id}', '${novoStatus}')`,
+        title: botaoAcao,
+        icone: 'check'
+      }));
+    }
+    principais.push(
+      criarBotaoIconeCard({
+        onclick: `abrirEditorPedido('${p.id}')`,
+        title: 'Editar',
+        icone: 'edit'
+      }),
+      criarBotaoIconeCard({
+        classeExtra: 'btn-ico-danger',
+        onclick: `excluirPedido('${p.id}')`,
+        title: 'Excluir',
+        icone: 'trash'
+      }),
+      criarBotaoIconeCard({
+        onclick: `verInformacoesCliente('${nomeJs}', '${emailJs}')`,
+        title: 'Ver Informações',
+        icone: 'info'
+      })
+    );
+
+    extras.push(
+      criarItemMenuCard({
+        classeExtra: 'is-success',
+        onclick: `concluirEPago('${p.id}', ${valorTotal})`,
+        icone: 'checkCircle',
+        texto: 'Concluído & Pago'
+      }),
+      criarItemMenuCard({
+        classeExtra: 'is-info',
+        onclick: `concluirPagoEEntregue('${p.id}', ${valorTotal})`,
+        icone: 'package',
+        texto: 'Concluído, Pago & Entregue'
+      }),
+      '<div class="card-more-sep"></div>',
+      criarItemMenuCard({
+        classeExtra: temFatura ? 'tem-fatura' : '',
+        onclick: `abrirModalFatura('${p.id}')`,
+        icone: 'file',
+        texto: textoFatura,
+        dot: temFatura
+      })
+    );
+  } else if (filtro === 'concluido') {
+    if (botaoAcao === 'Entregar') {
+      if (estaPago) {
+        principais.push(criarBotaoIconeCard({
+          classeExtra: 'btn-ico-primary',
+          onclick: `mudarStatus('${p.id}', '${novoStatus}')`,
+          title: 'Entregar',
+          icone: 'package'
+        }));
+      } else {
+        principais.push(
+          criarBotaoIconeCard({
+            classeExtra: 'btn-ico-pay',
+            onclick: `marcarComoPago('${p.id}', ${finalValueRendered})`,
+            title: 'Marcar como Pago para libertar a entrega',
+            icone: 'euro'
+          }),
+          criarBotaoIconeCard({
+            classeExtra: 'btn-ico-locked',
+            onclick: `alert('Não é possível entregar este pedido porque ainda não foi totalmente pago!')`,
+            title: 'Entrega bloqueada: aguarda pagamento',
+            icone: 'lock'
+          })
+        );
+      }
+    }
+    principais.push(criarBotaoIconeCard({
+      onclick: `verInformacoesCliente('${nomeJs}', '${emailJs}')`,
+      title: 'Ver Informações',
+      icone: 'info'
+    }));
+
+    extras.push(
+      criarItemMenuCard({
+        classeExtra: 'is-warn',
+        onclick: `mudarStatus('${p.id}', 'pendente')`,
+        icone: 'undo',
+        texto: 'Reabrir Pedido'
+      }),
+      '<div class="card-more-sep"></div>',
+      criarItemMenuCard({
+        classeExtra: temFatura ? 'tem-fatura' : '',
+        onclick: `abrirModalFatura('${p.id}')`,
+        icone: 'file',
+        texto: textoFatura,
+        dot: temFatura
+      })
+    );
+  } else if (filtro === 'entregue') {
+    principais.push(
+      criarBotaoIconeCard({
+        onclick: `verInformacoesCliente('${nomeJs}', '${emailJs}')`,
+        title: 'Ver Informações',
+        icone: 'info'
+      }),
+      criarBotaoIconeCard({
+        classeExtra: `btn-ico-fatura${temFatura ? ' tem-fatura' : ''}`,
+        onclick: `abrirModalFatura('${p.id}')`,
+        title: titleFatura,
+        icone: 'file'
+      })
+    );
+
+    extras.push(
+      criarItemMenuCard({
+        classeExtra: 'is-warn',
+        onclick: `mudarStatus('${p.id}', 'concluido', false)`,
+        icone: 'undo',
+        texto: 'Desfazer Entrega'
+      }),
+      '<div class="card-more-sep"></div>',
+      criarItemMenuCard({
+        classeExtra: 'is-danger',
+        onclick: `removerDoHistorico('${p.id}', '${nomeJs}', this)`,
+        icone: 'trash',
+        texto: 'Remover do Histórico'
+      })
+    );
+  }
+
+  return `
+    <div class="acoes-pedido admin-only">
+      <div class="acoes-principais">
+        ${principais.join('')}
+      </div>
+      ${extras.length > 0 ? `
+        <div class="card-more-wrap admin-only">
+          <button type="button" class="admin-only card-ico-btn btn-ico-more" onclick="toggleMenuAcoesCard(event, this)" title="Mais opções" aria-label="Mais opções">
+            ${CARD_ACTION_ICONS.dots2}
+          </button>
+          <div class="card-more-menu" onclick="event.stopPropagation()">
+            ${extras.join('')}
+          </div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
 // Substitua a função carregarPedidos no seu script.js por esta:
 
 async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
@@ -1355,8 +1598,13 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
     const dataPedidoF = formatarDataParaExibir(p.data_real || p.data_pedido);
     const dataEntregaF = formatarDataParaExibir(p.data_entrega);
 
+    const temFatura = Boolean(p.fatura_final_link || p.fatura_simples_link);
+    const indicadorFaturaHtml = temFatura
+      ? '<span class="fatura-valor-dot" title="Fatura anexada"></span>'
+      : '';
+
     const precoOriginal = p.preco_total ? Number(p.preco_total).toFixed(2) : '0.00';
-    let precoDisplay = `<p><strong>Total:</strong> €${precoOriginal}</p>`;
+    let precoDisplay = `<p class="pedido-total-linha"><strong>Total:</strong> €${precoOriginal}${indicadorFaturaHtml}</p>`;
 
     let finalValueRendered = p.preco_total ? Number(p.preco_total) : 0;
 
@@ -1366,7 +1614,7 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
        <div style="background:#fff8e1; border:1px solid #ffe082; padding:10px; border-radius:6px; margin-bottom:10px;">
          <p style="margin:0 0 5px 0; text-decoration:line-through; color:#777; font-size:0.9rem;">Subtotal: €${precoOriginal}</p>
          <p style="margin:0 0 5px 0; font-size:0.95rem;">🎟️ Cupão <strong>${p.cupao_codigo}</strong> (-${p.desconto_percentagem}%)</p>
-         <p style="margin:0; font-size:1.1rem; color:#d4af37;"><strong>Total a Pagar: €${Number(finalValueRendered).toFixed(2)}</strong></p>
+         <p class="pedido-total-linha" style="margin:0; font-size:1.1rem; color:#d4af37;"><strong>Total a Pagar: €${Number(finalValueRendered).toFixed(2)}</strong>${indicadorFaturaHtml}</p>
        </div>
        `;
     }
@@ -1411,13 +1659,6 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
               style="width:16px; height:16px; cursor:pointer; accent-color:#2e7d32;">
             Selecionar
           </label>` : ''}
-        ${filtro === 'entregue' ? `
-          <button class="admin-only btn-lixeira-historico" 
-            onclick="removerDoHistorico('${p.id}', '${p.nome ? p.nome.replace(/'/g, "\\'") : ''}')" 
-            title="Remover do Histórico (mantém dados fiscais e faturação)" 
-            aria-label="Remover do Histórico">
-            🗑️
-          </button>` : ''}
       </div>
       <ul>
         ${Array.isArray(itensList) ? itensList.map(i => `
@@ -1437,72 +1678,7 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
       
       ${precoDisplay}
       
-      <div class="acoes-pedido">
-          ${filtro === 'pendente' ? `
-            <button class="admin-only btn-concluir-pago" 
-              onclick="concluirEPago('${p.id}', ${Number(p.preco_final || p.preco_total || 0)})"
-              title="Marcar como concluído e 100% pago">
-              ✅ Concluído &amp; Pago
-            </button>
-            <button class="admin-only btn-concluir-pago-entregue" 
-              onclick="concluirPagoEEntregue('${p.id}', ${Number(p.preco_final || p.preco_total || 0)})"
-              style="background: linear-gradient(135deg, #1565c0, #1e88e5) !important; color: white !important;"
-              title="Marcar como concluído, 100% pago e entregue">
-              📦 Concluído, Pago &amp; Entregue
-            </button>` : ''}
-          ${botaoAcao ? (
-        (filtro === 'concluido' && botaoAcao === 'Entregar') ? (
-          estaPago ? `
-                <button class="admin-only" onclick="mudarStatus('${p.id}', '${novoStatus}')" style="background-color: #2e7d32 !important; color: white !important;">
-                  📦 ${botaoAcao}
-                </button>
-              ` : `
-                <button class="admin-only" onclick="marcarComoPago('${p.id}', ${finalValueRendered})" style="background-color: #2e7d32 !important; color: white !important;" title="Marcar como Pago para libertar a entrega">
-                  💶 Marcar como Pago
-                </button>
-                <button class="admin-only" onclick="alert('Não é possível entregar este pedido porque ainda não foi totalmente pago!')" style="background-color: #ccc !important; color: #666 !important; cursor: not-allowed;" title="Entrega bloqueada: aguarda pagamento">
-                  📦 ${botaoAcao} (Bloqueado)
-                </button>
-              `
-        ) : `
-              <button class="admin-only" onclick="mudarStatus('${p.id}', '${novoStatus}')">${botaoAcao}</button>
-            `
-      ) : ''}
-          ${filtro === 'concluido' ? `
-            <button class="admin-only" style="background-color: #f57c00 !important; color: white !important;" 
-              onclick="mudarStatus('${p.id}', 'pendente')"
-              title="Mover este pedido de volta para a lista de espera">
-              ↩️ Reabrir Pedido
-            </button>` : ''}
-          ${filtro === 'entregue' ? `
-            <button class="admin-only" style="background-color: #f57c00 !important; color: white !important;" 
-              onclick="mudarStatus('${p.id}', 'concluido', false)"
-              title="Mover este pedido de volta para a lista de concluídos">
-              ↩️ Desfazer Entrega
-            </button>
-            <button class="admin-only btn-remover-historico" 
-              onclick="removerDoHistorico('${p.id}', '${p.nome ? p.nome.replace(/'/g, "\\'") : ''}')" 
-              title="Remover do Histórico (mantém faturação e NIF)">
-              🗑️ Remover
-            </button>` : ''}
-          ${filtro === 'pendente' ? `
-            <button class="admin-only btn-editar" onclick="abrirEditorPedido('${p.id}')">Editar</button>
-            <button class="admin-only btn-excluir" onclick="excluirPedido('${p.id}')">Excluir</button>
-          ` : ''}
-          ${(p.fatura_final_link || p.fatura_simples_link) ? `
-            <button class="admin-only" onclick="abrirModalFatura('${p.id}')" style="background-color: #d4af37 !important; color: #fff !important; font-weight: bold; border: none;" title="Ver ou atualizar link da fatura completa">
-              📄 Ver Fatura
-            </button>
-          ` : `
-            <button class="admin-only" onclick="abrirModalFatura('${p.id}')" style="background-color: #f5f5f5 !important; color: #555 !important; border: 1px solid #ccc; font-weight: bold;" title="Anexar o link da fatura completa">
-              📄 Anexar Fatura
-            </button>
-          `}
-          <button class="admin-only" onclick="verInformacoesCliente('${p.nome ? p.nome.replace(/'/g, "\\'") : ''}', '${p.email_cliente ? p.email_cliente.replace(/'/g, "\\'") : ''}')" style="background-color: #607d8b !important; color: white !important; font-weight: bold; border: none;" title="Ver email e NIF do cliente">
-            ℹ️ Ver Informações
-          </button>
-      </div>
-      <hr>
+      ${construirAcoesPedido({ p, filtro, botaoAcao, novoStatus, estaPago, finalValueRendered, temFatura })}
     `;
     container.appendChild(div);
   });
@@ -1879,20 +2055,25 @@ async function excluirPedido(id) {
   }
 }
 
-// Remove o pedido da visualização do Histórico mas salvaguarda faturação e NIF
-async function removerDoHistorico(id, nomeCliente) {
+// Remove o pedido da visualização do Histórico mas salvaguarda faturação, NIF e Ficha do Cliente
+async function removerDoHistorico(id, nomeCliente, btnEl) {
   const nomeExibir = nomeCliente ? ` de "${nomeCliente}"` : '';
   const confirmado = window.mostrarConfirmacao
     ? await window.mostrarConfirmacao(
-        `Tem a certeza que deseja remover o pedido${nomeExibir} do histórico?\n\nℹ️ Os registos de faturação (faturas emitidas/físicas) e o NIF do cliente continuarão guardados no sistema.`,
+        `Tem a certeza que deseja remover o pedido${nomeExibir} do mural de Histórico?<br><br><small style="color:#666;">Os dados de faturação, NIF e o registo na Central de Clientes continuarão guardados no sistema.</small>`,
         "Remover do Histórico",
-        "🗑️",
+        "",
         "Sim, Remover",
         "Cancelar"
       )
     : confirm(`Remover o pedido${nomeExibir} do histórico? Os registos de faturação e NIF serão mantidos no sistema.`);
 
   if (!confirmado) return;
+
+  if (btnEl) {
+    btnEl.disabled = true;
+    btnEl.style.opacity = '0.6';
+  }
 
   try {
     const client = window.supabaseClient || supabase;
@@ -1904,24 +2085,32 @@ async function removerDoHistorico(id, nomeCliente) {
       .eq('id', id)
       .single();
 
-    if (errBusca || !p) {
-      console.warn("Não foi possível ler dados do pedido antes de arquivar:", errBusca);
-    } else {
-      // 2. Garante que os dados de cliente e NIF estão salvaguardados em clientes_financas
-      if (p.nome && p.nome.trim()) {
+    if (!errBusca && p) {
+      let nifCliente = '999999990';
+      const nomeLimpo = (p.nome || '').trim();
+
+      // 2. Garante que o cliente está registado em clientes_financas (sem conflito de UNIQUE no NIF 999999990)
+      if (nomeLimpo) {
         try {
-          const nomeLimpo = p.nome.trim();
           const { data: cliExistente } = await client
             .from('clientes_financas')
-            .select('id, nif')
-            .ilike('nome', `%${nomeLimpo}%`)
+            .select('id, nif, email')
+            .ilike('nome', nomeLimpo)
             .limit(1);
 
-          if (!cliExistente || cliExistente.length === 0) {
+          if (cliExistente && cliExistente.length > 0) {
+            if (cliExistente[0].nif && cliExistente[0].nif.trim() !== '') {
+              nifCliente = cliExistente[0].nif.trim();
+            }
+            if (!cliExistente[0].email && p.email_cliente) {
+              await client.from('clientes_financas').update({ email: p.email_cliente }).eq('id', cliExistente[0].id);
+            }
+          } else {
             await client.from('clientes_financas').insert([{
               nome: nomeLimpo,
               email: p.email_cliente || null,
-              nif: '999999990'
+              nif: null,
+              telefone: p.fatura_contato_envio || null
             }]);
           }
         } catch (eCli) {
@@ -1929,54 +2118,40 @@ async function removerDoHistorico(id, nomeCliente) {
         }
       }
 
-      // 3. Se o pedido tinha dados de fatura, garante que estão na tabela independente 'faturas'
-      const temDadosFatura = p.fatura_simples_link || p.fatura_final_link || p.fatura_codigo || p.fatura_pagina_fisica;
-      if (temDadosFatura) {
-        try {
-          const { data: faturaExistente } = await client
-            .from('faturas')
-            .select('id')
-            .eq('pedido_id', id)
-            .limit(1);
+      // 3. Garante que os dados fiscais/faturação deste pedido ficam registados na tabela 'faturas'
+      try {
+        const { data: faturaExistente } = await client
+          .from('faturas')
+          .select('id, nif, valor_total')
+          .eq('pedido_id', id)
+          .limit(1);
 
-          if (!faturaExistente || faturaExistente.length === 0) {
-            let nifCliente = '999999990';
-            if (p.nome) {
-              const { data: cli } = await client
-                .from('clientes_financas')
-                .select('nif')
-                .ilike('nome', `%${p.nome.trim()}%`)
-                .limit(1);
-              if (cli && cli.length > 0 && cli[0].nif) {
-                nifCliente = cli[0].nif;
-              }
-            }
+        const valorPedido = p.fatura_valor_total !== null && p.fatura_valor_total !== undefined
+          ? Number(p.fatura_valor_total)
+          : Number(p.preco_final || p.preco_total || 0);
 
+        if (!faturaExistente || faturaExistente.length === 0) {
+          if (valorPedido > 0 || p.fatura_final_link || p.fatura_simples_link) {
             await client.from('faturas').insert([{
               pedido_id: p.id,
-              nome_cliente: p.nome,
+              nome_cliente: nomeLimpo || p.nome,
               nif: nifCliente,
-              data_emissao: p.fatura_data_emissao || p.data_real || new Date().toISOString(),
-              valor_total: p.fatura_valor_total !== null && p.fatura_valor_total !== undefined 
-                ? Number(p.fatura_valor_total) 
-                : Number(p.preco_final || p.preco_total || 0),
+              data_emissao: p.fatura_data_emissao || (p.data_real ? new Date(p.data_real).toISOString() : new Date().toISOString()),
+              valor_total: valorPedido,
               fatura_codigo: p.fatura_codigo || null,
               simples_link: p.fatura_simples_link || null,
               final_link: p.fatura_final_link || null,
-              pagina_fisica: p.fatura_pagina_fisica || null,
-              quer_receber: !!p.fatura_quer_receber,
-              metodo_envio: p.fatura_metodo_envio || null,
-              contato_envio: p.fatura_contato_envio || p.email_cliente || null,
-              status_envio: p.fatura_status_envio || 'pendente'
+              status_envio: (p.fatura_final_link || p.fatura_simples_link) ? 'enviado' : 'pendente'
             }]);
           }
-        } catch (eFat) {
-          console.warn("Aviso ao salvaguardar em faturas:", eFat);
         }
+      } catch (eFat) {
+        console.warn("Aviso ao salvaguardar em faturas:", eFat);
       }
     }
 
-    // 4. Marca o status do pedido como 'arquivado' (sai do histórico sem apagar registos fiscais)
+    // 4. Arquiva o pedido para que não apareça mais na página de Histórico (entregues.html),
+    // mantendo-o na base de dados para Finanças, Dashboard e Central de Clientes
     const { error: errUpdate } = await client
       .from('pedidos')
       .update({ status: 'arquivado' })
@@ -1984,15 +2159,24 @@ async function removerDoHistorico(id, nomeCliente) {
 
     if (errUpdate) throw errUpdate;
 
-    if (window.mostrarAviso) {
-      await window.mostrarAviso("Pedido removido do histórico com sucesso!\nOs dados de faturação e NIF foram mantidos no sistema.", "Histórico Atualizado", "✅");
+    // Remove o cartão imediatamente da interface sem precisar esperar recarregar tudo
+    const cardEl = btnEl ? btnEl.closest('.pedido') : null;
+    if (cardEl) {
+      cardEl.style.transition = 'opacity 0.2s, transform 0.2s';
+      cardEl.style.opacity = '0';
+      cardEl.style.transform = 'scale(0.96)';
+      setTimeout(() => cardEl.remove(), 200);
+    } else {
+      location.reload();
     }
-
-    location.reload();
   } catch (err) {
     console.error("Erro ao remover pedido do histórico:", err);
+    if (btnEl) {
+      btnEl.disabled = false;
+      btnEl.style.opacity = '1';
+    }
     if (window.mostrarAviso) {
-      await window.mostrarAviso("Ocorreu um erro ao remover: " + err.message, "Erro", "❌");
+      await window.mostrarAviso("Ocorreu um erro ao remover: " + err.message, "Erro", "");
     } else {
       alert("Erro ao remover: " + err.message);
     }
@@ -2003,6 +2187,26 @@ window.removerDoHistorico = removerDoHistorico;
 // --- FUNÇÃO DE PESQUISA (ESTAVA FALTANDO) ---
 let _filtroPagamento = 'todos'; // 'todos' | 'sim' | 'nao'
 
+window.toggleFiltroPopover = function(event) {
+  if (event) event.stopPropagation();
+  const pop = document.getElementById('filter-popover-box');
+  const btn = document.getElementById('btn-filter-toggle');
+  if (!pop) return;
+  const aberto = pop.classList.toggle('aberto');
+  if (btn) btn.classList.toggle('ativo', aberto);
+};
+
+document.addEventListener('click', (e) => {
+  const pop = document.getElementById('filter-popover-box');
+  const btn = document.getElementById('btn-filter-toggle');
+  if (pop && pop.classList.contains('aberto')) {
+    if (!pop.contains(e.target) && (!btn || !btn.contains(e.target))) {
+      pop.classList.remove('aberto');
+      if (btn) btn.classList.remove('ativo');
+    }
+  }
+});
+
 function definirFiltroPagamento(estado) {
   _filtroPagamento = estado;
 
@@ -2011,9 +2215,9 @@ function definirFiltroPagamento(estado) {
     const btn = document.getElementById('filtro-btn-' + s);
     if (!btn) return;
     if (s === estado) {
-      btn.style.background = '#bba68a';
+      btn.style.background = '#1a1a1a';
       btn.style.color = '#fff';
-      btn.style.borderColor = '#bba68a';
+      btn.style.borderColor = '#1a1a1a';
     } else {
       btn.style.background = '#fff';
       btn.style.color = '#555';
@@ -2028,6 +2232,13 @@ function filtrarPedidos() {
   const input = document.getElementById('pesquisa');
   const termo = input ? input.value.toLowerCase() : '';
   const ordem = document.getElementById('ordem-pedidos')?.value || 'data-desc';
+
+  // Atualiza indicador de filtro ativo no botão de ícone
+  const btnIcon = document.getElementById('btn-filter-toggle');
+  if (btnIcon) {
+    const temFiltroAtivo = _filtroPagamento !== 'todos' || ordem !== 'data-desc';
+    btnIcon.classList.toggle('tem-filtro', temFiltroAtivo);
+  }
 
   // Determina o container correto
   let containerId = 'lista-espera';

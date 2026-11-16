@@ -15,19 +15,144 @@ const db = window.supabaseClient;
 let todosVouchers = [];
 let filtroAtivo = 'todos';
 let modoVitalicio = false;
-let voucherIdAtribuir = null; // ID do voucher a atribuir cliente
+let voucherIdAtribuir = null;
+let cacheClientesVoucher = [];
+
+// Ícones SVG Minimalistas
+const SVG_ICONS = {
+  check: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  alert: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+  error: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+  trash: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`,
+  info: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`
+};
+
+function obterSvgIconeModal(icone) {
+  if (!icone) return SVG_ICONS.info;
+  if (icone.includes('✔') || icone.includes('✅') || icone.includes('✨') || icone === 'check') return SVG_ICONS.check;
+  if (icone.includes('🗑') || icone === 'trash') return SVG_ICONS.trash;
+  if (icone.includes('❌') || icone === 'error') return SVG_ICONS.error;
+  if (icone.includes('⚠') || icone === 'alert') return SVG_ICONS.alert;
+  return SVG_ICONS.info;
+}
+
+// =========================================
+// POPOVER DE FILTRO NA BARRA DE TOPO
+// =========================================
+window.toggleFiltroPopover = function(popoverId, event) {
+  if (event) event.stopPropagation();
+  const pop = document.getElementById(popoverId);
+  const btn = document.getElementById('btn-filter-vouchers');
+  if (!pop) return;
+  const isOpen = pop.classList.contains('aberto');
+  document.querySelectorAll('.filter-popover.aberto').forEach(el => el.classList.remove('aberto'));
+  document.querySelectorAll('.btn-filter-icon.ativo').forEach(el => el.classList.remove('ativo'));
+  if (!isOpen) {
+    pop.classList.add('aberto');
+    if (btn) btn.classList.add('ativo');
+  }
+};
+
+document.addEventListener('click', () => {
+  document.querySelectorAll('.filter-popover.aberto').forEach(el => el.classList.remove('aberto'));
+  document.querySelectorAll('.btn-filter-icon.ativo').forEach(el => el.classList.remove('ativo'));
+});
+
+// =========================================
+// MODAL CRIAR CUPÃO
+// =========================================
+function abrirModalCriarVoucher() {
+  const modal = document.getElementById('modal-criar-voucher');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('v-nome')?.focus(), 80);
+}
+
+function fecharModalCriarVoucher() {
+  const modal = document.getElementById('modal-criar-voucher');
+  if (!modal) return;
+  modal.style.display = 'none';
+  document.body.style.overflow = 'auto';
+  const drop = document.getElementById('v-sugestoes-clientes');
+  if (drop) drop.style.display = 'none';
+}
+
+function definirDescontoRapido(valor) {
+  const input = document.getElementById('v-desconto');
+  if (input) input.value = valor;
+}
+
+// =========================================
+// AUTOCOMPLETE DE CLIENTES NO MODAL VOUCHER
+// =========================================
+async function carregarClientesAutocompleteVoucher() {
+  try {
+    const { data } = await db
+      .from('clientes_financas')
+      .select('nome, telefone, email')
+      .order('nome', { ascending: true });
+    if (data) cacheClientesVoucher = data;
+  } catch (e) {
+    console.warn('Autocomplete clientes voucher:', e);
+  }
+}
+
+function filtrarSugestoesClienteVoucher(termo) {
+  const drop = document.getElementById('v-sugestoes-clientes');
+  if (!drop) return;
+  const q = (termo || '').trim().toLowerCase();
+  if (q.length < 1 || cacheClientesVoucher.length === 0) {
+    drop.style.display = 'none';
+    return;
+  }
+  const matches = cacheClientesVoucher
+    .filter(c => c.nome && c.nome.toLowerCase().includes(q))
+    .slice(0, 6);
+
+  if (matches.length === 0) {
+    drop.style.display = 'none';
+    return;
+  }
+
+  drop.innerHTML = matches.map((c, idx) => `
+    <div class="v-sugestao-item" onclick="selecionarClienteVoucher(${idx}, '${(c.nome || '').replace(/'/g, "\\'")}', '${(c.telefone || '').replace(/'/g, "\\'")}', '${(c.email || '').replace(/'/g, "\\'")}')">
+      <span style="font-weight:500; color:#1a1a1a;">${c.nome}</span>
+      <span style="font-size:0.76rem; color:#888;">${c.telefone || c.email || ''}</span>
+    </div>
+  `).join('');
+  drop.style.display = 'block';
+}
+
+function selecionarClienteVoucher(idx, nome, telefone, email) {
+  const elNome = document.getElementById('v-nome');
+  const elNum = document.getElementById('v-numero');
+  const elEmail = document.getElementById('v-email');
+  const drop = document.getElementById('v-sugestoes-clientes');
+
+  if (elNome) elNome.value = nome;
+  if (elNum && telefone) elNum.value = telefone;
+  if (elEmail && email) elEmail.value = email;
+  if (drop) drop.style.display = 'none';
+}
 
 // =========================================
 // MODAL DE CONFIRMAÇÃO PERSONALIZADO
 // =========================================
-function confirmarModal({ icone = '⚠️', titulo, texto, corBotao = '#c62828', textoBotao = 'Confirmar', onConfirm }) {
-  document.getElementById('modal-confirmar-icone').textContent = icone;
+function confirmarModal({ icone = 'alert', titulo, texto, corBotao = '#dc2626', textoBotao = 'Confirmar', onConfirm }) {
+  const iconeEl = document.getElementById('modal-confirmar-icone');
+  if (iconeEl) iconeEl.innerHTML = obterSvgIconeModal(icone);
+
   document.getElementById('modal-confirmar-titulo').textContent = titulo;
   document.getElementById('modal-confirmar-texto').textContent = texto;
+
+  const cancelarBtn = document.getElementById('modal-confirmar-cancelar');
+  if (cancelarBtn) cancelarBtn.style.display = 'inline-flex';
 
   const okBtn = document.getElementById('modal-confirmar-ok');
   okBtn.textContent = textoBotao;
   okBtn.style.background = corBotao;
+  okBtn.style.borderColor = corBotao;
   okBtn.style.color = '#fff';
   okBtn.onclick = () => {
     fecharModalConfirmar();
@@ -46,40 +171,36 @@ function fecharModalConfirmar() {
 // =========================================
 // MODAL DE ALERTA RÁPIDO
 // =========================================
-window.alertaModal = function(titulo, texto, icone = 'ℹ️') {
+window.alertaModal = function(titulo, texto, icone = 'info') {
   const m = document.getElementById('modal-confirmar');
-  if(!m) { 
-      alert(texto.replace(/<br>/g, '\n').replace(/<[^>]+>/g, '')); 
-      return; 
+  if (!m) {
+    alert(texto.replace(/<br>/g, '\n').replace(/<[^>]+>/g, ''));
+    return;
   }
-  
-  document.getElementById('modal-confirmar-icone').textContent = icone;
+
+  const iconeEl = document.getElementById('modal-confirmar-icone');
+  if (iconeEl) iconeEl.innerHTML = obterSvgIconeModal(icone);
+
   document.getElementById('modal-confirmar-titulo').innerHTML = titulo;
   document.getElementById('modal-confirmar-texto').innerHTML = texto;
 
   const okBtn = document.getElementById('modal-confirmar-ok');
-  okBtn.textContent = 'OK';
-  okBtn.style.background = '#000';
+  okBtn.textContent = 'Entendido';
+  okBtn.style.background = '#1a1a1a';
+  okBtn.style.borderColor = '#1a1a1a';
   okBtn.style.color = '#fff';
 
-  const botoes = document.querySelectorAll('#modal-confirmar button');
-  let cancelarBtn = null;
-  botoes.forEach(b => {
-      if (b.innerText.toLowerCase().includes('cancelar')) {
-          cancelarBtn = b;
-      }
-  });
-
+  const cancelarBtn = document.getElementById('modal-confirmar-cancelar');
   if (cancelarBtn) cancelarBtn.style.display = 'none';
 
   okBtn.onclick = () => {
     fecharModalConfirmar();
-    if (cancelarBtn) cancelarBtn.style.display = 'block';
+    if (cancelarBtn) cancelarBtn.style.display = 'inline-flex';
   };
 
   m.style.display = 'flex';
   document.body.style.overflow = 'hidden';
-}
+};
 
 // =========================================
 // TOGGLE VITALÍCIO
@@ -93,7 +214,7 @@ function toggleVitalicio() {
     btn.classList.add('active');
     inputData.disabled = true;
     inputData.value = '';
-    inputData.style.opacity = '0.4';
+    inputData.style.opacity = '0.45';
   } else {
     btn.classList.remove('active');
     inputData.disabled = false;
@@ -114,6 +235,19 @@ function gerarCodigo() {
 }
 
 // =========================================
+// COPIAR CÓDIGO DO VOUCHER
+// =========================================
+function copiarCodigoVoucher(codigo, btnEl) {
+  if (!navigator.clipboard) return;
+  navigator.clipboard.writeText(codigo).then(() => {
+    if (!btnEl) return;
+    const original = btnEl.innerHTML;
+    btnEl.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+    setTimeout(() => { btnEl.innerHTML = original; }, 1400);
+  });
+}
+
+// =========================================
 // CRIAR VOUCHER
 // =========================================
 async function criarVoucher() {
@@ -124,19 +258,20 @@ async function criarVoucher() {
   const desconto = parseInt(document.getElementById('v-desconto').value);
 
   if (!desconto || desconto < 1 || desconto > 100) {
-    alert('Por favor, insira uma percentagem de desconto válida (1–100%).');
+    alertaModal('Desconto Inválido', 'Por favor, insira uma percentagem de desconto válida (entre 1% e 100%).', 'alert');
     return;
   }
 
   if (!modoVitalicio && !validade) {
-    const confirmar = confirm('Não definiu um prazo de validade. Deseja criar como Vitalício?');
-    if (!confirmar) return;
     modoVitalicio = true;
   }
 
   const btn = document.querySelector('.btn-criar');
-  btn.textContent = 'A criar...';
-  btn.disabled = true;
+  const htmlOriginal = btn ? btn.innerHTML : 'Criar Cupão';
+  if (btn) {
+    btn.textContent = 'A criar...';
+    btn.disabled = true;
+  }
 
   const novoVoucher = {
     codigo: gerarCodigo(),
@@ -163,30 +298,54 @@ async function criarVoucher() {
 
   const { error } = await db.from('vouchers').insert(novoVoucher);
 
-  btn.textContent = '✨ Criar Voucher';
-  btn.disabled = false;
+  if (btn) {
+    btn.innerHTML = htmlOriginal;
+    btn.disabled = false;
+  }
 
   if (error) {
-    if (typeof alertaModal === 'function') alertaModal('Erro', 'Erro ao criar voucher: ' + error.message, '❌');
-    else alert('Erro ao criar voucher: ' + error.message);
+    alertaModal('Erro', 'Erro ao criar cupão: ' + error.message, 'error');
     console.error(error);
     return;
   }
 
-  // Limpar formulário
+  // Limpar formulário e fechar modal
   document.getElementById('v-nome').value = '';
   document.getElementById('v-numero').value = '';
   document.getElementById('v-email').value = '';
   document.getElementById('v-validade').value = '';
   document.getElementById('v-desconto').value = '';
-  if (modoVitalicio) toggleVitalicio(); // reset
+  if (modoVitalicio) toggleVitalicio();
 
-  if (typeof alertaModal === 'function') {
-      alertaModal('Sucesso!', `✅ O voucher foi criado com êxito.<br><br>Código gerado:<br><strong style="font-size:1.3rem; color:#2e7d32; font-family:monospace; background:#e8f5e9; padding:6px 12px; border-radius:6px; display:inline-block; margin-top:8px;">${novoVoucher.codigo}</strong>`, '✨');
-  } else {
-      alert(`✅ Voucher criado com sucesso!\nCódigo: ${novoVoucher.codigo}`);
-  }
+  fecharModalCriarVoucher();
+
+  alertaModal(
+    'Cupão Criado',
+    `O cupão de <strong>${desconto}% OFF</strong> foi registado com sucesso.<br><br><span style="font-size:1.15rem; color:#1a1a1a; font-family:monospace; font-weight:700; background:#f3f0ea; border:1px solid #e5e0d5; padding:8px 16px; border-radius:8px; display:inline-block; letter-spacing:1.5px;">${novoVoucher.codigo}</span>`,
+    'check'
+  );
+
   await carregarVouchers();
+}
+
+// =========================================
+// ATUALIZAR KPIS DE VOUCHERS
+// =========================================
+function atualizarKPIsVouchers() {
+  const total = todosVouchers.length;
+  const disponiveis = todosVouchers.filter(v => v.estado === 'disponivel').length;
+  const utilizados = todosVouchers.filter(v => v.estado === 'utilizado').length;
+  const expirados = todosVouchers.filter(v => v.estado === 'expirado').length;
+
+  const elTotal = document.getElementById('kpi-v-total');
+  const elDisp = document.getElementById('kpi-v-disponiveis');
+  const elUtil = document.getElementById('kpi-v-utilizados');
+  const elExp = document.getElementById('kpi-v-expirados');
+
+  if (elTotal) elTotal.textContent = total;
+  if (elDisp) elDisp.textContent = disponiveis;
+  if (elUtil) elUtil.textContent = utilizados;
+  if (elExp) elExp.textContent = expirados;
 }
 
 // =========================================
@@ -200,7 +359,7 @@ async function carregarVouchers() {
 
   if (error) {
     document.getElementById('vouchers-lista').innerHTML =
-      `<div class="empty-state"><p>❌</p><p>Erro ao carregar vouchers: ${error.message}</p></div>`;
+      `<div class="empty-state"><p>Erro ao carregar cupões: ${error.message}</p></div>`;
     return;
   }
 
@@ -211,7 +370,6 @@ async function carregarVouchers() {
     if (v.estado === 'disponivel' && !v.vitalicio && v.data_validade) {
       const dataVal = new Date(v.data_validade + 'T00:00:00');
       if (dataVal < hoje) {
-        // Marca como expirado na BD
         await db.from('vouchers').update({ estado: 'expirado', data_estado_mudado: new Date().toISOString() }).eq('id', v.id);
         v.estado = 'expirado';
         if (!v.data_estado_mudado) v.data_estado_mudado = new Date().toISOString();
@@ -220,6 +378,7 @@ async function carregarVouchers() {
   }
 
   todosVouchers = data;
+  atualizarKPIsVouchers();
   renderVouchers();
   await limparVouchersAntigos();
 }
@@ -232,9 +391,7 @@ function renderVouchers() {
   const termoPesquisa = (document.getElementById('pesquisa-vouchers')?.value || '').toLowerCase();
 
   let lista = todosVouchers.filter(v => {
-    // Filtro de estado
     if (filtroAtivo !== 'todos' && v.estado !== filtroAtivo) return false;
-    // Filtro de pesquisa
     if (termoPesquisa) {
       const matchNome = v.nome_cliente?.toLowerCase().includes(termoPesquisa);
       const matchCodigo = v.codigo?.toLowerCase().includes(termoPesquisa);
@@ -244,51 +401,77 @@ function renderVouchers() {
   });
 
   if (lista.length === 0) {
-    container.innerHTML = `<div class="empty-state"><p>🎫</p><p>Nenhum voucher encontrado.</p></div>`;
+    container.innerHTML = `
+      <div class="empty-state">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        <p style="font-weight:600; color:#444;">Nenhum cupão encontrado</p>
+        <p style="font-size:0.82rem; color:#999;">Experimente ajustar os filtros ou clique em "Criar Cupão".</p>
+      </div>`;
     return;
   }
 
+  const svgUser = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+  const svgPhone = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`;
+  const svgMail = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`;
+  const svgCalendar = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+  const svgInfinity = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18.178 8c5.096 0 5.096 8 0 8-5.095 0-7.133-8-12.739-8-4.585 0-4.585 8 0 8 5.606 0 7.644-8 12.74-8z"/></svg>`;
+  const svgCopy = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+  const svgCheck = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+  const svgUserPlus = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>`;
+  const svgTrash = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`;
+
   container.innerHTML = lista.map(v => {
-    const nomeStr = v.nome_cliente || '<em style="color:#bbb;">Sem cliente atribuído</em>';
+    const nomeStr = v.nome_cliente || '<span style="color:#999; font-weight:400;">Sem cliente atribuído</span>';
     const descontoStr = v.desconto_percentagem ? `${v.desconto_percentagem}%` : '—';
+
     const badgeClasse = v.estado === 'disponivel' ? 'badge-disponivel' :
                         v.estado === 'utilizado'  ? 'badge-utilizado'  : 'badge-expirado';
-    const badgeLabel  = v.estado === 'disponivel' ? '✅ Disponível' :
-                        v.estado === 'utilizado'  ? '❌ Utilizado'   : '⌛ Expirado';
+    const dotClasse   = v.estado === 'disponivel' ? 'dot-green' :
+                        v.estado === 'utilizado'  ? 'dot-red'   : 'dot-gray';
+    const badgeLabel  = v.estado === 'disponivel' ? 'Disponível' :
+                        v.estado === 'utilizado'  ? 'Utilizado'   : 'Expirado';
 
     const ticketClasse = v.estado === 'utilizado' ? 'usado' :
                          v.estado === 'expirado'  ? 'expirado' : '';
-    const watermarkLabel = v.estado === 'utilizado' ? 'USADO' : 'EXPIRADO';
 
-    const validadeStr = v.vitalicio ? '♾️ Vitalício' :
-      (v.data_validade ? `📅 Válido até: ${formatarData(v.data_validade)}` : '♾️ Vitalício');
+    const validadeHtml = (v.vitalicio || !v.data_validade)
+      ? `<span>${svgInfinity} Vitalício</span>`
+      : `<span>${svgCalendar} Válido até ${formatarData(v.data_validade)}</span>`;
 
-    const numStr  = v.numero_cliente ? `📞 ${v.numero_cliente}` : '';
-    const emailStr = v.email_cliente  ? `✉️ ${v.email_cliente}`  : '';
+    const numHtml   = v.numero_cliente ? `<span>${svgPhone} ${v.numero_cliente}</span>` : '';
+    const emailHtml = v.email_cliente  ? `<span>${svgMail} ${v.email_cliente}</span>`  : '';
 
     const botoesFooter = v.estado === 'disponivel' ? `
-      ${!v.nome_cliente ? `<button class="btn-atribuir" onclick="abrirModalAtribuir('${v.id}')">👤 Atribuir Cliente</button>` : ''}
-      <button class="btn-utilizado" onclick="marcarUtilizado('${v.id}')">✔️ Já Utilizado</button>
-      <button class="btn-excluir"   onclick="excluirVoucher('${v.id}')">🗑️ Excluir</button>
+      ${!v.nome_cliente ? `<button class="btn-ticket-action" onclick="abrirModalAtribuir('${v.id}')">${svgUserPlus} Atribuir</button>` : ''}
+      <button class="btn-ticket-action btn-utilizado" onclick="marcarUtilizado('${v.id}')">${svgCheck} Marcar Usado</button>
+      <button class="btn-ticket-action btn-excluir" onclick="excluirVoucher('${v.id}')" title="Excluir Cupão">${svgTrash}</button>
     ` : `
-      <button class="btn-excluir" style="flex:1" onclick="excluirVoucher('${v.id}')">🗑️ Excluir</button>
+      <button class="btn-ticket-action btn-excluir" style="flex:1;" onclick="excluirVoucher('${v.id}')">${svgTrash} Excluir Registo</button>
     `;
 
     return `
-      <div class="ticket ${ticketClasse}" data-label="${watermarkLabel}" data-id="${v.id}">
+      <div class="ticket ${ticketClasse}" data-id="${v.id}">
         <div class="ticket-header">
-          <span class="codigo">${v.codigo}</span>
-          <span class="badge ${badgeClasse}">${badgeLabel}</span>
+          <div class="codigo-wrap">
+            <span class="codigo">${v.codigo}</span>
+            <button type="button" class="btn-copiar-codigo" onclick="copiarCodigoVoucher('${v.codigo}', this)" title="Copiar código">
+              ${svgCopy}
+            </button>
+          </div>
+          <span class="badge-status ${badgeClasse}">
+            <span class="status-dot ${dotClasse}"></span>
+            ${badgeLabel}
+          </span>
         </div>
         <div class="ticket-body">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <div class="cliente-nome">👤 ${nomeStr}</div>
-            <div style="background:#fff8e1; border:1px solid #ffe082; border-radius:8px; padding:4px 10px; font-size:1rem; font-weight:900; color:#7a5c00; white-space:nowrap;">${descontoStr} OFF</div>
+          <div class="ticket-main-row">
+            <div class="cliente-nome">${svgUser} <span>${nomeStr}</span></div>
+            <div class="desconto-pill">${descontoStr} OFF</div>
           </div>
           <div class="ticket-meta">
-            ${numStr   ? `<span>${numStr}</span>`   : ''}
-            ${emailStr ? `<span>${emailStr}</span>` : ''}
-            <span>${validadeStr}</span>
+            ${numHtml}
+            ${emailHtml}
+            ${validadeHtml}
           </div>
         </div>
         <div class="ticket-footer">
@@ -304,8 +487,21 @@ function renderVouchers() {
 // =========================================
 function aplicarFiltro(filtro) {
   filtroAtivo = filtro;
-  document.querySelectorAll('.filtros-voucher button').forEach(b => b.classList.remove('ativo'));
+
+  // Atualiza pills no popover
+  document.querySelectorAll('.vouchers-filter-pills button').forEach(b => b.classList.remove('ativo'));
   document.getElementById(`filtro-${filtro}`)?.classList.add('ativo');
+
+  // Atualiza KPI cards
+  document.querySelectorAll('.v-kpi-card').forEach(c => c.classList.remove('ativo'));
+  document.getElementById(`kpi-card-${filtro}`)?.classList.add('ativo');
+
+  // Indicador de filtro ativo no botão da barra
+  const btnFilter = document.getElementById('btn-filter-vouchers');
+  if (btnFilter) {
+    btnFilter.classList.toggle('tem-filtro', filtro !== 'todos');
+  }
+
   renderVouchers();
 }
 
@@ -318,11 +514,11 @@ function filtrarVouchers() {
 // =========================================
 async function marcarUtilizado(id) {
   confirmarModal({
-    icone: '✔️',
+    icone: 'check',
     titulo: 'Marcar como Utilizado',
-    texto: 'Tem a certeza que deseja marcar este voucher como já utilizado? Esta ação não pode ser desfeita.',
-    corBotao: '#2e7d32',
-    textoBotao: '✔️ Confirmar',
+    texto: 'Confirma que este cupão já foi utilizado? Esta ação não pode ser desfeita.',
+    corBotao: '#15803d',
+    textoBotao: 'Confirmar Uso',
     onConfirm: async () => {
       const { error } = await db
         .from('vouchers')
@@ -330,7 +526,7 @@ async function marcarUtilizado(id) {
         .eq('id', id);
 
       if (error) {
-        alert('Erro ao atualizar voucher: ' + error.message);
+        alertaModal('Erro', 'Erro ao atualizar cupão: ' + error.message, 'error');
         return;
       }
       await carregarVouchers();
@@ -358,8 +554,7 @@ function fecharModalAtribuir() {
 async function salvarAtribuicao() {
   const nome = document.getElementById('modal-nome-cliente').value.trim();
   if (!nome) {
-    if (typeof alertaModal === 'function') alertaModal('Atenção', 'Por favor, insira o nome da cliente.', '⚠️');
-    else alert('Por favor, insira o nome da cliente.');
+    alertaModal('Atenção', 'Por favor, insira o nome da cliente.', 'alert');
     return;
   }
 
@@ -369,8 +564,7 @@ async function salvarAtribuicao() {
     .eq('id', voucherIdAtribuir);
 
   if (error) {
-    if (typeof alertaModal === 'function') alertaModal('Erro', 'Erro ao atribuir cliente: ' + error.message, '❌');
-    else alert('Erro ao atribuir cliente: ' + error.message);
+    alertaModal('Erro', 'Erro ao atribuir cliente: ' + error.message, 'error');
     return;
   }
 
@@ -383,15 +577,15 @@ async function salvarAtribuicao() {
 // =========================================
 async function excluirVoucher(id) {
   confirmarModal({
-    icone: '🗑️',
-    titulo: 'Excluir Voucher',
-    texto: 'Tem a certeza que deseja excluir este voucher permanentemente? Esta ação não pode ser desfeita.',
-    corBotao: '#c62828',
-    textoBotao: '🗑️ Excluir',
+    icone: 'trash',
+    titulo: 'Excluir Cupão',
+    texto: 'Tem a certeza que deseja eliminar este cupão permanentemente?',
+    corBotao: '#dc2626',
+    textoBotao: 'Excluir',
     onConfirm: async () => {
       const { error } = await db.from('vouchers').delete().eq('id', id);
       if (error) {
-        alert('Erro ao excluir: ' + error.message);
+        alertaModal('Erro', 'Erro ao excluir: ' + error.message, 'error');
         return;
       }
       await carregarVouchers();
@@ -414,7 +608,7 @@ async function limparVouchersAntigos() {
     .lt('data_estado_mudado', dataStr);
 
   if (!error && count > 0) {
-    console.log(`🧹 ${count} voucher(s) antigo(s) removidos.`);
+    console.log(`${count} voucher(s) antigo(s) removidos.`);
   }
 }
 
@@ -463,5 +657,6 @@ function formatarData(dataStr) {
 document.addEventListener('DOMContentLoaded', () => {
   if (document.getElementById('vouchers-lista')) {
     carregarVouchers();
+    carregarClientesAutocompleteVoucher();
   }
 });

@@ -1,369 +1,1550 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Compras - Eva Leite Atelier</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-    <script src="auth-guard.js"></script>
-    <script src="navbar.js" defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lista de Compras - Eva Leite Atelier</title>
+  <link rel="stylesheet" href="style.css?v=2">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="auth-guard.js"></script>
+  <script src="navbar.js?v=7" defer></script>
 
-    <style>
-        :root {
-            --gold: #d4af37;
-            --dark: #1a1a2e;
-            --bg: #f5f1ea;
-            --text: #2d2d2d;
-            --text-muted: #888;
-            --radius: 14px;
-        }
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; }
-        .wrapper { max-width: 1000px; margin: 30px auto; padding: 0 20px 60px; }
-        
-        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 14px; }
-        .page-header h1 { margin: 0; font-size: 1.8rem; color: var(--dark); }
-        .page-header p { margin: 4px 0 0; color: var(--text-muted); font-size: 0.88rem; }
+  <style>
+    :root {
+      --lc-bg: #f5f1ea;
+      --lc-card: #ffffff;
+      --lc-muted-card: #faf8f4;
+      --lc-dark: #141414;
+      --lc-text: #1f2937;
+      --lc-muted: #6b7280;
+      --lc-gold: #b8860b;
+      --lc-green: #15803d;
+      --lc-green-soft: #ecfdf3;
+      --lc-amber: #b45309;
+      --lc-amber-soft: #fffbeb;
+      --lc-red: #dc2626;
+      --lc-red-soft: #fef2f2;
+      --lc-blue: #1d4ed8;
+      --lc-blue-soft: #eff6ff;
+      --lc-border: rgba(17, 24, 39, 0.07);
+      --lc-shadow: 0 2px 12px rgba(0, 0, 0, 0.035);
+      --lc-radius: 16px;
+    }
 
-        .btn-gold {
-            background: var(--gold); color: #fff; border: none; padding: 10px 20px;
-            border-radius: 8px; font-size: 0.88rem; font-weight: 600; cursor: pointer;
-            transition: background 0.2s; font-family: inherit;
-        }
-        .btn-gold:hover { background: #b8972e; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--lc-bg);
+      color: var(--lc-text);
+      margin: 0;
+      padding: 0;
+    }
 
-        .card { background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,.06); margin-bottom: 30px; }
-        .card h2 { margin: 0 0 16px 0; font-size: 1.15rem; color: var(--dark); }
+    .compras-page {
+      max-width: 1120px;
+      margin: 14px auto 64px;
+      padding: 0 24px 60px;
+      box-sizing: border-box;
+    }
 
-        .card-concluidos { background: #faf9f6; border: 1px dashed #e0dbd0; box-shadow: none; }
-        
-        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-        thead th { text-align: left; padding: 10px 12px; border-bottom: 2px solid #eee; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
-        tbody td { padding: 14px 12px; border-bottom: 1px solid #f5f5f5; vertical-align: middle; }
-        tbody tr:last-child td { border-bottom: none; }
-        
-        .empty { text-align: center; padding: 30px; color: var(--text-muted); font-size: 0.9rem; }
-        
-        .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.73rem; font-weight: 700; display: inline-block; }
-        .badge-alta { background: #fce8e6; color: #c62828; }
-        .badge-media { background: #fff3cd; color: #8a6100; }
-        .badge-baixa { background: #e8f5e9; color: #2e7d32; }
+    /* Botao primario movido pela navbar.js para #liquid-dynamic-right */
+    .btn-lc-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      width: auto !important;
+      margin: 0 !important;
+      padding: 0 16px !important;
+      height: 40px !important;
+      border-radius: 12px !important;
+      border: 1px solid rgba(20, 20, 20, 0.9) !important;
+      background: var(--lc-dark) !important;
+      color: #ffffff !important;
+      font-family: inherit;
+      font-size: 0.84rem !important;
+      font-weight: 600 !important;
+      letter-spacing: -0.01em;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+      transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    }
+    .btn-lc-primary:hover {
+      background: #2b2b2b !important;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.16);
+    }
+    .btn-lc-primary svg {
+      flex-shrink: 0;
+    }
 
-        .valor-txt { font-size: 0.82rem; color: #666; margin-top: 4px; display: block; }
-        
-        .acoes { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: flex-end; }
-        .btn-icon {
-            width: 32px; height: 32px; border-radius: 8px; border: none; cursor: pointer;
-            display: inline-flex; align-items: center; justify-content: center;
-            font-size: 1.05rem; transition: all 0.2s; background: #f5f5f5; color: #555; text-decoration: none;
-        }
-        .btn-icon:hover { background: #e0e0e0; }
-        
-        .btn-link { background: #e3f0ff; color: #1565c0; }
-        .btn-link:hover { background: #bbdefb; }
-        
-        .btn-check { background: #e8f5e9; color: #2e7d32; }
-        .btn-check:hover { background: #c8e6c9; }
-        
-        .btn-del { background: #fce8e6; color: #c62828; }
-        .btn-del:hover { background: #ffcdd2; }
+    /* Pills dentro do popover de filtro */
+    .lc-filter-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .lc-filter-pills button,
+    .liquid-left .lc-filter-pills button {
+      width: auto !important;
+      margin: 0 !important;
+      padding: 6px 11px !important;
+      border-radius: 8px !important;
+      border: 1px solid #e2ddd5 !important;
+      background: #faf9f6 !important;
+      color: #4b5563 !important;
+      font-family: inherit;
+      font-size: 0.78rem !important;
+      font-weight: 500 !important;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .lc-filter-pills button:hover,
+    .liquid-left .lc-filter-pills button:hover {
+      background: #f0ece4 !important;
+      color: #111 !important;
+    }
+    .lc-filter-pills button.ativo,
+    .liquid-left .lc-filter-pills button.ativo {
+      background: var(--lc-dark) !important;
+      color: #ffffff !important;
+      border-color: var(--lc-dark) !important;
+    }
 
-        .item-riscado { text-decoration: line-through; color: #999; }
+    .lc-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-dark { background: #141414; }
+    .dot-red { background: #dc2626; }
+    .dot-amber { background: #d97706; }
+    .dot-green { background: #16a34a; }
 
-        /* MODAL */
-        .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,.55);
-            display: none; align-items: center; justify-content: center;
-            z-index: 9999; backdrop-filter: blur(4px);
-        }
-        .modal-overlay.active { display: flex; animation: fadeIn .2s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        
-        .modal-card {
-            background: #fff; width: 100%; max-width: 440px; border-radius: var(--radius);
-            padding: 28px 24px; box-shadow: 0 10px 40px rgba(0,0,0,.2); animation: slideUp .25s;
-        }
-        @keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        
-        .modal-title { font-size: 1.15rem; font-weight: 700; margin: 0 0 20px; color: var(--dark); }
-        .form-group { margin-bottom: 14px; }
-        .form-group label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; }
-        .form-group input, .form-group select {
-            width: 100%; padding: 10px 12px; border: 1.5px solid #e0dbd0; border-radius: 8px;
-            font-size: 0.93rem; font-family: inherit; outline: none; box-sizing: border-box; transition: border .2s;
-        }
-        .form-group input:focus, .form-group select:focus { border-color: var(--gold); }
-        
-        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
-        .btn-cancel { background: #f0f0f0; color: #666; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 600; }
-        .btn-cancel:hover { background: #e0e0e0; }
-    </style>
+    /* Alerta discreto de prazos vencidos */
+    .alerta-prazos {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 11px 16px;
+      margin-bottom: 16px;
+      background: #fff9f8;
+      border: 1px solid rgba(220, 38, 38, 0.18);
+      border-radius: 13px;
+      color: #991b1b;
+      font-size: 0.85rem;
+      box-shadow: 0 2px 10px rgba(220, 38, 38, 0.04);
+    }
+    .alerta-prazos-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 500;
+    }
+    .alerta-ico-circle {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #fee2e2;
+      color: #dc2626;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .btn-alerta-ver {
+      width: auto !important;
+      margin: 0 !important;
+      padding: 6px 12px !important;
+      border-radius: 999px !important;
+      border: 1px solid rgba(220, 38, 38, 0.25) !important;
+      background: #ffffff !important;
+      color: #b91c1c !important;
+      font-family: inherit;
+      font-size: 0.77rem !important;
+      font-weight: 600 !important;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+    .btn-alerta-ver:hover {
+      background: #dc2626 !important;
+      border-color: #dc2626 !important;
+      color: #ffffff !important;
+    }
+
+    /* Faixa de 4 KPIs clicaveis */
+    .compras-kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .lc-kpi-card {
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid var(--lc-border);
+      border-radius: var(--lc-radius);
+      padding: 16px 18px;
+      box-shadow: var(--lc-shadow);
+      cursor: pointer;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+      text-align: left;
+      position: relative;
+      user-select: none;
+    }
+    .lc-kpi-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.055);
+      border-color: rgba(20, 20, 20, 0.16);
+    }
+    .lc-kpi-card.ativo {
+      background: #ffffff;
+      border-color: var(--lc-dark);
+      box-shadow: 0 6px 18px rgba(20, 20, 20, 0.08);
+    }
+    .lc-kpi-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.73rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--lc-muted);
+      margin-bottom: 8px;
+    }
+    .lc-kpi-val {
+      font-size: 1.65rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: var(--lc-dark);
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+    .lc-kpi-sub {
+      font-size: 0.76rem;
+      color: var(--lc-muted);
+      margin-top: 5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Chip bar de filtro ativo */
+    .lc-filter-chip-bar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 14px;
+      margin-bottom: 14px;
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid var(--lc-border);
+      border-radius: 12px;
+      font-size: 0.81rem;
+      color: #4b5563;
+    }
+    .lc-filter-chip-bar.visivel {
+      display: flex;
+    }
+    .btn-limpar-lc {
+      width: auto !important;
+      margin: 0 !important;
+      padding: 4px 10px !important;
+      border-radius: 999px !important;
+      border: 1px solid #ddd6ca !important;
+      background: #ffffff !important;
+      color: var(--lc-dark) !important;
+      font-size: 0.75rem !important;
+      font-weight: 600 !important;
+      cursor: pointer;
+    }
+    .btn-limpar-lc:hover {
+      background: var(--lc-dark) !important;
+      color: #ffffff !important;
+      border-color: var(--lc-dark) !important;
+    }
+
+    /* Paineis de Lista */
+    .panel-card {
+      background: var(--lc-card);
+      border: 1px solid var(--lc-border);
+      border-radius: 18px;
+      padding: 22px 24px;
+      box-shadow: var(--lc-shadow);
+      margin-bottom: 22px;
+    }
+    .panel-card.panel-historico {
+      background: rgba(250, 248, 244, 0.85);
+      border: 1px solid rgba(17, 24, 39, 0.065);
+      box-shadow: none;
+    }
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .panel-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .panel-title {
+      margin: 0;
+      font-size: 1.04rem;
+      font-weight: 650;
+      color: var(--lc-dark);
+      letter-spacing: -0.015em;
+    }
+    .panel-historico .panel-title {
+      font-size: 0.96rem;
+      color: #4b5563;
+    }
+    .panel-count-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24px;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: #f3efe7;
+      color: #4b453c;
+      font-size: 0.75rem;
+      font-weight: 650;
+      font-variant-numeric: tabular-nums;
+    }
+    .panel-subnote {
+      font-size: 0.78rem;
+      color: var(--lc-muted);
+    }
+
+    /* Tabela limpa */
+    .table-scroll {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.89rem;
+    }
+    thead th {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid #ece8df;
+      color: var(--lc-muted);
+      font-size: 0.7rem;
+      font-weight: 650;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+    tbody td {
+      padding: 14px 12px;
+      border-bottom: 1px solid #f5f2eb;
+      vertical-align: middle;
+    }
+    tbody tr {
+      transition: background 0.14s ease;
+    }
+    tbody tr:hover {
+      background: #fcfaf6;
+    }
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+    .empty {
+      text-align: center;
+      padding: 36px 16px !important;
+      color: var(--lc-muted);
+      font-size: 0.88rem;
+    }
+
+    /* Celula do item */
+    .lc-item-nome {
+      font-weight: 600;
+      color: var(--lc-dark);
+      font-size: 0.93rem;
+      line-height: 1.35;
+    }
+    .item-riscado .lc-item-nome {
+      text-decoration: line-through;
+      color: #8b857b;
+      font-weight: 500;
+    }
+    .lc-meta-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .lc-valor-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--lc-muted);
+    }
+    .lc-valor-tag svg {
+      width: 12px;
+      height: 12px;
+      stroke: currentColor;
+      stroke-width: 1.9;
+      fill: none;
+    }
+
+    /* Celula de prazo */
+    .lc-prazo-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+    .lc-prazo-data {
+      font-size: 0.84rem;
+      font-weight: 500;
+      color: var(--lc-text);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .lc-prazo-data.sem-prazo {
+      color: #9ca3af;
+      font-weight: 400;
+    }
+    .lc-prazo-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.69rem;
+      font-weight: 600;
+    }
+    .lc-prazo-atrasado {
+      background: var(--lc-red-soft);
+      color: var(--lc-red);
+      border: 1px solid rgba(220, 38, 38, 0.16);
+    }
+    .lc-prazo-proximo {
+      background: var(--lc-amber-soft);
+      color: var(--lc-amber);
+      border: 1px solid rgba(217, 119, 6, 0.16);
+    }
+
+    /* Badges de Prioridade */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 11px;
+      border-radius: 999px;
+      font-size: 0.73rem;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+    .badge-alta {
+      background: var(--lc-red-soft);
+      color: var(--lc-red);
+      border: 1px solid rgba(220, 38, 38, 0.14);
+    }
+    .badge-media {
+      background: var(--lc-amber-soft);
+      color: var(--lc-amber);
+      border: 1px solid rgba(217, 119, 6, 0.16);
+    }
+    .badge-baixa {
+      background: var(--lc-green-soft);
+      color: var(--lc-green);
+      border: 1px solid rgba(22, 163, 74, 0.15);
+    }
+
+    /* Botoes circulares de acao na linha */
+    .acoes {
+      display: flex;
+      gap: 7px;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: nowrap;
+    }
+    .lc-ico-btn {
+      width: 34px !important;
+      height: 34px !important;
+      min-width: 34px;
+      margin: 0 !important;
+      padding: 0 !important;
+      border-radius: 50% !important;
+      border: 1px solid #e5dfd5 !important;
+      background: #ffffff !important;
+      color: #2c2a27 !important;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      text-decoration: none;
+      flex-shrink: 0;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .lc-ico-btn svg {
+      width: 15px;
+      height: 15px;
+      stroke: currentColor;
+      stroke-width: 1.85;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      pointer-events: none;
+    }
+    .lc-ico-btn:hover {
+      background: var(--lc-dark) !important;
+      border-color: var(--lc-dark) !important;
+      color: #ffffff !important;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    .lc-ico-btn.btn-lc-link {
+      background: var(--lc-blue-soft) !important;
+      border-color: #cbdcfb !important;
+      color: var(--lc-blue) !important;
+    }
+    .lc-ico-btn.btn-lc-link:hover {
+      background: var(--lc-blue) !important;
+      border-color: var(--lc-blue) !important;
+      color: #ffffff !important;
+    }
+    .lc-ico-btn.btn-lc-check {
+      background: var(--lc-green-soft) !important;
+      border-color: #c2e0c4 !important;
+      color: var(--lc-green) !important;
+    }
+    .lc-ico-btn.btn-lc-check:hover {
+      background: var(--lc-green) !important;
+      border-color: var(--lc-green) !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 10px rgba(21, 128, 61, 0.18);
+    }
+    .lc-ico-btn.btn-lc-del {
+      background: #fdf6f6 !important;
+      border-color: #f2dada !important;
+      color: var(--lc-red) !important;
+    }
+    .lc-ico-btn.btn-lc-del:hover {
+      background: var(--lc-red) !important;
+      border-color: var(--lc-red) !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 10px rgba(220, 38, 38, 0.18);
+    }
+
+    /* MODAL MINIMALISTA NOVO/EDITAR ITEM */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 15, 15, 0.44);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 4000;
+    }
+    .modal-overlay.active {
+      display: flex;
+      animation: fadeModalLc 0.16s ease-out;
+    }
+    @keyframes fadeModalLc { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal-card {
+      background: #ffffff;
+      width: 100%;
+      max-width: 460px;
+      border-radius: 18px;
+      border: 1px solid #eae6df;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+      overflow: hidden;
+      animation: slideModalLc 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes slideModalLc {
+      from { transform: translateY(10px) scale(0.985); opacity: 0; }
+      to   { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    .modal-header {
+      padding: 18px 22px;
+      border-bottom: 1px solid #f2eee6;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .modal-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .modal-badge-ico {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #f5f1ea;
+      color: var(--lc-dark);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .modal-title {
+      font-size: 1.02rem;
+      font-weight: 650;
+      margin: 0;
+      color: var(--lc-dark);
+      letter-spacing: -0.015em;
+    }
+    .modal-close-btn {
+      width: 32px !important;
+      height: 32px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border-radius: 50% !important;
+      border: none !important;
+      background: #f6f4ef !important;
+      color: #4b5563 !important;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .modal-close-btn:hover {
+      background: #eae4da !important;
+      color: var(--lc-dark) !important;
+    }
+    .modal-body {
+      padding: 20px 22px 10px;
+    }
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .form-group {
+      margin-bottom: 14px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.79rem;
+      font-weight: 600;
+      color: #4b5563;
+      margin: 0 0 6px !important;
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      margin: 0 !important;
+      padding: 10px 12px;
+      border: 1px solid #ddd6ca;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      background: #fdfcfa;
+      color: var(--lc-dark);
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+      background: #ffffff;
+      border-color: var(--lc-dark);
+      box-shadow: 0 0 0 3px rgba(20, 20, 20, 0.06);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 14px 22px 20px;
+    }
+    .btn-cancel {
+      width: auto !important;
+      margin: 0 !important;
+      background: #f4f1ea !important;
+      color: #4b5563 !important;
+      border: none !important;
+      padding: 10px 16px !important;
+      border-radius: 10px !important;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.85rem !important;
+      font-weight: 600 !important;
+    }
+    .btn-cancel:hover {
+      background: #e9e4da !important;
+      color: var(--lc-dark) !important;
+    }
+    .btn-save-lc {
+      width: auto !important;
+      margin: 0 !important;
+      background: var(--lc-dark) !important;
+      color: #ffffff !important;
+      border: none !important;
+      padding: 10px 18px !important;
+      border-radius: 10px !important;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.85rem !important;
+      font-weight: 600 !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+    .btn-save-lc:hover {
+      background: #2c2c2c !important;
+    }
+    .btn-save-lc:disabled {
+      opacity: 0.65;
+      cursor: wait;
+    }
+
+    .spin-lc {
+      animation: spinLc 0.85s linear infinite;
+      vertical-align: middle;
+      color: var(--lc-muted);
+    }
+    @keyframes spinLc {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 900px) {
+      .compras-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 600px) {
+      .compras-page { padding: 0 14px 50px; }
+      .compras-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .panel-card { padding: 16px; }
+      .form-grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
 
-<div class="wrapper">
-    <div class="page-header">
-        <div>
-            <h1>🛒 Lista de Compras</h1>
-            <p>Gerencie itens a adquirir para o Atelier</p>
+<div class="compras-page">
+
+  <!-- Controlos absorvidos para a Barra Superior Flutuante Liquid Glass -->
+  <div class="page-toolbar">
+    <div class="page-toolbar-controls">
+      <div class="toolbar-search-wrap">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="pesquisa-compras" placeholder="Pesquisar item ou valor..." oninput="aplicarPesquisaCompras()">
+      </div>
+
+      <div class="filter-dropdown-wrap">
+        <button type="button" class="btn-filter-icon" id="btn-filter-compras" onclick="toggleFiltroCompras(event)" title="Filtrar e ordenar compras" aria-expanded="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <line x1="4" y1="6" x2="20" y2="6"></line>
+            <line x1="7" y1="12" x2="17" y2="12"></line>
+            <line x1="10" y1="18" x2="14" y2="18"></line>
+          </svg>
+          <span class="filter-badge-dot" id="dot-filtro-compras"></span>
+        </button>
+
+        <div class="filter-popover" id="popover-filtro-compras" onclick="event.stopPropagation()">
+          <div class="filter-popover-section">
+            <span class="filter-popover-label">Prioridade &amp; Prazo</span>
+            <div class="lc-filter-pills" id="pills-filtro-compras">
+              <button type="button" data-filtro="todos" class="ativo" onclick="aplicarFiltroCompras('todos')">Todos</button>
+              <button type="button" data-filtro="maxima" onclick="aplicarFiltroCompras('maxima')"><span class="lc-dot dot-red"></span>Máxima</button>
+              <button type="button" data-filtro="media" onclick="aplicarFiltroCompras('media')"><span class="lc-dot dot-amber"></span>Média</button>
+              <button type="button" data-filtro="baixa" onclick="aplicarFiltroCompras('baixa')"><span class="lc-dot dot-green"></span>Baixa</button>
+              <button type="button" data-filtro="atrasado" onclick="aplicarFiltroCompras('atrasado')"><span class="lc-dot dot-red"></span>Em atraso</button>
+            </div>
+          </div>
+
+          <div class="filter-popover-section">
+            <span class="filter-popover-label">Ordenar Pendentes</span>
+            <div class="lc-filter-pills" id="pills-ordem-compras">
+              <button type="button" data-ordem="recentes" class="ativo" onclick="aplicarOrdemCompras('recentes')">Mais recentes</button>
+              <button type="button" data-ordem="prioridade" onclick="aplicarOrdemCompras('prioridade')">Prioridade</button>
+              <button type="button" data-ordem="prazo" onclick="aplicarOrdemCompras('prazo')">Prazo próximo</button>
+            </div>
+          </div>
         </div>
-        <button class="btn-gold" onclick="abrirModal()">+ Novo Item</button>
+      </div>
+
+      <button type="button" class="btn-lc-primary" id="btn-novo-item-topbar" onclick="abrirModal()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        <span>Novo Item</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Alerta discreto de prazos vencidos -->
+  <div class="alerta-prazos" id="alerta-prazos-compras">
+    <div class="alerta-prazos-left">
+      <span class="alerta-ico-circle" aria-hidden="true">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </span>
+      <span id="alerta-prazos-texto">Existem itens com o prazo máximo ultrapassado.</span>
+    </div>
+    <button type="button" class="btn-alerta-ver" onclick="aplicarFiltroCompras('atrasado')">Ver em atraso</button>
+  </div>
+
+  <!-- Faixa de 4 KPIs clicaveis -->
+  <div class="compras-kpis">
+    <div class="lc-kpi-card ativo" id="kpi-lc-todos" onclick="aplicarFiltroCompras('todos')">
+      <div class="lc-kpi-head">
+        <span>Por Comprar</span>
+        <span class="lc-dot dot-dark"></span>
+      </div>
+      <div class="lc-kpi-val" id="kpi-c-pendentes">0</div>
+      <div class="lc-kpi-sub" id="kpi-c-pendentes-sub">Itens ativos para adquirir</div>
     </div>
 
-    <!-- PENDENTES -->
-    <div class="card">
-        <h2>A Comprar</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Item</th>
-                    <th>Prazo Máximo</th>
-                    <th>Prioridade</th>
-                    <th style="text-align: right;">Ações</th>
-                </tr>
-            </thead>
-            <tbody id="tbody-pendentes">
-                <tr><td colspan="4" class="empty">A carregar...</td></tr>
-            </tbody>
-        </table>
+    <div class="lc-kpi-card" id="kpi-lc-maxima" onclick="alternarFiltroKpiCompras('maxima')">
+      <div class="lc-kpi-head">
+        <span>Prioridade Máxima</span>
+        <span class="lc-dot dot-red"></span>
+      </div>
+      <div class="lc-kpi-val" id="kpi-c-maxima">0</div>
+      <div class="lc-kpi-sub">Compras urgentes</div>
     </div>
 
-    <!-- CONCLUÍDOS -->
-    <div class="card card-concluidos">
-        <h2 style="font-size: 1rem; color: #888;">Histórico (Últimos 15 dias)</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Item</th>
-                    <th>Data Compra</th>
-                    <th style="text-align: right;">Ações</th>
-                </tr>
-            </thead>
-            <tbody id="tbody-concluidos">
-                <tr><td colspan="3" class="empty">Nenhum histórico recente.</td></tr>
-            </tbody>
-        </table>
+    <div class="lc-kpi-card" id="kpi-lc-atraso" onclick="alternarFiltroKpiCompras('atrasado')">
+      <div class="lc-kpi-head">
+        <span>Prazo Ultrapassado</span>
+        <span class="lc-dot dot-amber"></span>
+      </div>
+      <div class="lc-kpi-val" id="kpi-c-atraso">0</div>
+      <div class="lc-kpi-sub">Prazo máximo vencido</div>
     </div>
+
+    <div class="lc-kpi-card" id="kpi-lc-comprados" onclick="irParaHistoricoCompras()">
+      <div class="lc-kpi-head">
+        <span>Comprados (15 dias)</span>
+        <span class="lc-dot dot-green"></span>
+      </div>
+      <div class="lc-kpi-val" id="kpi-c-concluidos">0</div>
+      <div class="lc-kpi-sub">Registos no histórico recente</div>
+    </div>
+  </div>
+
+  <!-- Barra de estado do filtro ativo -->
+  <div class="lc-filter-chip-bar" id="lc-filter-chip-bar">
+    <span id="lc-filter-resumo"></span>
+    <button type="button" class="btn-limpar-lc" onclick="limparFiltrosCompras()">Limpar</button>
+  </div>
+
+  <!-- PENDENTES -->
+  <div class="panel-card" id="sec-pendentes">
+    <div class="panel-head">
+      <div class="panel-title-wrap">
+        <h2 class="panel-title">A Comprar</h2>
+        <span class="panel-count-pill" id="count-pendentes">0</span>
+      </div>
+      <span class="panel-subnote" id="subnote-pendentes"></span>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Prazo Máximo</th>
+            <th>Prioridade</th>
+            <th style="text-align: right;">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-pendentes">
+          <tr>
+            <td colspan="4" class="empty">
+              <svg class="spin-lc" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" stroke-dasharray="42" stroke-dashoffset="16"></circle>
+              </svg>
+              <span style="margin-left:8px;">A carregar lista...</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CONCLUIDOS -->
+  <div class="panel-card panel-historico" id="sec-historico">
+    <div class="panel-head">
+      <div class="panel-title-wrap">
+        <h2 class="panel-title">Histórico (Últimos 15 dias)</h2>
+        <span class="panel-count-pill" id="count-concluidos">0</span>
+      </div>
+      <span class="panel-subnote">Limpeza automática após 15 dias</span>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Data Compra</th>
+            <th style="text-align: right;">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-concluidos">
+          <tr><td colspan="3" class="empty">Nenhum histórico recente.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
-<!-- MODAL NOVO ITEM -->
-<div class="modal-overlay" id="modal-compras" onclick="fecharModalFora(event)">
-    <div class="modal-card">
-        <h3 class="modal-title">Adicionar à Lista</h3>
-        
-        <div class="form-group">
-            <label>O que é? *</label>
-            <input type="text" id="item-nome" placeholder="Ex: Bobinas de linha branca">
-        </div>
-        
-        <div class="form-group">
-            <label>Link (Opcional)</label>
-            <input type="url" id="item-link" placeholder="Ex: https://loja.com/produto">
-        </div>
-
-        <div class="form-group">
-            <label>Valor Estimado / Intervalo (Opcional)</label>
-            <input type="text" id="item-valor" placeholder="Ex: 10€ - 15€">
-        </div>
-        
-        <div class="form-group">
-            <label>Prioridade</label>
-            <select id="item-prioridade">
-                <option value="baixa">Baixa</option>
-                <option value="media" selected>Média</option>
-                <option value="maxima">Máxima</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Prazo Máximo (Opcional)</label>
-            <input type="date" id="item-prazo">
-        </div>
-
-        <div class="modal-actions">
-            <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
-            <button class="btn-gold" id="btn-guardar" onclick="salvarItem()">Adicionar</button>
-        </div>
+<!-- MODAL NOVO / EDITAR ITEM -->
+<div class="modal-overlay" id="modal-compras" role="dialog" aria-modal="true" aria-labelledby="modal-compras-titulo" onclick="fecharModalFora(event)">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-header-left">
+        <span class="modal-badge-ico" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <path d="M16 10a4 4 0 0 1-8 0"></path>
+          </svg>
+        </span>
+        <h3 class="modal-title" id="modal-compras-titulo">Adicionar à Lista</h3>
+      </div>
+      <button type="button" class="modal-close-btn" onclick="fecharModal()" title="Fechar" aria-label="Fechar janela">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
     </div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="item-nome">O que é? *</label>
+        <input type="text" id="item-nome" placeholder="Ex: Bobinas de linha branca">
+      </div>
+
+      <div class="form-group">
+        <label for="item-link">Link de referência (Opcional)</label>
+        <input type="url" id="item-link" placeholder="Ex: https://loja.com/produto">
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="item-valor">Valor Estimado (Opcional)</label>
+          <input type="text" id="item-valor" placeholder="Ex: 10€ - 15€">
+        </div>
+
+        <div class="form-group">
+          <label for="item-prioridade">Prioridade</label>
+          <select id="item-prioridade">
+            <option value="baixa">Baixa</option>
+            <option value="media" selected>Média</option>
+            <option value="maxima">Máxima</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 4px;">
+        <label for="item-prazo">Prazo Máximo (Opcional)</label>
+        <input type="date" id="item-prazo">
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+      <button type="button" class="btn-save-lc" id="btn-guardar" onclick="salvarItem()">Adicionar</button>
+    </div>
+  </div>
 </div>
 
 <script>
-    const SUPABASE_URL = "https://cixjmwfkfmeedajpmzmp.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeGptd2ZrZm1lZWRhanBtem1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MzM5ODIsImV4cCI6MjA2OTEwOTk4Mn0.vFvgRMK_oabG19FNauNaBu_CoQTL8QRSXcptyfY6rbM";
-    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const SUPABASE_URL = "https://cixjmwfkfmeedajpmzmp.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeGptd2ZrZm1lZWRhanBtem1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MzM5ODIsImV4cCI6MjA2OTEwOTk4Mn0.vFvgRMK_oabG19FNauNaBu_CoQTL8QRSXcptyfY6rbM";
+  const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    document.addEventListener("DOMContentLoaded", () => {
-        // Corre a limpeza automática em background (invisível)
-        db.rpc('limpar_compras_antigas').then(() => console.log('Limpeza OK')).catch(e => console.error('Limpeza ERRO', e));
-        
-        carregarCompras();
+  let comprasAtuais = [];
+  let filtroComprasAtual = 'todos';
+  let ordemComprasAtual = 'recentes';
+  let itemEmEdicaoId = null;
+
+  function esc(str) {
+    return String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function safeHref(url) {
+    const raw = String(url ?? '').trim();
+    if (!raw) return null;
+    if (/^https?:\/\//i.test(raw)) return raw;
+    return null;
+  }
+
+  function formatarValorCompra(valStr) {
+    const s = String(valStr ?? '').trim();
+    if (!s) return '';
+    if (/^\d+([.,]\d+)?$/.test(s)) return s.replace('.', ',') + ' €';
+    return s;
+  }
+
+  function parseValorFixo(valStr) {
+    const s = String(valStr ?? '').trim();
+    if (!s) return null;
+    // Soma apenas valores unicos (ignora intervalos como "10€ - 15€")
+    if (/[-–]|(?:\ba\b)/i.test(s)) return null;
+    const cleaned = s.replace(/\s+/g, '').replace(',', '.');
+    const m = cleaned.match(/^€?(\d+(?:\.\d+)?)€?$/);
+    if (!m) return null;
+    const n = Number(m[1]);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function parseDataLocal(dataIso) {
+    if (!dataIso) return null;
+    const s = String(dataIso).trim();
+    const ymd = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (ymd) {
+      return new Date(Number(ymd[1]), Number(ymd[2]) - 1, Number(ymd[3]));
+    }
+    const d = new Date(s);
+    if (Number.isNaN(d.getTime())) return null;
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
+  function formatarData(dataIso) {
+    if (!dataIso) return '—';
+    const s = String(dataIso).trim();
+    const ymd = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (ymd) return `${ymd[3]}/${ymd[2]}/${ymd[1]}`;
+    const d = new Date(s);
+    if (Number.isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('pt-PT');
+  }
+
+  function hojeLocalMeiaNoite() {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    return hoje;
+  }
+
+  function estadoPrazo(prazoIso, hoje) {
+    if (!prazoIso) return { semPrazo: true, atrasado: false, proximo: false };
+    const dt = parseDataLocal(prazoIso);
+    if (!dt) return { semPrazo: true, atrasado: false, proximo: false };
+    const diffDias = Math.round((dt.getTime() - hoje.getTime()) / 86400000);
+    return {
+      semPrazo: false,
+      atrasado: diffDias < 0,
+      proximo: diffDias >= 0 && diffDias <= 3,
+      ts: dt.getTime()
+    };
+  }
+
+  // =========================================
+  // FILTROS E ORDENACAO
+  // =========================================
+  function toggleFiltroCompras(e) {
+    if (e) e.stopPropagation();
+    if (window.fecharMenuMobile) window.fecharMenuMobile();
+    const pop = document.getElementById('popover-filtro-compras');
+    const btn = document.getElementById('btn-filter-compras');
+    if (!pop || !btn) return;
+    const aberto = pop.classList.toggle('aberto');
+    btn.classList.toggle('ativo', aberto);
+    btn.setAttribute('aria-expanded', String(aberto));
+  }
+
+  function fecharFiltroCompras() {
+    const pop = document.getElementById('popover-filtro-compras');
+    const btn = document.getElementById('btn-filter-compras');
+    if (pop) pop.classList.remove('aberto');
+    if (btn) {
+      btn.classList.remove('ativo');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+  }
+
+  function aplicarFiltroCompras(filtro) {
+    filtroComprasAtual = filtro || 'todos';
+    sincronizarControlesCompras();
+    renderizarCompras();
+  }
+
+  function alternarFiltroKpiCompras(filtro) {
+    aplicarFiltroCompras(filtroComprasAtual === filtro ? 'todos' : filtro);
+  }
+
+  function aplicarOrdemCompras(ordem) {
+    ordemComprasAtual = ordem || 'recentes';
+    sincronizarControlesCompras();
+    renderizarCompras();
+  }
+
+  function aplicarPesquisaCompras() {
+    renderizarCompras();
+  }
+
+  function limparFiltrosCompras() {
+    filtroComprasAtual = 'todos';
+    ordemComprasAtual = 'recentes';
+    const inp = document.getElementById('pesquisa-compras');
+    if (inp) inp.value = '';
+    sincronizarControlesCompras();
+    renderizarCompras();
+  }
+
+  function irParaHistoricoCompras() {
+    const sec = document.getElementById('sec-historico');
+    if (sec && sec.scrollIntoView) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function sincronizarControlesCompras() {
+    document.querySelectorAll('#pills-filtro-compras button').forEach(btn => {
+      btn.classList.toggle('ativo', btn.dataset.filtro === filtroComprasAtual);
+    });
+    document.querySelectorAll('#pills-ordem-compras button').forEach(btn => {
+      btn.classList.toggle('ativo', btn.dataset.ordem === ordemComprasAtual);
+    });
+    const kpiMap = {
+      'kpi-lc-todos': 'todos',
+      'kpi-lc-maxima': 'maxima',
+      'kpi-lc-atraso': 'atrasado'
+    };
+    Object.entries(kpiMap).forEach(([id, f]) => {
+      const card = document.getElementById(id);
+      if (card) card.classList.toggle('ativo', filtroComprasAtual === f);
+    });
+    const btnFilter = document.getElementById('btn-filter-compras');
+    if (btnFilter) {
+      btnFilter.classList.toggle('tem-filtro', filtroComprasAtual !== 'todos' || ordemComprasAtual !== 'recentes');
+    }
+  }
+
+  // =========================================
+  // CARREGAMENTO E RENDERIZACAO
+  // =========================================
+  async function carregarCompras() {
+    const tbPendentes = document.getElementById('tbody-pendentes');
+    tbPendentes.innerHTML = `<tr><td colspan="4" class="empty"><svg class="spin-lc" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke-dasharray="42" stroke-dashoffset="16"></circle></svg><span style="margin-left:8px;">A carregar lista...</span></td></tr>`;
+
+    const { data, error } = await db.from('compras').select('*').order('created_at', { ascending: false });
+
+    if (error) {
+      tbPendentes.innerHTML = `<tr><td colspan="4" class="empty" style="color:#dc2626">Erro: ${esc(error.message)}</td></tr>`;
+      return;
+    }
+
+    comprasAtuais = data || [];
+    renderizarCompras();
+  }
+
+  function renderizarCompras() {
+    const tbPendentes = document.getElementById('tbody-pendentes');
+    const tbConcluidos = document.getElementById('tbody-concluidos');
+    const hoje = hojeLocalMeiaNoite();
+    const termo = (document.getElementById('pesquisa-compras')?.value || '').toLowerCase().trim();
+
+    const pendentes = comprasAtuais.filter(i => i.status === 'pendente');
+    const concluidos = comprasAtuais.filter(i => i.status === 'concluido');
+
+    let totalMaxima = 0;
+    let totalAtraso = 0;
+    let somaFixa = 0;
+    let countFixos = 0;
+
+    pendentes.forEach(item => {
+      if (item.prioridade === 'maxima') totalMaxima++;
+      const st = estadoPrazo(item.prazo_maximo, hoje);
+      if (st.atrasado) totalAtraso++;
+      const vFixo = parseValorFixo(item.valor_estimado);
+      if (vFixo !== null) {
+        somaFixa += vFixo;
+        countFixos++;
+      }
     });
 
-    function formatarData(dataIso) {
-        if (!dataIso) return '-';
-        const d = new Date(dataIso);
-        return d.toLocaleDateString('pt-PT');
+    const setTxt = (id, v) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = String(v);
+    };
+    setTxt('kpi-c-pendentes', pendentes.length);
+    setTxt('kpi-c-maxima', totalMaxima);
+    setTxt('kpi-c-atraso', totalAtraso);
+    setTxt('kpi-c-concluidos', concluidos.length);
+
+    const subPendentes = document.getElementById('kpi-c-pendentes-sub');
+    if (subPendentes) {
+      if (countFixos > 0 && countFixos === pendentes.length) {
+        subPendentes.textContent = `Estimativa total: ${somaFixa.toFixed(2).replace('.', ',')} €`;
+      } else if (countFixos > 0) {
+        subPendentes.textContent = `Parcial estimado: ${somaFixa.toFixed(2).replace('.', ',')} €`;
+      } else {
+        subPendentes.textContent = 'Itens ativos para adquirir';
+      }
     }
 
-    async function carregarCompras() {
-        const tbPendentes = document.getElementById('tbody-pendentes');
-        const tbConcluidos = document.getElementById('tbody-concluidos');
-        
-        tbPendentes.innerHTML = `<tr><td colspan="4" class="empty"><div class="spinner" style="margin:0 auto;"></div></td></tr>`;
-        
-        const { data, error } = await db.from('compras').select('*').order('created_at', { ascending: false });
-
-        if (error) {
-            tbPendentes.innerHTML = `<tr><td colspan="4" class="empty" style="color:red">Erro: ${error.message}</td></tr>`;
-            return;
-        }
-
-        const pendentes = data.filter(i => i.status === 'pendente');
-        const concluidos = data.filter(i => i.status === 'concluido');
-
-        // PENDENTES
-        if (pendentes.length === 0) {
-            tbPendentes.innerHTML = `<tr><td colspan="4" class="empty">Não há itens a comprar neste momento! 🎉</td></tr>`;
-        } else {
-            tbPendentes.innerHTML = pendentes.map(item => {
-                let badgeClass = 'badge-media';
-                let badgeText = 'Média';
-                if (item.prioridade === 'baixa') { badgeClass = 'badge-baixa'; badgeText = 'Baixa'; }
-                if (item.prioridade === 'maxima') { badgeClass = 'badge-alta'; badgeText = 'Máxima'; }
-
-                let linkBtn = item.link ? `<a href="${item.link}" target="_blank" class="btn-icon btn-link" title="Abrir link">&#128279;</a>` : '';
-                let valorHtml = item.valor_estimado ? `<span class="valor-txt">💰 ${item.valor_estimado}</span>` : '';
-
-                return `
-                <tr>
-                    <td>
-                        <strong style="color: #1a1a2e">${item.nome}</strong>
-                        ${valorHtml}
-                    </td>
-                    <td>${item.prazo_maximo ? formatarData(item.prazo_maximo) : '-'}</td>
-                    <td><span class="badge ${badgeClass}">${badgeText}</span></td>
-                    <td>
-                        <div class="acoes">
-                            ${linkBtn}
-                            <button class="btn-icon btn-check" title="Marcar como Comprado" onclick="marcarComprado('${item.id}')">&#10004;</button>
-                            <button class="btn-icon btn-del" title="Apagar" onclick="apagarItem('${item.id}')">&#128465;</button>
-                        </div>
-                    </td>
-                </tr>`;
-            }).join('');
-        }
-
-        // CONCLUÍDOS
-        if (concluidos.length === 0) {
-            tbConcluidos.innerHTML = `<tr><td colspan="3" class="empty">Nenhum histórico recente.</td></tr>`;
-        } else {
-            tbConcluidos.innerHTML = concluidos.map(item => {
-                let valorHtml = item.valor_estimado ? `<span class="valor-txt">💰 ${item.valor_estimado}</span>` : '';
-                return `
-                <tr>
-                    <td class="item-riscado">
-                        <strong>${item.nome}</strong>
-                        ${valorHtml}
-                    </td>
-                    <td style="color:#888; font-size:0.85rem;">${formatarData(item.data_conclusao)}</td>
-                    <td>
-                        <div class="acoes">
-                            <button class="btn-icon btn-del" title="Apagar" onclick="apagarItem('${item.id}')">&#128465;</button>
-                        </div>
-                    </td>
-                </tr>`;
-            }).join('');
-        }
+    const alertaEl = document.getElementById('alerta-prazos-compras');
+    const alertaTxt = document.getElementById('alerta-prazos-texto');
+    if (alertaEl) {
+      alertaEl.style.display = totalAtraso > 0 ? 'flex' : 'none';
+      if (alertaTxt && totalAtraso > 0) {
+        alertaTxt.textContent = totalAtraso === 1
+          ? 'Existe 1 item com o prazo máximo ultrapassado.'
+          : `Existem ${totalAtraso} itens com o prazo máximo ultrapassado.`;
+      }
     }
 
-    function abrirModal() {
-        document.getElementById('item-nome').value = '';
-        document.getElementById('item-link').value = '';
-        document.getElementById('item-valor').value = '';
-        document.getElementById('item-prioridade').value = 'media';
-        document.getElementById('item-prazo').value = '';
-        document.getElementById('modal-compras').classList.add('active');
+    // Filtrar pendentes
+    let pendentesFiltrados = pendentes.filter(item => {
+      const st = estadoPrazo(item.prazo_maximo, hoje);
+      if (filtroComprasAtual === 'maxima' && item.prioridade !== 'maxima') return false;
+      if (filtroComprasAtual === 'media' && (item.prioridade || 'media') !== 'media') return false;
+      if (filtroComprasAtual === 'baixa' && item.prioridade !== 'baixa') return false;
+      if (filtroComprasAtual === 'atrasado' && !st.atrasado) return false;
+      if (termo) {
+        const matchNome = String(item.nome || '').toLowerCase().includes(termo);
+        const matchVal = String(item.valor_estimado || '').toLowerCase().includes(termo);
+        if (!matchNome && !matchVal) return false;
+      }
+      return true;
+    });
+
+    // Ordenar pendentes
+    if (ordemComprasAtual === 'prioridade') {
+      const peso = { maxima: 0, media: 1, baixa: 2 };
+      pendentesFiltrados = [...pendentesFiltrados].sort((a, b) => (peso[a.prioridade] ?? 1) - (peso[b.prioridade] ?? 1));
+    } else if (ordemComprasAtual === 'prazo') {
+      pendentesFiltrados = [...pendentesFiltrados].sort((a, b) => {
+        const pa = parseDataLocal(a.prazo_maximo)?.getTime() ?? Number.MAX_SAFE_INTEGER;
+        const pb = parseDataLocal(b.prazo_maximo)?.getTime() ?? Number.MAX_SAFE_INTEGER;
+        return pa - pb;
+      });
     }
 
-    function fecharModal() {
-        document.getElementById('modal-compras').classList.remove('active');
+    const concluidosFiltrados = termo
+      ? concluidos.filter(item =>
+          String(item.nome || '').toLowerCase().includes(termo) ||
+          String(item.valor_estimado || '').toLowerCase().includes(termo)
+        )
+      : concluidos;
+
+    setTxt('count-pendentes', pendentesFiltrados.length);
+    setTxt('count-concluidos', concluidosFiltrados.length);
+
+    const subnotePend = document.getElementById('subnote-pendentes');
+    if (subnotePend) {
+      subnotePend.textContent = pendentesFiltrados.length !== pendentes.length
+        ? `A mostrar ${pendentesFiltrados.length} de ${pendentes.length}`
+        : '';
     }
 
-    function fecharModalFora(e) {
-        if (e.target.id === 'modal-compras') fecharModal();
+    const chipBar = document.getElementById('lc-filter-chip-bar');
+    const chipTxt = document.getElementById('lc-filter-resumo');
+    if (chipBar && chipTxt) {
+      const ativo = filtroComprasAtual !== 'todos' || ordemComprasAtual !== 'recentes' || Boolean(termo);
+      chipBar.classList.toggle('visivel', ativo);
+      if (ativo) {
+        const labels = [];
+        if (filtroComprasAtual === 'maxima') labels.push('Prioridade Máxima');
+        else if (filtroComprasAtual === 'media') labels.push('Prioridade Média');
+        else if (filtroComprasAtual === 'baixa') labels.push('Prioridade Baixa');
+        else if (filtroComprasAtual === 'atrasado') labels.push('Em atraso');
+        if (ordemComprasAtual === 'prioridade') labels.push('Ordem: Prioridade');
+        else if (ordemComprasAtual === 'prazo') labels.push('Ordem: Prazo próximo');
+        if (termo) labels.push(`"${termo}"`);
+        chipTxt.textContent = `${pendentesFiltrados.length} a comprar${labels.length ? ' · ' + labels.join(' · ') : ''}`;
+      }
     }
 
-    async function salvarItem() {
-        const nome = document.getElementById('item-nome').value.trim();
-        const link = document.getElementById('item-link').value.trim();
-        const valor = document.getElementById('item-valor').value.trim();
-        const prioridade = document.getElementById('item-prioridade').value;
-        const prazo = document.getElementById('item-prazo').value || null;
+    // Render Pendentes
+    if (pendentesFiltrados.length === 0) {
+      const msgVazio = (filtroComprasAtual !== 'todos' || termo)
+        ? 'Nenhum item pendente corresponde ao filtro atual.'
+        : 'Não há itens a comprar neste momento.';
+      tbPendentes.innerHTML = `<tr><td colspan="4" class="empty">${msgVazio}</td></tr>`;
+    } else {
+      tbPendentes.innerHTML = pendentesFiltrados.map(item => {
+        let badgeClass = 'badge-media';
+        let badgeText = 'Média';
+        let badgeDot = 'dot-amber';
+        if (item.prioridade === 'baixa') { badgeClass = 'badge-baixa'; badgeText = 'Baixa'; badgeDot = 'dot-green'; }
+        if (item.prioridade === 'maxima') { badgeClass = 'badge-alta'; badgeText = 'Máxima'; badgeDot = 'dot-red'; }
 
-        if (!nome) {
-            window.mostrarAviso?.("O nome do item é obrigatório.", "Atenção", "⚠️") || alert("O nome do item é obrigatório.");
-            return;
+        const valFormatado = formatarValorCompra(item.valor_estimado);
+        const valorHtml = valFormatado
+          ? `<div class="lc-meta-row"><span class="lc-valor-tag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>${esc(valFormatado)}</span></div>`
+          : '';
+
+        const prazoSt = estadoPrazo(item.prazo_maximo, hoje);
+        let prazoHtml = `<span class="lc-prazo-data sem-prazo">Sem prazo</span>`;
+        if (!prazoSt.semPrazo) {
+          const pillPrazo = prazoSt.atrasado
+            ? `<span class="lc-prazo-pill lc-prazo-atrasado">Atrasado</span>`
+            : (prazoSt.proximo ? `<span class="lc-prazo-pill lc-prazo-proximo">Próximo</span>` : '');
+          prazoHtml = `<div class="lc-prazo-wrap"><span class="lc-prazo-data">${esc(formatarData(item.prazo_maximo))}</span>${pillPrazo}</div>`;
         }
 
-        const btn = document.getElementById('btn-guardar');
-        btn.disabled = true;
-        btn.textContent = 'A guardar...';
+        const hrefSegura = safeHref(item.link);
+        const linkBtn = hrefSegura
+          ? `<a href="${esc(hrefSegura)}" target="_blank" rel="noopener noreferrer" class="lc-ico-btn btn-lc-link" title="Abrir link" aria-label="Abrir link de ${esc(item.nome)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>`
+          : '';
 
-        const { error } = await db.from('compras').insert([{
-            nome,
-            link: link || null,
-            valor_estimado: valor || null,
-            prioridade,
-            prazo_maximo: prazo
-        }]);
+        return `
+          <tr data-lc-id="${esc(item.id)}">
+            <td>
+              <div class="lc-item-nome">${esc(item.nome)}</div>
+              ${valorHtml}
+            </td>
+            <td>${prazoHtml}</td>
+            <td><span class="badge ${badgeClass}"><span class="lc-dot ${badgeDot}"></span>${badgeText}</span></td>
+            <td>
+              <div class="acoes">
+                ${linkBtn}
+                <button type="button" class="lc-ico-btn" data-lc-action="editar" title="Editar item" aria-label="Editar ${esc(item.nome)}">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 20h9"></path>
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                  </svg>
+                </button>
+                <button type="button" class="lc-ico-btn btn-lc-check" data-lc-action="comprar" title="Marcar como comprado" aria-label="Marcar ${esc(item.nome)} como comprado">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </button>
+                <button type="button" class="lc-ico-btn btn-lc-del" data-lc-action="apagar" title="Apagar" aria-label="Apagar ${esc(item.nome)}">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                    <path d="M10 11v6"></path>
+                    <path d="M14 11v6"></path>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>`;
+      }).join('');
+    }
 
-        btn.disabled = false;
-        btn.textContent = 'Adicionar';
+    // Render Concluidos
+    if (concluidosFiltrados.length === 0) {
+      const msgHist = termo ? `Sem histórico para "${esc(termo)}".` : 'Nenhum histórico recente.';
+      tbConcluidos.innerHTML = `<tr><td colspan="3" class="empty">${msgHist}</td></tr>`;
+    } else {
+      tbConcluidos.innerHTML = concluidosFiltrados.map(item => {
+        const valFormatado = formatarValorCompra(item.valor_estimado);
+        const valorHtml = valFormatado
+          ? `<div class="lc-meta-row"><span class="lc-valor-tag">${esc(valFormatado)}</span></div>`
+          : '';
+        const hrefSegura = safeHref(item.link);
+        const linkBtn = hrefSegura
+          ? `<a href="${esc(hrefSegura)}" target="_blank" rel="noopener noreferrer" class="lc-ico-btn btn-lc-link" title="Abrir link" aria-label="Abrir link de ${esc(item.nome)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>`
+          : '';
 
-        if (error) {
-            console.error(error);
-            window.mostrarAviso?.("Erro ao salvar: " + error.message, "Erro", "❌") || alert("Erro: " + error.message);
-            return;
-        }
+        return `
+          <tr data-lc-id="${esc(item.id)}">
+            <td class="item-riscado">
+              <div class="lc-item-nome">${esc(item.nome)}</div>
+              ${valorHtml}
+            </td>
+            <td style="color: var(--lc-muted); font-size: 0.84rem; font-variant-numeric: tabular-nums;">${esc(formatarData(item.data_conclusao))}</td>
+            <td>
+              <div class="acoes">
+                ${linkBtn}
+                <button type="button" class="lc-ico-btn btn-lc-del" data-lc-action="apagar" title="Apagar" aria-label="Apagar ${esc(item.nome)}">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                    <path d="M10 11v6"></path>
+                    <path d="M14 11v6"></path>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>`;
+      }).join('');
+    }
+  }
 
+  // =========================================
+  // MODAL NOVO / EDITAR ITEM
+  // =========================================
+  function abrirModal(itemParaEditar) {
+    itemEmEdicaoId = itemParaEditar ? itemParaEditar.id : null;
+    document.getElementById('item-nome').value = itemParaEditar?.nome || '';
+    document.getElementById('item-link').value = itemParaEditar?.link || '';
+    document.getElementById('item-valor').value = itemParaEditar?.valor_estimado || '';
+    document.getElementById('item-prioridade').value = itemParaEditar?.prioridade || 'media';
+    document.getElementById('item-prazo').value = itemParaEditar?.prazo_maximo
+      ? String(itemParaEditar.prazo_maximo).slice(0, 10)
+      : '';
+
+    const titulo = document.getElementById('modal-compras-titulo');
+    const btnGuardar = document.getElementById('btn-guardar');
+    if (titulo) titulo.textContent = itemEmEdicaoId ? 'Editar Item' : 'Adicionar à Lista';
+    if (btnGuardar) btnGuardar.textContent = itemEmEdicaoId ? 'Guardar Alterações' : 'Adicionar';
+
+    document.getElementById('modal-compras').classList.add('active');
+    if (window.fecharMenuMobile) window.fecharMenuMobile();
+    setTimeout(() => {
+      const inpNome = document.getElementById('item-nome');
+      if (inpNome) inpNome.focus();
+    }, 40);
+  }
+
+  function fecharModal() {
+    itemEmEdicaoId = null;
+    document.getElementById('modal-compras').classList.remove('active');
+  }
+
+  function fecharModalFora(e) {
+    if (e.target.id === 'modal-compras') fecharModal();
+  }
+
+  async function salvarItem() {
+    const nome = document.getElementById('item-nome').value.trim();
+    const link = document.getElementById('item-link').value.trim();
+    const valor = document.getElementById('item-valor').value.trim();
+    const prioridade = document.getElementById('item-prioridade').value;
+    const prazo = document.getElementById('item-prazo').value || null;
+
+    if (!nome) {
+      window.mostrarAviso?.("O nome do item é obrigatório.", "Atenção", "alert") || alert("O nome do item é obrigatório.");
+      return;
+    }
+
+    const btn = document.getElementById('btn-guardar');
+    const emEdicao = Boolean(itemEmEdicaoId);
+    btn.disabled = true;
+    btn.textContent = 'A guardar...';
+
+    const payload = {
+      nome,
+      link: link || null,
+      valor_estimado: valor || null,
+      prioridade,
+      prazo_maximo: prazo
+    };
+
+    const { error } = emEdicao
+      ? await db.from('compras').update(payload).eq('id', itemEmEdicaoId)
+      : await db.from('compras').insert([payload]);
+
+    btn.disabled = false;
+    btn.textContent = emEdicao ? 'Guardar Alterações' : 'Adicionar';
+
+    if (error) {
+      console.error(error);
+      window.mostrarAviso?.("Erro ao guardar: " + esc(error.message), "Erro", "error") || alert("Erro: " + error.message);
+      return;
+    }
+
+    fecharModal();
+    await carregarCompras();
+  }
+
+  async function marcarComprado(id) {
+    const confirmar = window.mostrarConfirmacao
+      ? await window.mostrarConfirmacao("Marcar este item como já comprado?", "Comprado", "check", "Sim, Comprado", "Cancelar")
+      : confirm("Marcar este item como comprado?");
+
+    if (!confirmar) return;
+
+    const { error } = await db.from('compras').update({
+      status: 'concluido',
+      data_conclusao: new Date().toISOString()
+    }).eq('id', id);
+
+    if (error) {
+      window.mostrarAviso?.("Erro ao atualizar: " + esc(error.message), "Erro", "error") || alert("Erro: " + error.message);
+    } else {
+      await carregarCompras();
+    }
+  }
+
+  async function apagarItem(id) {
+    const confirmar = window.mostrarConfirmacao
+      ? await window.mostrarConfirmacao("Tem a certeza que deseja apagar este item?", "Apagar Item", "alert", "Apagar", "Cancelar")
+      : confirm("Tem a certeza que deseja apagar?");
+
+    if (!confirmar) return;
+
+    const { error } = await db.from('compras').delete().eq('id', id);
+
+    if (error) {
+      window.mostrarAviso?.("Erro ao apagar: " + esc(error.message), "Erro", "error") || alert("Erro: " + error.message);
+    } else {
+      await carregarCompras();
+    }
+  }
+
+  // =========================================
+  // INICIALIZACAO E EVENTOS DELEGADOS
+  // =========================================
+  document.addEventListener("DOMContentLoaded", () => {
+    db.rpc('limpar_compras_antigas')
+      .then(() => console.log('Limpeza OK'))
+      .catch(e => console.error('Limpeza ERRO', e));
+
+    sincronizarControlesCompras();
+    carregarCompras();
+
+    const handleTabelaClick = (e) => {
+      const btn = e.target.closest('button[data-lc-action]');
+      if (!btn) return;
+      const row = btn.closest('tr[data-lc-id]');
+      if (!row) return;
+      const id = row.dataset.lcId;
+      const action = btn.dataset.lcAction;
+      if (action === 'editar') {
+        const item = comprasAtuais.find(x => String(x.id) === String(id));
+        if (item) abrirModal(item);
+      } else if (action === 'comprar') {
+        marcarComprado(id);
+      } else if (action === 'apagar') {
+        apagarItem(id);
+      }
+    };
+
+    const tbPend = document.getElementById('tbody-pendentes');
+    const tbConc = document.getElementById('tbody-concluidos');
+    if (tbPend) tbPend.addEventListener('click', handleTabelaClick);
+    if (tbConc) tbConc.addEventListener('click', handleTabelaClick);
+
+    document.addEventListener('click', (e) => {
+      const pop = document.getElementById('popover-filtro-compras');
+      const btn = document.getElementById('btn-filter-compras');
+      if (pop && pop.classList.contains('aberto') && !pop.contains(e.target) && (!btn || !btn.contains(e.target))) {
+        fecharFiltroCompras();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        fecharFiltroCompras();
         fecharModal();
-        carregarCompras();
-    }
-
-    async function marcarComprado(id) {
-        const confirmar = window.mostrarConfirmacao 
-            ? await window.mostrarConfirmacao("Marcar este item como já comprado?", "Comprado", "✅", "Sim", "Cancelar")
-            : confirm("Marcar este item como comprado?");
-            
-        if (!confirmar) return;
-
-        const { error } = await db.from('compras').update({
-            status: 'concluido',
-            data_conclusao: new Date().toISOString()
-        }).eq('id', id);
-
-        if (error) {
-            window.mostrarAviso?.("Erro ao atualizar: " + error.message, "Erro", "❌") || alert("Erro: " + error.message);
-        } else {
-            carregarCompras();
-        }
-    }
-
-    async function apagarItem(id) {
-        const confirmar = window.mostrarConfirmacao 
-            ? await window.mostrarConfirmacao("Tem a certeza que deseja apagar este item?", "Apagar", "🗑️", "Apagar", "Cancelar")
-            : confirm("Tem a certeza que deseja apagar?");
-            
-        if (!confirmar) return;
-
-        const { error } = await db.from('compras').delete().eq('id', id);
-
-        if (error) {
-            window.mostrarAviso?.("Erro ao apagar: " + error.message, "Erro", "❌") || alert("Erro: " + error.message);
-        } else {
-            carregarCompras();
-        }
-    }
+      }
+    });
+  });
 </script>
 
 </body>

@@ -1,657 +1,1919 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Tecidos - Eva Leite Atelier</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-    <script src="auth-guard.js"></script>
-    <script src="navbar.js" defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Tecidos - Eva Leite Atelier</title>
+  <link rel="stylesheet" href="style.css?v=2">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="auth-guard.js"></script>
+  <script src="navbar.js?v=7" defer></script>
 
-    <style>
-        :root {
-            --gold: #d4af37;
-            --dark: #1a1a2e;
-            --bg: #f5f1ea;
-            --text: #2d2d2d;
-            --text-muted: #888;
-            --radius: 14px;
-        }
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; }
-        .wrapper { max-width: 1200px; margin: 30px auto; padding: 0 20px 60px; }
-        
-        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 14px; }
-        .page-header h1 { margin: 0; font-size: 1.8rem; color: var(--dark); }
-        .page-header p { margin: 4px 0 0; color: var(--text-muted); font-size: 0.88rem; }
+  <style>
+    :root {
+      --tec-bg: #f5f1ea;
+      --tec-card: #ffffff;
+      --tec-dark: #141414;
+      --tec-text: #1f2937;
+      --tec-muted: #6b7280;
+      --tec-gold: #b8860b;
+      --tec-gold-accent: #c59b27;
+      --tec-green: #15803d;
+      --tec-green-soft: #ecfdf3;
+      --tec-red: #dc2626;
+      --tec-red-soft: #fef2f2;
+      --tec-border: rgba(17, 24, 39, 0.07);
+      --tec-shadow: 0 2px 12px rgba(0, 0, 0, 0.035);
+      --tec-radius: 16px;
+    }
 
-        .btn-gold {
-            background: var(--gold); color: #fff; border: none; padding: 10px 20px;
-            border-radius: 8px; font-size: 0.88rem; font-weight: 600; cursor: pointer;
-            transition: background 0.2s; font-family: inherit;
-        }
-        .btn-gold:hover { background: #b8972e; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--tec-bg);
+      color: var(--tec-text);
+      margin: 0;
+      padding: 0;
+    }
 
-        /* TABS */
-        .tabs { display: flex; gap: 10px; margin-bottom: 24px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .tab-btn { background: none; border: none; font-size: 1rem; font-weight: 600; color: var(--text-muted); cursor: pointer; padding: 8px 16px; border-radius: 8px; transition: 0.2s; }
-        .tab-btn:hover { background: #f0f0f0; }
-        .tab-btn.active { background: var(--dark); color: #fff; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.3s; }
-        
-        .saldo-positivo { color: #2e7d32; font-weight: bold; }
-        .saldo-negativo { color: #c62828; font-weight: bold; }
+    .tecidos-page {
+      max-width: 1220px;
+      margin: 14px auto 60px;
+      padding: 0 24px 60px;
+      box-sizing: border-box;
+    }
 
-        .layout-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            align-items: start;
-        }
-        @media (max-width: 900px) {
-            .layout-grid { grid-template-columns: 1fr; }
-        }
+    /* Botao primario movido pela navbar.js para #liquid-dynamic-right */
+    .btn-tec-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      width: auto !important;
+      margin: 0 !important;
+      padding: 0 16px !important;
+      height: 40px !important;
+      border-radius: 12px !important;
+      border: 1px solid rgba(20, 20, 20, 0.9) !important;
+      background: var(--tec-dark) !important;
+      color: #ffffff !important;
+      font-family: inherit;
+      font-size: 0.84rem !important;
+      font-weight: 600 !important;
+      letter-spacing: -0.01em;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+      transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    }
+    .btn-tec-primary:hover {
+      background: #2b2b2b !important;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.16);
+    }
+    .btn-tec-primary svg {
+      flex-shrink: 0;
+    }
 
-        /* LADO ESQUERDO: MÓVEL */
-        .movel-container {
-            background: #fff; border-radius: 16px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,.06);
-            display: flex; flex-direction: column; align-items: center;
-        }
-        .movel-container h2 { margin: 0 0 24px 0; font-size: 1.15rem; color: var(--dark); text-align: center; }
+    /* Pills dentro do popover de filtro */
+    .tec-filter-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .tec-filter-pills button,
+    .liquid-left .tec-filter-pills button {
+      width: auto !important;
+      margin: 0 !important;
+      padding: 6px 11px !important;
+      border-radius: 8px !important;
+      border: 1px solid #e2ddd5 !important;
+      background: #faf9f6 !important;
+      color: #4b5563 !important;
+      font-family: inherit;
+      font-size: 0.79rem !important;
+      font-weight: 500 !important;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tec-filter-pills button:hover,
+    .liquid-left .tec-filter-pills button:hover {
+      background: #f0ece4 !important;
+      color: #111 !important;
+    }
+    .tec-filter-pills button.ativo,
+    .liquid-left .tec-filter-pills button.ativo {
+      background: var(--tec-dark) !important;
+      color: #ffffff !important;
+      border-color: var(--tec-dark) !important;
+    }
 
-        .movel-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: repeat(8, 60px);
-            gap: 15px;
-            width: 100%;
-            max-width: 380px;
-            background: #faf9f6;
-            padding: 20px;
-            border-radius: 12px;
-            border: 2px solid #eaddcf;
-        }
+    /* Barra superior da pagina: Segmentacao de Separadores */
+    .tecidos-subbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
 
-        .prateleira {
-            background: #fff;
-            border: 2px solid #eaddcf;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: space-evenly;
-            gap: 5px;
-            padding: 5px;
-            position: relative;
-            overflow: hidden;
-        }
-        .prateleira::before {
-            content: attr(data-id);
-            position: absolute;
-            font-size: 2rem;
-            font-weight: 800;
-            color: #f0ebe4;
-            z-index: 1;
-            pointer-events: none;
-        }
-        .prateleira.full { grid-column: 1 / span 2; }
-        
-        .pano-wrapper {
-            position: relative;
-            z-index: 2;
-        }
-        .pano-circle {
-            width: 44px; height: 44px; border-radius: 50%;
-            background-size: cover; background-position: center;
-            border: 2.5px solid var(--gold); box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            background-color: #fdfdfd;
-        }
-        .pano-wrapper.atrasado .pano-circle { border-color: #c62828; }
-        .pano-wrapper.atrasado::after {
-            content: "⚠️"; position: absolute; top: -8px; right: -8px;
-            font-size: 0.9rem; background: #fff; border-radius: 50%; width: 20px; height: 20px;
-            display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 3;
-        }
+    .tabs-segmented {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(17, 24, 39, 0.08);
+      border-radius: 13px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    }
+    .tab-btn {
+      width: auto !important;
+      margin: 0 !important;
+      padding: 8px 15px !important;
+      border: none !important;
+      border-radius: 9px !important;
+      background: transparent !important;
+      color: var(--tec-muted) !important;
+      font-family: inherit;
+      font-size: 0.84rem !important;
+      font-weight: 600 !important;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .tab-btn svg {
+      width: 15px;
+      height: 15px;
+      stroke: currentColor;
+      stroke-width: 1.85;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      flex-shrink: 0;
+    }
+    .tab-btn:hover {
+      color: var(--tec-dark) !important;
+      background: rgba(20, 20, 20, 0.04) !important;
+    }
+    .tab-btn.active {
+      background: var(--tec-dark) !important;
+      color: #ffffff !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    }
 
-        /* LADO DIREITO: TABELA */
-        .tabela-container {
-            background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,.06);
-        }
-        .tabela-container h2 { margin: 0 0 16px 0; font-size: 1.15rem; color: var(--dark); }
+    /* Faixa de estado/filtro ativo ao lado dos tabs */
+    .tec-filter-chip-bar {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.79rem;
+      color: #4b5563;
+      background: rgba(255, 255, 255, 0.75);
+      border: 1px solid rgba(17, 24, 39, 0.07);
+      padding: 6px 12px;
+      border-radius: 999px;
+    }
+    .tec-filter-chip-bar.visivel {
+      display: inline-flex;
+    }
+    .btn-limpar-tec {
+      width: auto !important;
+      margin: 0 !important;
+      padding: 2px 8px !important;
+      border-radius: 999px !important;
+      border: 1px solid #d6d0c4 !important;
+      background: #fff !important;
+      color: var(--tec-dark) !important;
+      font-family: inherit;
+      font-size: 0.73rem !important;
+      font-weight: 600 !important;
+      cursor: pointer;
+    }
+    .btn-limpar-tec:hover {
+      background: #efeae0 !important;
+    }
 
-        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-        thead th { text-align: left; padding: 10px 12px; border-bottom: 2px solid #eee; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
-        tbody td { padding: 14px 12px; border-bottom: 1px solid #f5f5f5; vertical-align: middle; }
-        tbody tr:last-child td { border-bottom: none; }
-        .empty { text-align: center; padding: 30px; color: var(--text-muted); font-size: 0.9rem; }
+    /* Alerta discreto de atrasos */
+    .alerta-topo {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+      padding: 12px 16px;
+      border-radius: 14px;
+      background: #fff6f6;
+      border: 1px solid #f7d2d2;
+      color: #991b1b;
+      font-size: 0.85rem;
+      font-weight: 500;
+      box-shadow: 0 2px 10px rgba(220, 38, 38, 0.04);
+    }
+    .alerta-topo-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .alerta-ico-circle {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #fee2e2;
+      color: var(--tec-red);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .btn-alerta-ver {
+      width: auto !important;
+      margin: 0 !important;
+      padding: 6px 12px !important;
+      border-radius: 8px !important;
+      border: 1px solid #fca5a5 !important;
+      background: #ffffff !important;
+      color: #b91c1c !important;
+      font-family: inherit;
+      font-size: 0.77rem !important;
+      font-weight: 600 !important;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s ease;
+    }
+    .btn-alerta-ver:hover {
+      background: #fef2f2 !important;
+    }
 
-        .badge-status { padding: 4px 10px; border-radius: 20px; font-size: 0.73rem; font-weight: 700; display: inline-block; margin-top: 4px;}
-        .status-ok { background: #e8f5e9; color: #2e7d32; }
-        .status-atrasado { background: #fce8e6; color: #c62828; }
+    /* KPIs Minimalistas */
+    .tecidos-kpis {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .tec-kpi-card {
+      background: var(--tec-card);
+      border: 1px solid var(--tec-border);
+      border-radius: var(--tec-radius);
+      box-shadow: var(--tec-shadow);
+      padding: 16px 19px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 7px;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+    }
+    .tec-kpi-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.05);
+      border-color: rgba(20, 20, 20, 0.16);
+    }
+    .tec-kpi-card.ativo {
+      border-color: rgba(20, 20, 20, 0.85);
+      box-shadow: 0 0 0 1px rgba(20, 20, 20, 0.85), 0 8px 22px rgba(0, 0, 0, 0.05);
+    }
+    .tec-kpi-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--tec-muted);
+    }
+    .tec-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-dark { background: var(--tec-dark); opacity: 0.65; }
+    .dot-green { background: #16a34a; }
+    .dot-red { background: #dc2626; }
+    .dot-gold { background: var(--tec-gold-accent); }
 
-        .acoes { display: flex; gap: 8px; flex-wrap: wrap; }
-        .btn-sm {
-            background: #f0f0f0; color: #333; border: none; padding: 6px 12px;
-            border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: 0.2s;
-        }
-        .btn-sm:hover { background: #e0e0e0; }
-        .btn-renovar { background: #e8f5e9; color: #2e7d32; }
-        .btn-renovar:hover { background: #c8e6c9; }
-        .btn-del { background: #fce8e6; color: #c62828; }
-        .btn-del:hover { background: #ffcdd2; }
+    .tec-kpi-val {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--tec-dark);
+      letter-spacing: -0.025em;
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+    .tec-kpi-sub {
+      font-size: 0.76rem;
+      color: var(--tec-muted);
+    }
 
-        .alerta-topo {
-            background: #fce8e6; border: 1px solid #ffcdd2; border-radius: 12px;
-            padding: 14px 20px; color: #c62828; margin-bottom: 24px; display: none;
-            align-items: center; gap: 10px; font-weight: 600; font-size: 0.95rem;
-        }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeInTec 0.2s ease-out; }
+    @keyframes fadeInTec { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* MODAL */
-        .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,.55);
-            display: none; align-items: center; justify-content: center;
-            z-index: 9999; backdrop-filter: blur(4px);
-        }
-        .modal-overlay.active { display: flex; animation: fadeIn .2s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        
-        .modal-card {
-            background: #fff; width: 100%; max-width: 440px; border-radius: var(--radius);
-            padding: 28px 24px; box-shadow: 0 10px 40px rgba(0,0,0,.2); animation: slideUp .25s;
-        }
-        @keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        
-        .modal-title { font-size: 1.15rem; font-weight: 700; margin: 0 0 20px; color: var(--dark); }
-        .form-group { margin-bottom: 14px; }
-        .form-group label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; }
-        .form-group input, .form-group select {
-            width: 100%; padding: 10px 12px; border: 1.5px solid #e0dbd0; border-radius: 8px;
-            font-size: 0.93rem; font-family: inherit; outline: none; box-sizing: border-box; transition: border .2s;
-        }
-        .form-group input:focus, .form-group select:focus { border-color: var(--gold); }
-        
-        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
-        .btn-cancel { background: #f0f0f0; color: #666; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 600; }
-        .btn-cancel:hover { background: #e0e0e0; }
-    </style>
+    /* GRID PRINCIPAL: MOVEL + TABELA */
+    .layout-grid {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel-card {
+      background: var(--tec-card);
+      border: 1px solid var(--tec-border);
+      border-radius: var(--tec-radius);
+      box-shadow: var(--tec-shadow);
+      padding: 20px 22px;
+      box-sizing: border-box;
+    }
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 0 0 16px;
+    }
+    .panel-head h2 {
+      margin: 0;
+      font-size: 1.02rem;
+      font-weight: 650;
+      color: var(--tec-dark);
+      letter-spacing: -0.015em;
+      text-align: left;
+      border: none;
+      padding: 0;
+    }
+    .panel-legend {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.72rem;
+      color: var(--tec-muted);
+    }
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* MÓVEL VISUAL */
+    .movel-container {
+      display: flex;
+      flex-direction: column;
+    }
+    .movel-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+      background: #f6f3ed;
+      padding: 13px;
+      border-radius: 14px;
+      border: 1px solid rgba(17, 24, 39, 0.07);
+      box-sizing: border-box;
+    }
+    .prateleira {
+      background: #ffffff;
+      border: 1px solid rgba(17, 24, 39, 0.08);
+      border-radius: 12px;
+      min-height: 66px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      position: relative;
+      box-sizing: border-box;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .prateleira:hover {
+      border-color: rgba(184, 134, 11, 0.35);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+    }
+    .prateleira.full {
+      grid-column: 1 / span 2;
+    }
+    .prat-num {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #9c9487;
+      min-width: 18px;
+      text-align: center;
+      user-select: none;
+      flex-shrink: 0;
+      font-variant-numeric: tabular-nums;
+    }
+    .prat-slots {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 8px;
+      flex: 1;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding: 2px 0;
+    }
+    .prateleira.full .prat-slots {
+      justify-content: space-evenly;
+    }
+    .prateleira:not(.full) .prat-slots {
+      justify-content: center;
+    }
+
+    .pano-slot-btn {
+      position: relative;
+      width: 42px !important;
+      height: 42px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border-radius: 50% !important;
+      border: none !important;
+      background: transparent !important;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: transform 0.15s ease;
+    }
+    .pano-slot-btn:hover {
+      transform: translateY(-2px) scale(1.04);
+    }
+
+    /* Slot ocupado */
+    .pano-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-size: cover;
+      background-position: center;
+      border: 2px solid var(--tec-gold-accent);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+      background-color: #ece6da;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #5b5347;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+    .pano-wrapper.atrasado .pano-circle {
+      border-color: var(--tec-red);
+    }
+    .pano-wrapper.atrasado::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--tec-red);
+      border: 2px solid #ffffff;
+      box-shadow: 0 1px 4px rgba(220, 38, 38, 0.35);
+      pointer-events: none;
+    }
+    .pano-wrapper.filtrado-dim {
+      opacity: 0.25;
+    }
+    .pano-slot-tag {
+      position: absolute;
+      bottom: -3px;
+      right: -3px;
+      font-size: 0.58rem;
+      font-weight: 700;
+      line-height: 1;
+      padding: 2px 4px;
+      border-radius: 6px;
+      background: var(--tec-dark);
+      color: #ffffff;
+      border: 1.5px solid #ffffff;
+      pointer-events: none;
+    }
+
+    /* Slot vazio (clicavel para adicionar diretamente na posicao) */
+    .pano-empty-ring {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 1.5px dashed #d5cdc0;
+      background: #fbfaf7;
+      color: #b0a89b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.68rem;
+      font-weight: 600;
+      box-sizing: border-box;
+      transition: all 0.15s ease;
+    }
+    .pano-slot-btn:hover .pano-empty-ring {
+      border-color: var(--tec-dark);
+      border-style: solid;
+      background: #f2ede3;
+      color: var(--tec-dark);
+    }
+
+    /* TABELA DIREITA */
+    .tabela-container {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    thead th {
+      text-align: left;
+      padding: 10px 10px 12px;
+      border-bottom: 1px solid rgba(17, 24, 39, 0.08);
+      color: var(--tec-muted);
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+    tbody tr {
+      transition: background-color 0.15s ease;
+    }
+    tbody tr:hover {
+      background: #fbfaf7;
+    }
+    tbody tr.destacada {
+      background: #fcf7e8;
+    }
+    tbody td {
+      padding: 13px 10px;
+      border-bottom: 1px solid rgba(17, 24, 39, 0.05);
+      vertical-align: middle;
+    }
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+    .empty {
+      text-align: center;
+      padding: 36px 16px !important;
+      color: var(--tec-muted);
+      font-size: 0.88rem;
+    }
+
+    /* Celula de Posicao com mini miniatura */
+    .pos-cell {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+    }
+    .pos-mini-thumb {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background-size: cover;
+      background-position: center;
+      background-color: #eee8dc;
+      border: 1.5px solid #d9cbb0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #6b6356;
+      flex-shrink: 0;
+    }
+    .pos-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 9px;
+      border-radius: 8px;
+      background: #f4f1ea;
+      color: var(--tec-dark);
+      font-weight: 700;
+      font-size: 0.82rem;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .dono-nome {
+      font-weight: 600;
+      color: var(--tec-dark);
+      font-size: 0.91rem;
+      line-height: 1.3;
+    }
+    .valor-meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 3px;
+      font-size: 0.78rem;
+      color: var(--tec-muted);
+      font-weight: 500;
+    }
+    .valor-meta svg {
+      width: 12px;
+      height: 12px;
+      stroke: currentColor;
+      stroke-width: 1.9;
+      fill: none;
+    }
+
+    .venc-data {
+      font-size: 0.84rem;
+      font-weight: 500;
+      color: var(--tec-text);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      margin-top: 4px;
+      white-space: nowrap;
+    }
+    .badge-status .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+    .status-ok {
+      background: var(--tec-green-soft);
+      color: var(--tec-green);
+      border: 1px solid rgba(22, 163, 74, 0.14);
+    }
+    .status-ok .dot { background: #16a34a; }
+    .status-atrasado {
+      background: var(--tec-red-soft);
+      color: var(--tec-red);
+      border: 1px solid rgba(220, 38, 38, 0.16);
+    }
+    .status-atrasado .dot { background: #dc2626; }
+
+    /* Botoes de acao circulares minimalistas numa unica linha */
+    .acoes {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 7px;
+      flex-wrap: nowrap;
+    }
+    .t-ico-btn {
+      width: 34px !important;
+      height: 34px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border-radius: 50% !important;
+      border: 1px solid #e5dfd5 !important;
+      background: #faf9f6 !important;
+      color: #2c2a27 !important;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
+      box-sizing: border-box;
+      flex-shrink: 0;
+    }
+    .t-ico-btn svg {
+      width: 15px;
+      height: 15px;
+      stroke: currentColor;
+      stroke-width: 1.85;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      pointer-events: none;
+    }
+    .t-ico-btn.btn-vender {
+      background: #fdf9ed !important;
+      border-color: #ead89b !important;
+      color: #8a6408 !important;
+    }
+    .t-ico-btn.btn-vender:hover {
+      background: var(--tec-dark) !important;
+      border-color: var(--tec-dark) !important;
+      color: #ffffff !important;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    .t-ico-btn.btn-renovar-ico {
+      background: #eef7ee !important;
+      border-color: #c2e0c4 !important;
+      color: var(--tec-green) !important;
+    }
+    .t-ico-btn.btn-renovar-ico:hover {
+      background: var(--tec-green) !important;
+      border-color: var(--tec-green) !important;
+      color: #ffffff !important;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(21, 128, 61, 0.16);
+    }
+    .t-ico-btn.btn-del-ico {
+      background: #fdf6f6 !important;
+      border-color: #f2dada !important;
+      color: var(--tec-red) !important;
+    }
+    .t-ico-btn.btn-del-ico:hover {
+      background: var(--tec-red) !important;
+      border-color: var(--tec-red) !important;
+      color: #ffffff !important;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(220, 38, 38, 0.18);
+    }
+
+    /* Botao Acertar Contas minimalista na aba Donos */
+    .btn-acertar {
+      width: auto !important;
+      margin: 0 !important;
+      padding: 7px 13px !important;
+      border-radius: 999px !important;
+      border: 1px solid #dcd6cc !important;
+      background: #faf9f6 !important;
+      color: var(--tec-dark) !important;
+      font-family: inherit;
+      font-size: 0.78rem !important;
+      font-weight: 600 !important;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+    .btn-acertar:hover {
+      background: var(--tec-dark) !important;
+      border-color: var(--tec-dark) !important;
+      color: #ffffff !important;
+    }
+    .btn-acertar svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+    }
+    .saldo-positivo { color: var(--tec-green); font-weight: 650; }
+    .saldo-negativo { color: var(--tec-red); font-weight: 650; }
+
+    /* MODAL MINIMALISTA NOVO PANO */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 15, 15, 0.44);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 4000;
+    }
+    .modal-overlay.active {
+      display: flex;
+      animation: fadeModalTec 0.16s ease-out;
+    }
+    @keyframes fadeModalTec { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal-card {
+      background: #ffffff;
+      width: 100%;
+      max-width: 450px;
+      border-radius: 18px;
+      border: 1px solid #eae6df;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+      overflow: hidden;
+      animation: slideModalTec 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes slideModalTec {
+      from { transform: translateY(10px) scale(0.985); opacity: 0; }
+      to   { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    .modal-header {
+      padding: 18px 22px;
+      border-bottom: 1px solid #f2eee6;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .modal-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .modal-badge-ico {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #f5f1ea;
+      color: var(--tec-dark);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .modal-title {
+      font-size: 1.02rem;
+      font-weight: 650;
+      margin: 0;
+      color: var(--tec-dark);
+      letter-spacing: -0.015em;
+    }
+    .modal-close-btn {
+      width: 32px !important;
+      height: 32px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border-radius: 50% !important;
+      border: none !important;
+      background: #f6f4ef !important;
+      color: #4b5563 !important;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .modal-close-btn:hover {
+      background: #e9e4da !important;
+      color: var(--tec-dark) !important;
+    }
+
+    .modal-body {
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .form-group { margin: 0; }
+    .form-group label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #4b5563;
+      margin: 0 0 6px;
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      margin: 0;
+      padding: 10px 12px;
+      border: 1px solid #dcd6cc;
+      border-radius: 10px;
+      font-size: 0.91rem;
+      font-family: inherit;
+      color: var(--tec-dark);
+      background: #fff;
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: var(--tec-dark);
+      box-shadow: 0 0 0 3px rgba(20, 20, 20, 0.06);
+    }
+
+    .modal-actions {
+      padding: 14px 22px 18px;
+      border-top: 1px solid #f2eee6;
+      background: #fcfbf9;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    .btn-cancel {
+      width: auto !important;
+      margin: 0 !important;
+      padding: 9px 16px !important;
+      border-radius: 10px !important;
+      border: 1px solid #dcd6cc !important;
+      background: #ffffff !important;
+      color: #4b5563 !important;
+      font-family: inherit;
+      font-size: 0.85rem !important;
+      font-weight: 500 !important;
+      cursor: pointer;
+    }
+    .btn-cancel:hover {
+      background: #f3f0ea !important;
+      color: var(--tec-dark) !important;
+    }
+    .btn-gold {
+      width: auto !important;
+      margin: 0 !important;
+      padding: 9px 18px !important;
+      border-radius: 10px !important;
+      border: 1px solid var(--tec-dark) !important;
+      background: var(--tec-dark) !important;
+      color: #ffffff !important;
+      font-family: inherit;
+      font-size: 0.85rem !important;
+      font-weight: 600 !important;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-gold:hover {
+      background: #2b2b2b !important;
+      color: #ffffff !important;
+    }
+    .btn-gold:disabled {
+      opacity: 0.65;
+      cursor: wait;
+    }
+
+    @keyframes spinTec { to { transform: rotate(360deg); } }
+    .spin-tec { animation: spinTec 1.1s linear infinite; }
+
+    @media (max-width: 1000px) {
+      .layout-grid {
+        grid-template-columns: 1fr;
+      }
+      .tecidos-kpis {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (max-width: 600px) {
+      .tecidos-page {
+        padding: 0 14px 48px;
+      }
+      .tecidos-kpis {
+        gap: 10px;
+      }
+      .tec-kpi-card {
+        padding: 13px 14px;
+      }
+      .tec-kpi-val {
+        font-size: 1.38rem;
+      }
+      .panel-card {
+        padding: 16px;
+      }
+      .btn-tec-primary {
+        padding: 0 12px !important;
+        font-size: 0.79rem !important;
+      }
+    }
+  </style>
 </head>
 <body>
 
-<div class="wrapper">
-    <div class="alerta-topo" id="alerta-atrasos">
-        ⚠️ Atenção! Existem posições com o aluguer em atraso.
-    </div>
+<div class="tecidos-page">
 
-    <div class="page-header">
-        <div>
-            <h1>🧵 Gestão de Tecidos</h1>
-            <p>Controle o aluguer de posições no móvel de tecidos</p>
-        </div>
-        <button class="btn-gold" onclick="abrirModal()">+ Novo Pano</button>
-    </div>
+  <!-- Controlos absorvidos para a Barra Superior Flutuante Liquid Glass -->
+  <div class="page-toolbar">
+    <div class="page-toolbar-controls">
+      <div class="toolbar-search-wrap">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="pesquisa-tecidos" placeholder="Pesquisar posição ou dono..." oninput="aplicarPesquisaTecidos()">
+      </div>
 
-    <div class="tabs">
-        <button class="tab-btn active" onclick="showTab('tab-movel', this)">Móvel & Prateleiras</button>
-        <button class="tab-btn" onclick="showTab('tab-contas', this)">Donos & Contas</button>
-    </div>
+      <div class="filter-dropdown-wrap">
+        <button type="button" class="btn-filter-icon" id="btn-filter-tecidos" onclick="toggleFiltroTecidos(event)" title="Filtrar tecidos" aria-expanded="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <line x1="4" y1="6" x2="20" y2="6"></line>
+            <line x1="7" y1="12" x2="17" y2="12"></line>
+            <line x1="10" y1="18" x2="14" y2="18"></line>
+          </svg>
+          <span class="filter-badge-dot" id="dot-filtro-tecidos"></span>
+        </button>
 
-    <div id="tab-movel" class="tab-content active">
-        <div class="layout-grid">
-            <!-- MAPA VISUAL DO MÓVEL -->
-        <div class="movel-container">
-            <h2>Móvel de Tecidos</h2>
-            <div class="movel-grid" id="movel-grid">
-                <!-- Construído dinamicamente -->
+        <div class="filter-popover" id="popover-filtro-tecidos" onclick="event.stopPropagation()">
+          <div class="filter-popover-section">
+            <span class="filter-popover-label">Estado do Aluguer</span>
+            <div class="tec-filter-pills" id="pills-filtro-tecidos">
+              <button type="button" data-filtro="todos" class="ativo" onclick="aplicarFiltroEstado('todos')">Todos</button>
+              <button type="button" data-filtro="ok" onclick="aplicarFiltroEstado('ok')"><span class="tec-dot dot-green"></span>Em dia</button>
+              <button type="button" data-filtro="atrasado" onclick="aplicarFiltroEstado('atrasado')"><span class="tec-dot dot-red"></span>Em atraso</button>
             </div>
+          </div>
         </div>
+      </div>
 
-        <!-- TABELA DE GESTÃO -->
-        <div class="tabela-container">
-            <h2>Lista de Ocupações</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Pos.</th>
-                        <th>Dono / Valor</th>
-                        <th>Vencimento</th>
-                        <th style="text-align: right;">Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="tbody-tecidos">
-                    <tr><td colspan="4" class="empty">A carregar...</td></tr>
-                </tbody>
-            </table>
-        </div>
-        </div>
+      <button type="button" class="btn-tec-primary" id="btn-novo-pano-topbar" onclick="abrirModal()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        <span>Novo Pano</span>
+      </button>
     </div>
-    </div> <!-- tab-movel -->
+  </div>
 
-    <div id="tab-contas" class="tab-content">
-        <div class="tabela-container">
-            <div style="display:flex; justify-content:space-between; margin-bottom: 16px;">
-                <h2>Conta Corrente dos Donos</h2>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Dono</th>
-                        <th>Saldo de Vendas</th>
-                        <th>Dívida de Aluguer</th>
-                        <th>Balanço Final</th>
-                        <th style="text-align: right;">Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="tbody-donos">
-                    <tr><td colspan="5" class="empty">A carregar...</td></tr>
-                </tbody>
-            </table>
-        </div>
+  <!-- Sub-barra: Separadores segmentados + indicador de filtro -->
+  <div class="tecidos-subbar">
+    <div class="tabs-segmented" role="tablist">
+      <button type="button" class="tab-btn active" data-tab="tab-movel" onclick="showTab('tab-movel', this)">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+          <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+          <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+          <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+        </svg>
+        <span>Móvel &amp; Prateleiras</span>
+      </button>
+      <button type="button" class="tab-btn" data-tab="tab-contas" onclick="showTab('tab-contas', this)">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+        <span>Donos &amp; Contas</span>
+      </button>
     </div>
+
+    <div class="tec-filter-chip-bar" id="tec-filter-chip-bar">
+      <span id="tec-filter-resumo"></span>
+      <button type="button" class="btn-limpar-tec" onclick="limparFiltrosTecidos()">Limpar</button>
+    </div>
+  </div>
+
+  <!-- Alerta minimalista de vencimentos -->
+  <div class="alerta-topo" id="alerta-atrasos">
+    <div class="alerta-topo-left">
+      <span class="alerta-ico-circle" aria-hidden="true">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </span>
+      <span id="alerta-atrasos-texto">Existem posições com o aluguer em atraso.</span>
+    </div>
+    <button type="button" class="btn-alerta-ver" onclick="aplicarFiltroEstado('atrasado')">Ver em atraso</button>
+  </div>
+
+  <!-- ABA 1: MOVEL E OCUPACOES -->
+  <div id="tab-movel" class="tab-content active">
+
+    <!-- 4 KPIs Minimalistas -->
+    <div class="tecidos-kpis">
+      <div class="tec-kpi-card ativo" id="kpi-tec-todos" onclick="aplicarFiltroEstado('todos')">
+        <div class="tec-kpi-head">
+          <span>Posições Ocupadas</span>
+          <span class="tec-dot dot-dark"></span>
+        </div>
+        <div class="tec-kpi-val" id="kpi-t-ocupadas">0 / 26</div>
+        <div class="tec-kpi-sub">Total no móvel de tecidos</div>
+      </div>
+
+      <div class="tec-kpi-card" id="kpi-tec-ok" onclick="alternarFiltroKpiTec('ok')">
+        <div class="tec-kpi-head">
+          <span>Aluguer Em Dia</span>
+          <span class="tec-dot dot-green"></span>
+        </div>
+        <div class="tec-kpi-val" id="kpi-t-ok">0</div>
+        <div class="tec-kpi-sub">Dentro do prazo mensal</div>
+      </div>
+
+      <div class="tec-kpi-card" id="kpi-tec-atrasado" onclick="alternarFiltroKpiTec('atrasado')">
+        <div class="tec-kpi-head">
+          <span>Em Atraso</span>
+          <span class="tec-dot dot-red"></span>
+        </div>
+        <div class="tec-kpi-val" id="kpi-t-atrasados">0</div>
+        <div class="tec-kpi-sub">A aguardar renovação</div>
+      </div>
+
+      <div class="tec-kpi-card" id="kpi-tec-livres" onclick="abrirModal()" title="Ocupar uma posição livre">
+        <div class="tec-kpi-head">
+          <span>Vagas Disponíveis</span>
+          <span class="tec-dot dot-gold"></span>
+        </div>
+        <div class="tec-kpi-val" id="kpi-t-livres">26</div>
+        <div class="tec-kpi-sub">Clique para adicionar pano</div>
+      </div>
+    </div>
+
+    <div class="layout-grid">
+      <!-- MAPA VISUAL DO MOVEL -->
+      <div class="panel-card movel-container">
+        <div class="panel-head">
+          <h2>Móvel de Tecidos</h2>
+          <div class="panel-legend">
+            <span class="legend-item"><span class="tec-dot dot-gold"></span>Ocupado</span>
+            <span class="legend-item"><span class="tec-dot dot-red"></span>Atraso</span>
+          </div>
+        </div>
+        <div class="movel-grid" id="movel-grid">
+          <!-- Construido dinamicamente -->
+        </div>
+      </div>
+
+      <!-- TABELA DE GESTAO -->
+      <div class="panel-card tabela-container">
+        <div class="panel-head">
+          <h2>Lista de Ocupações</h2>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Pos.</th>
+              <th>Dono / Valor</th>
+              <th>Vencimento</th>
+              <th style="text-align: right;">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-tecidos">
+            <tr>
+              <td colspan="4" class="empty">
+                <svg class="spin-tec" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;" aria-hidden="true">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                </svg>
+                A carregar posições...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABA 2: DONOS E CONTAS -->
+  <div id="tab-contas" class="tab-content">
+    <div class="panel-card tabela-container">
+      <div class="panel-head">
+        <h2>Conta Corrente dos Donos</h2>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Dono</th>
+            <th>Saldo de Vendas</th>
+            <th>Dívida de Aluguer</th>
+            <th>Balanço Final</th>
+            <th style="text-align: right;">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-donos">
+          <tr><td colspan="5" class="empty">A carregar contas...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 </div>
 
 <!-- MODAL NOVO PANO -->
-<div class="modal-overlay" id="modal-pano" onclick="fecharModalFora(event)">
-    <div class="modal-card">
-        <h3 class="modal-title">Adicionar Tecido</h3>
-        
-        <div class="form-group">
-            <label>Posição Disponível *</label>
-            <select id="pano-posicao">
-                <!-- Preenchido dinamicamente -->
-            </select>
-        </div>
-        
-        <div class="form-group">
-            <label>Dono do Tecido *</label>
-            <input type="text" id="pano-dono" placeholder="Ex: Maria Silva">
-        </div>
-
-        <div class="form-group">
-            <label>Valor de Venda *</label>
-            <input type="text" id="pano-valor" placeholder="Ex: 15€ / metro">
-        </div>
-
-        <div class="form-group">
-            <label>Link da Foto (Opcional mas Recomendado)</label>
-            <input type="url" id="pano-foto" placeholder="https://exemplo.com/foto.jpg">
-        </div>
-
-        <div class="form-group">
-            <label>Data de Pagamento do Aluguer *</label>
-            <input type="date" id="pano-data-pag">
-        </div>
-
-        <div class="modal-actions">
-            <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
-            <button class="btn-gold" id="btn-guardar" onclick="salvarPano()">Adicionar</button>
-        </div>
+<div class="modal-overlay" id="modal-pano" role="dialog" aria-modal="true" aria-labelledby="modal-pano-titulo" onclick="fecharModalFora(event)">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-header-left">
+        <span class="modal-badge-ico" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="3"></rect>
+            <line x1="3" y1="9" x2="21" y2="9"></line>
+            <line x1="9" y1="21" x2="9" y2="9"></line>
+          </svg>
+        </span>
+        <h3 class="modal-title" id="modal-pano-titulo">Adicionar Tecido</h3>
+      </div>
+      <button type="button" class="modal-close-btn" onclick="fecharModal()" title="Fechar" aria-label="Fechar modal">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
     </div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="pano-posicao">Posição Disponível *</label>
+        <select id="pano-posicao"></select>
+      </div>
+
+      <div class="form-group">
+        <label for="pano-dono">Dono do Tecido *</label>
+        <input type="text" id="pano-dono" placeholder="Ex: Maria Silva">
+      </div>
+
+      <div class="form-group">
+        <label for="pano-valor">Valor de Venda *</label>
+        <input type="text" id="pano-valor" placeholder="Ex: 15€ / metro">
+      </div>
+
+      <div class="form-group">
+        <label for="pano-foto">Link da Foto (Opcional)</label>
+        <input type="url" id="pano-foto" placeholder="https://exemplo.com/foto.jpg">
+      </div>
+
+      <div class="form-group">
+        <label for="pano-data-pag">Data de Pagamento do Aluguer *</label>
+        <input type="date" id="pano-data-pag">
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+      <button type="button" class="btn-gold" id="btn-guardar" onclick="salvarPano()">Adicionar</button>
+    </div>
+  </div>
 </div>
 
 <script>
-    const SUPABASE_URL = "https://cixjmwfkfmeedajpmzmp.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeGptd2ZrZm1lZWRhanBtem1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MzM5ODIsImV4cCI6MjA2OTEwOTk4Mn0.vFvgRMK_oabG19FNauNaBu_CoQTL8QRSXcptyfY6rbM";
-    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const SUPABASE_URL = "https://cixjmwfkfmeedajpmzmp.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeGptd2ZrZm1lZWRhanBtem1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MzM5ODIsImV4cCI6MjA2OTEwOTk4Mn0.vFvgRMK_oabG19FNauNaBu_CoQTL8QRSXcptyfY6rbM";
+  const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    let tecidosAtuais = [];
+  let tecidosAtuais = [];
+  let donosAtuais = [];
+  let filtroEstadoAtual = 'todos';
+  let tabAtual = 'tab-movel';
+  let posicaoDestacada = null;
 
-    document.addEventListener("DOMContentLoaded", () => {
-        desenharMovelVazio();
-        carregarTecidos();
+  function esc(str) {
+    return String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function iniciaisDono(nome) {
+    const clean = String(nome || '').trim();
+    if (!clean) return 'T';
+    return clean.split(/\s+/).slice(0, 2).map(p => p.charAt(0).toUpperCase()).join('');
+  }
+
+  function formatarValorExibicao(valStr) {
+    const s = String(valStr ?? '').trim();
+    if (!s) return '—';
+    if (/^\d+([.,]\d+)?$/.test(s)) return s.replace('.', ',') + ' €';
+    return s;
+  }
+
+  // Mapeamento das 11 prateleiras e posicoes do movel (26 slots totais)
+  const mapPosicoes = [
+    { id: 1, full: true, slots: ['1A', '1B', '1C', '1D'] },
+    { id: 2, full: true, slots: ['2A', '2B', '2C', '2D'] },
+    { id: 3, full: false, slots: ['3'] },
+    { id: 9, full: false, slots: ['9'] },
+    { id: 4, full: false, slots: ['4'] },
+    { id: 10, full: false, slots: ['10'] },
+    { id: 5, full: false, slots: ['5'] },
+    { id: 11, full: false, slots: ['11'] },
+    { id: 6, full: true, slots: ['6A', '6B', '6C', '6D'] },
+    { id: 7, full: true, slots: ['7A', '7B', '7C', '7D'] },
+    { id: 8, full: true, slots: ['8A', '8B', '8C', '8D'] }
+  ];
+
+  const todasPosicoes = [
+    '1A', '1B', '1C', '1D',
+    '2A', '2B', '2C', '2D',
+    '3', '4', '5',
+    '6A', '6B', '6C', '6D',
+    '7A', '7B', '7C', '7D',
+    '8A', '8B', '8C', '8D',
+    '9', '10', '11'
+  ];
+
+  function desenharMovelVazio() {
+    const grid = document.getElementById('movel-grid');
+    if (!grid) return;
+    grid.innerHTML = mapPosicoes.map(p => {
+      const extraClass = p.full ? 'full' : '';
+      return `<div class="prateleira ${extraClass}" id="prat-${p.id}"><span class="prat-num">${p.id}</span><div class="prat-slots" id="prat-slots-${p.id}"></div></div>`;
+    }).join('');
+  }
+
+  function formatarData(dataIso) {
+    if (!dataIso) return '—';
+    return new Date(dataIso).toLocaleDateString('pt-PT');
+  }
+
+  // =========================================
+  // FILTROS E NAVEGACAO
+  // =========================================
+  function toggleFiltroTecidos(e) {
+    if (e) e.stopPropagation();
+    if (window.fecharMenuMobile) window.fecharMenuMobile();
+    const pop = document.getElementById('popover-filtro-tecidos');
+    const btn = document.getElementById('btn-filter-tecidos');
+    if (!pop || !btn) return;
+    const aberto = pop.classList.toggle('aberto');
+    btn.classList.toggle('ativo', aberto);
+    btn.setAttribute('aria-expanded', String(aberto));
+  }
+
+  function fecharFiltroTecidos() {
+    const pop = document.getElementById('popover-filtro-tecidos');
+    const btn = document.getElementById('btn-filter-tecidos');
+    if (pop) pop.classList.remove('aberto');
+    if (btn) {
+      btn.classList.remove('ativo');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+  }
+
+  function aplicarFiltroEstado(estado) {
+    filtroEstadoAtual = estado || 'todos';
+    sincronizarControlesFiltroTecidos();
+    atualizarInterface();
+  }
+
+  function alternarFiltroKpiTec(estado) {
+    aplicarFiltroEstado(filtroEstadoAtual === estado ? 'todos' : estado);
+  }
+
+  function limparFiltrosTecidos() {
+    filtroEstadoAtual = 'todos';
+    posicaoDestacada = null;
+    const pesq = document.getElementById('pesquisa-tecidos');
+    if (pesq) pesq.value = '';
+    sincronizarControlesFiltroTecidos();
+    if (tabAtual === 'tab-contas') renderizarDonos();
+    else atualizarInterface();
+  }
+
+  function aplicarPesquisaTecidos() {
+    if (tabAtual === 'tab-contas') renderizarDonos();
+    else atualizarInterface();
+  }
+
+  function sincronizarControlesFiltroTecidos() {
+    document.querySelectorAll('#pills-filtro-tecidos button').forEach(b => {
+      b.classList.toggle('ativo', b.dataset.filtro === filtroEstadoAtual);
+    });
+    const kpiMap = {
+      todos: 'kpi-tec-todos',
+      ok: 'kpi-tec-ok',
+      atrasado: 'kpi-tec-atrasado'
+    };
+    Object.entries(kpiMap).forEach(([k, id]) => {
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle('ativo', filtroEstadoAtual === k);
+    });
+    const btnFilter = document.getElementById('btn-filter-tecidos');
+    if (btnFilter) {
+      btnFilter.classList.toggle('tem-filtro', filtroEstadoAtual !== 'todos');
+    }
+  }
+
+  function showTab(tabId, btn) {
+    tabAtual = tabId;
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    const tabEl = document.getElementById(tabId);
+    if (tabEl) tabEl.classList.add('active');
+    const alvoBtn = btn || document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+    if (alvoBtn) alvoBtn.classList.add('active');
+    if (tabId === 'tab-contas') carregarDonos();
+    else atualizarInterface();
+  }
+
+  function selecionarPosicaoNoMovel(pos) {
+    posicaoDestacada = pos;
+    atualizarInterface();
+    const row = document.querySelector(`#tbody-tecidos tr[data-posicao="${esc(pos)}"]`);
+    if (row && row.scrollIntoView) {
+      row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
+  // =========================================
+  // CARREGAR & RENDERIZAR DONOS
+  // =========================================
+  async function carregarDonos() {
+    const tbody = document.getElementById('tbody-donos');
+    tbody.innerHTML = '<tr><td colspan="5" class="empty">A carregar contas...</td></tr>';
+
+    const { data, error } = await db.from('tecidos_donos').select('*').order('nome', { ascending: true });
+    if (error) {
+      tbody.innerHTML = `<tr><td colspan="5" class="empty" style="color:#dc2626">Erro: ${esc(error.message)}</td></tr>`;
+      return;
+    }
+
+    donosAtuais = data || [];
+    renderizarDonos();
+  }
+
+  function renderizarDonos() {
+    const tbody = document.getElementById('tbody-donos');
+    if (!tbody) return;
+    const termo = (document.getElementById('pesquisa-tecidos')?.value || '').toLowerCase().trim();
+    const lista = termo
+      ? donosAtuais.filter(d =>
+          String(d.nome || '').toLowerCase().includes(termo) ||
+          String(d.telefone || '').toLowerCase().includes(termo)
+        )
+      : donosAtuais;
+
+    const chipBar = document.getElementById('tec-filter-chip-bar');
+    const chipTxt = document.getElementById('tec-filter-resumo');
+    if (chipBar && chipTxt) {
+      chipBar.classList.toggle('visivel', Boolean(termo));
+      if (termo) chipTxt.textContent = `${lista.length} dono${lista.length === 1 ? '' : 's'} para "${termo}"`;
+    }
+
+    if (!lista || lista.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" class="empty">${termo ? `Sem donos para "${esc(termo)}".` : 'Nenhum dono registado com contas.'}</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = lista.map(d => {
+      const saldo = Number(d.saldo_vendas || 0);
+      const divida = Number(d.divida_acumulada || 0);
+      const balanco = saldo - divida;
+      const balancoClass = balanco >= 0 ? 'saldo-positivo' : 'saldo-negativo';
+      return `
+        <tr data-dono-id="${esc(d.id)}" data-dono-nome="${esc(d.nome)}">
+          <td>
+            <div class="dono-nome">${esc(d.nome)}</div>
+            <div class="valor-meta">${esc(d.telefone || 'Sem contacto')}</div>
+          </td>
+          <td style="color:#15803d;font-weight:600;">+ ${saldo.toFixed(2)} €</td>
+          <td style="color:#dc2626;font-weight:600;">− ${divida.toFixed(2)} €</td>
+          <td class="${balancoClass}">${balanco.toFixed(2)} €</td>
+          <td style="text-align: right;">
+            <button type="button" class="btn-acertar" data-dono-action="acertar">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>Acertar Contas</span>
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // =========================================
+  // VENDA & ACERTO DE CONTAS
+  // =========================================
+  async function venderTecido(id, pos, nome_dono, valorVendaStr) {
+    const valorParsed = parseFloat(String(valorVendaStr || '').replace(/[^0-9,.-]/g, '').replace(',', '.'));
+    const valorNumerico = isNaN(valorParsed) ? 0 : valorParsed;
+    const confirmar = window.mostrarConfirmacao
+      ? await window.mostrarConfirmacao(`Registar venda do tecido da Posição ${esc(pos)} por ${valorNumerico}€? O valor irá para a conta do dono.`, 'Registar Venda', 'check', 'Sim, Vender', 'Cancelar')
+      : confirm(`Vender tecido por ${valorNumerico}€?`);
+
+    if (!confirmar) return;
+
+    let { data: donos } = await db.from('tecidos_donos').select('id, saldo_vendas').eq('nome', nome_dono);
+    let dono_id = null;
+    let saldo_atual = 0;
+
+    if (!donos || donos.length === 0) {
+      const { data: newDono } = await db.from('tecidos_donos').insert([{ nome: nome_dono }]).select();
+      if (newDono && newDono.length > 0) dono_id = newDono[0].id;
+    } else {
+      dono_id = donos[0].id;
+      saldo_atual = Number(donos[0].saldo_vendas || 0);
+    }
+
+    if (dono_id) {
+      const novoSaldo = saldo_atual + valorNumerico;
+      await db.from('tecidos_donos').update({ saldo_vendas: novoSaldo }).eq('id', dono_id);
+      await db.from('tecidos_vendas').insert([{ dono_id, posicao: pos, valor_venda: valorNumerico, valor_liquido: valorNumerico }]);
+    }
+
+    await db.from('tecidos_aluguer').delete().eq('id', id);
+    await carregarTecidos();
+    window.mostrarAviso?.(`Venda registada! O valor foi adicionado à conta de ${esc(nome_dono)}.`, 'Sucesso', 'check') || alert('Vendido!');
+  }
+
+  async function acertarContas(dono_id, nome) {
+    const confirmar = window.mostrarConfirmacao
+      ? await window.mostrarConfirmacao(`Entregou o valor final a ${esc(nome)}? As contas de vendas e dívidas vão ser zeradas.`, 'Acertar Contas', 'alert', 'Sim, Entreguei', 'Cancelar')
+      : confirm(`Zerar contas de ${nome}?`);
+
+    if (!confirmar) return;
+
+    await db.from('tecidos_donos').update({ saldo_vendas: 0, divida_acumulada: 0 }).eq('id', dono_id);
+    await carregarDonos();
+    window.mostrarAviso?.('Contas acertadas com sucesso!', 'Concluído', 'check');
+  }
+
+  // =========================================
+  // CARREGAR TECIDOS & ATUALIZAR INTERFACE
+  // =========================================
+  async function carregarTecidos() {
+    const tbody = document.getElementById('tbody-tecidos');
+    if (tbody) {
+      tbody.innerHTML = `<tr><td colspan="4" class="empty">A carregar posições...</td></tr>`;
+    }
+
+    const { data, error } = await db.from('tecidos_aluguer').select('*');
+
+    if (error) {
+      if (tbody) tbody.innerHTML = `<tr><td colspan="4" class="empty" style="color:#dc2626">Erro: ${esc(error.message)}</td></tr>`;
+      return;
+    }
+
+    tecidosAtuais = (data || []).sort((a, b) =>
+      String(a.posicao).localeCompare(String(b.posicao), undefined, { numeric: true, sensitivity: 'base' })
+    );
+    atualizarInterface();
+  }
+
+  function atualizarInterface() {
+    const tbody = document.getElementById('tbody-tecidos');
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    const termo = (document.getElementById('pesquisa-tecidos')?.value || '').toLowerCase().trim();
+    const porPosicao = new Map();
+    let totalAtrasados = 0;
+    let totalOk = 0;
+
+    tecidosAtuais.forEach(item => {
+      const posKey = String(item.posicao || '').trim().toUpperCase();
+      const vencimento = new Date(item.data_vencimento);
+      const isAtrasado = vencimento < hoje;
+      if (isAtrasado) totalAtrasados++;
+      else totalOk++;
+      porPosicao.set(posKey, { item, isAtrasado });
     });
 
-    function showTab(tabId, btn) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        if (btn) btn.classList.add('active');
-        if (tabId === 'tab-contas') carregarDonos();
+    const totalOcupadas = tecidosAtuais.length;
+    const totalLivres = Math.max(todasPosicoes.length - totalOcupadas, 0);
+    const setKpi = (id, v) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = String(v);
+    };
+    setKpi('kpi-t-ocupadas', `${totalOcupadas} / ${todasPosicoes.length}`);
+    setKpi('kpi-t-ok', totalOk);
+    setKpi('kpi-t-atrasados', totalAtrasados);
+    setKpi('kpi-t-livres', totalLivres);
+
+    // Alerta discreto no topo
+    const alertaEl = document.getElementById('alerta-atrasos');
+    const alertaTxt = document.getElementById('alerta-atrasos-texto');
+    if (alertaEl) {
+      alertaEl.style.display = totalAtrasados > 0 ? 'flex' : 'none';
+      if (alertaTxt && totalAtrasados > 0) {
+        alertaTxt.textContent = totalAtrasados === 1
+          ? 'Existe 1 posição com o aluguer em atraso.'
+          : `Existem ${totalAtrasados} posições com o aluguer em atraso.`;
+      }
     }
 
-    async function carregarDonos() {
-        const tbody = document.getElementById('tbody-donos');
-        tbody.innerHTML = '<tr><td colspan="5" class="empty"><div class="spinner" style="margin:0 auto;"></div></td></tr>';
-        
-        const { data, error } = await db.from('tecidos_donos').select('*').order('nome', { ascending: true });
-        if (error) return tbody.innerHTML = '<tr><td colspan="5" class="empty" style="color:red">Erro: ' + error.message + '</td></tr>';
-        
-        if (!data || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="empty">Nenhum dono registado com contas.</td></tr>';
-            return;
+    // Reconstruir movel visual com slots ocupados + vagas disponiveis
+    desenharMovelVazio();
+    mapPosicoes.forEach(prat => {
+      const slotsContainer = document.getElementById(`prat-slots-${prat.id}`);
+      if (!slotsContainer) return;
+
+      slotsContainer.innerHTML = prat.slots.map(posCode => {
+        const entry = porPosicao.get(posCode.toUpperCase());
+        if (!entry) {
+          return `
+            <button type="button" class="pano-slot-btn" data-slot-empty="${esc(posCode)}" title="Ocupar posição #${esc(posCode)}" aria-label="Ocupar posição ${esc(posCode)}">
+              <span class="pano-empty-ring">+</span>
+            </button>`;
         }
 
-        tbody.innerHTML = data.map(d => {
-            const balanco = (d.saldo_vendas || 0) - (d.divida_acumulada || 0);
-            const balancoClass = balanco >= 0 ? 'saldo-positivo' : 'saldo-negativo';
-            return `
-                <tr>
-                    <td><strong>${d.nome}</strong><br><small style="color:#888">${d.telefone || 'Sem contato'}</small></td>
-                    <td style="color:#2e7d32">+ ${Number(d.saldo_vendas || 0).toFixed(2)}€</td>
-                    <td style="color:#c62828">- ${Number(d.divida_acumulada || 0).toFixed(2)}€</td>
-                    <td class="${balancoClass}">${balanco.toFixed(2)}€</td>
-                    <td style="text-align: right;">
-                        <button class="btn-sm" onclick="acertarContas('${d.id}', '${d.nome}')">Acertar Contas</button>
-                    </td>
-                </tr>
-            `;
-        }).join('');
+        const { item, isAtrasado } = entry;
+        const correspondeFiltro =
+          (filtroEstadoAtual === 'todos' ||
+           (filtroEstadoAtual === 'ok' && !isAtrasado) ||
+           (filtroEstadoAtual === 'atrasado' && isAtrasado)) &&
+          (!termo ||
+           String(item.posicao || '').toLowerCase().includes(termo) ||
+           String(item.nome_dono || '').toLowerCase().includes(termo));
+
+        const wrapClass = `pano-wrapper ${isAtrasado ? 'atrasado' : ''} ${correspondeFiltro ? '' : 'filtrado-dim'}`.trim();
+        const temFoto = Boolean(item.foto_url && String(item.foto_url).trim());
+        const circleStyle = temFoto ? `background-image: url('${esc(item.foto_url)}')` : '';
+        const fallbackLabel = temFoto ? '' : esc(iniciaisDono(item.nome_dono));
+        const subTag = prat.slots.length > 1 ? `<span class="pano-slot-tag">${esc(posCode)}</span>` : '';
+
+        return `
+          <button type="button" class="pano-slot-btn ${wrapClass}" data-slot-pos="${esc(item.posicao)}"
+            title="#${esc(item.posicao)} · ${esc(item.nome_dono)} (${esc(formatarValorExibicao(item.valor_venda))})"
+            aria-label="Selecionar posição ${esc(item.posicao)} de ${esc(item.nome_dono)}">
+            <span class="pano-circle" style="${circleStyle}">${fallbackLabel}</span>
+            ${subTag}
+          </button>`;
+      }).join('');
+    });
+
+    // Filtrar lista de ocupacoes (tabela)
+    const filtrados = tecidosAtuais.filter(item => {
+      const vencimento = new Date(item.data_vencimento);
+      const isAtrasado = vencimento < hoje;
+      if (filtroEstadoAtual === 'ok' && isAtrasado) return false;
+      if (filtroEstadoAtual === 'atrasado' && !isAtrasado) return false;
+      if (termo) {
+        const matchPos = String(item.posicao || '').toLowerCase().includes(termo);
+        const matchDono = String(item.nome_dono || '').toLowerCase().includes(termo);
+        if (!matchPos && !matchDono) return false;
+      }
+      return true;
+    });
+
+    const chipBar = document.getElementById('tec-filter-chip-bar');
+    const chipTxt = document.getElementById('tec-filter-resumo');
+    if (chipBar && chipTxt && tabAtual === 'tab-movel') {
+      const ativo = filtroEstadoAtual !== 'todos' || Boolean(termo);
+      chipBar.classList.toggle('visivel', ativo);
+      if (ativo) {
+        chipTxt.textContent = `A mostrar ${filtrados.length} de ${tecidosAtuais.length} ocupaç${tecidosAtuais.length === 1 ? 'ão' : 'ões'}`;
+      }
     }
 
-    async function venderTecido(id, pos, nome_dono, valorVendaStr) {
-        const valorNumerico = parseFloat(valorVendaStr.replace(/[^0-9,.-]/g, '').replace(',', '.'));
-        const confirmar = window.mostrarConfirmacao 
-            ? await window.mostrarConfirmacao(`Registar venda do tecido da Posição ${pos} por ${valorNumerico}€? O valor irá para a conta do dono.`, 'Vender', '💰', 'Sim, Vender', 'Cancelar')
-            : confirm(`Vender tecido por ${valorNumerico}€?`);
-            
-        if (!confirmar) return;
-
-        // 1. Verificar se dono existe
-        let { data: donos } = await db.from('tecidos_donos').select('id, saldo_vendas').eq('nome', nome_dono);
-        let dono_id = null;
-        let saldo_atual = 0;
-        
-        if (!donos || donos.length === 0) {
-            const { data: newDono } = await db.from('tecidos_donos').insert([{ nome: nome_dono }]).select();
-            if(newDono && newDono.length > 0) dono_id = newDono[0].id;
-        } else {
-            dono_id = donos[0].id;
-            saldo_atual = Number(donos[0].saldo_vendas || 0);
-        }
-
-        // 2. Adicionar ao saldo
-        if(dono_id) {
-            const novoSaldo = saldo_atual + valorNumerico;
-            await db.from('tecidos_donos').update({ saldo_vendas: novoSaldo }).eq('id', dono_id);
-            await db.from('tecidos_vendas').insert([{ dono_id, posicao: pos, valor_venda: valorNumerico, valor_liquido: valorNumerico }]);
-        }
-
-        // 3. Remover do móvel
-        await db.from('tecidos_aluguer').delete().eq('id', id);
-        carregarTecidos();
-        window.mostrarAviso?.('Venda registada! O valor foi adicionado à conta de ' + nome_dono, 'Sucesso', '✅') || alert('Vendido!');
+    if (!tbody) return;
+    if (filtrados.length === 0) {
+      const msgVazio = tecidosAtuais.length === 0
+        ? 'Nenhum tecido ocupado no móvel.'
+        : 'Nenhuma ocupação encontrada para o filtro atual.';
+      tbody.innerHTML = `<tr><td colspan="4" class="empty">${msgVazio}</td></tr>`;
+      return;
     }
 
-    async function acertarContas(dono_id, nome) {
-        const confirmar = window.mostrarConfirmacao 
-            ? await window.mostrarConfirmacao(`Entregou o valor final a ${nome}? As contas de vendas e dívidas vão ser zeradas.`, 'Acertar Contas', '🤝', 'Sim, Entreguei', 'Cancelar')
-            : confirm(`Zerar contas de ${nome}?`);
-            
-        if(!confirmar) return;
-        
-        await db.from('tecidos_donos').update({ saldo_vendas: 0, divida_acumulada: 0 }).eq('id', dono_id);
-        carregarDonos();
-        window.mostrarAviso?.('Contas acertadas com sucesso!', 'Pronto', '✅');
+    tbody.innerHTML = filtrados.map(item => {
+      const vencimento = new Date(item.data_vencimento);
+      const isAtrasado = vencimento < hoje;
+      const statusBadge = isAtrasado
+        ? `<span class="badge-status status-atrasado"><span class="dot"></span>Atrasado</span>`
+        : `<span class="badge-status status-ok"><span class="dot"></span>Em dia</span>`;
+
+      const temFoto = Boolean(item.foto_url && String(item.foto_url).trim());
+      const thumbStyle = temFoto ? `background-image: url('${esc(item.foto_url)}')` : '';
+      const thumbTxt = temFoto ? '' : esc(iniciaisDono(item.nome_dono));
+      const rowDestaque = posicaoDestacada && posicaoDestacada === String(item.posicao) ? 'destacada' : '';
+
+      return `
+        <tr class="${rowDestaque}" data-id="${esc(item.id)}" data-posicao="${esc(item.posicao)}" data-dono="${esc(item.nome_dono)}" data-valor="${esc(item.valor_venda)}" data-vencimento="${esc(item.data_vencimento)}">
+          <td>
+            <div class="pos-cell">
+              <span class="pos-mini-thumb" style="${thumbStyle}">${thumbTxt}</span>
+              <span class="pos-pill">#${esc(item.posicao)}</span>
+            </div>
+          </td>
+          <td>
+            <div class="dono-nome">${esc(item.nome_dono)}</div>
+            <div class="valor-meta">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+              <span>${esc(formatarValorExibicao(item.valor_venda))}</span>
+            </div>
+          </td>
+          <td>
+            <div class="venc-data">${formatarData(item.data_vencimento)}</div>
+            ${statusBadge}
+          </td>
+          <td style="text-align: right;">
+            <div class="acoes">
+              <button type="button" class="t-ico-btn btn-vender" data-action="vender" title="Registar venda" aria-label="Vender tecido da posição ${esc(item.posicao)}">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <path d="M16 10a4 4 0 0 1-8 0"></path>
+                </svg>
+              </button>
+              <button type="button" class="t-ico-btn btn-renovar-ico" data-action="renovar" title="Renovar +1 mês" aria-label="Renovar mensalidade da posição ${esc(item.posicao)}">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <polyline points="23 4 23 10 17 10"></polyline>
+                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                </svg>
+              </button>
+              <button type="button" class="t-ico-btn btn-del-ico" data-action="remover" title="Remover do móvel" aria-label="Remover posição ${esc(item.posicao)}">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </button>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  // =========================================
+  // MODAL NOVO PANO
+  // =========================================
+  function abrirModal(posicaoPreSelecionada) {
+    const posOcupadas = tecidosAtuais.map(t => String(t.posicao || '').trim().toUpperCase());
+    const selPos = document.getElementById('pano-posicao');
+    selPos.innerHTML = '';
+
+    let temLivre = false;
+    todasPosicoes.forEach(pos => {
+      if (!posOcupadas.includes(pos.toUpperCase())) {
+        selPos.innerHTML += `<option value="${pos}">Posição ${pos}</option>`;
+        temLivre = true;
+      }
+    });
+
+    if (!temLivre) {
+      window.mostrarAviso?.("Não há posições livres no móvel!", "Móvel Completo", "alert") || alert("Móvel cheio!");
+      return;
     }
 
-    // Mapeamento das 11 posições no grid
-    const mapPosicoes = [
-        { id: 1, full: true },
-        { id: 2, full: true },
-        { id: 3, full: false },
-        { id: 9, full: false },
-        { id: 4, full: false },
-        { id: 10, full: false },
-        { id: 5, full: false },
-        { id: 11, full: false },
-        { id: 6, full: true },
-        { id: 7, full: true },
-        { id: 8, full: true }
-    ];
-
-    function desenharMovelVazio() {
-        const grid = document.getElementById('movel-grid');
-        grid.innerHTML = mapPosicoes.map(p => {
-            const extraClass = p.full ? 'full' : '';
-            return `<div class="prateleira ${extraClass}" id="prat-${p.id}">${p.id}</div>`;
-        }).join('');
+    if (posicaoPreSelecionada && !posOcupadas.includes(String(posicaoPreSelecionada).trim().toUpperCase())) {
+      selPos.value = String(posicaoPreSelecionada).trim();
     }
 
-    function formatarData(dataIso) {
-        if (!dataIso) return '-';
-        return new Date(dataIso).toLocaleDateString('pt-PT');
+    document.getElementById('pano-dono').value = '';
+    document.getElementById('pano-valor').value = '';
+    document.getElementById('pano-foto').value = '';
+
+    const hojeIso = new Date().toISOString().split('T')[0];
+    document.getElementById('pano-data-pag').value = hojeIso;
+
+    document.getElementById('modal-pano').classList.add('active');
+    if (window.fecharMenuMobile) window.fecharMenuMobile();
+    setTimeout(() => {
+      const donoInp = document.getElementById('pano-dono');
+      if (donoInp) donoInp.focus();
+    }, 40);
+  }
+
+  function fecharModal() {
+    document.getElementById('modal-pano').classList.remove('active');
+  }
+
+  function fecharModalFora(e) {
+    if (e.target.id === 'modal-pano') fecharModal();
+  }
+
+  async function salvarPano() {
+    const posicao = document.getElementById('pano-posicao').value.trim();
+    const dono = document.getElementById('pano-dono').value.trim();
+    const valor = document.getElementById('pano-valor').value.trim();
+    const foto = document.getElementById('pano-foto').value.trim();
+    const dataPagTxt = document.getElementById('pano-data-pag').value;
+
+    if (!posicao) {
+      window.mostrarAviso?.("Selecione uma posição disponível.", "Atenção", "alert") || alert("Selecione uma posição.");
+      return;
+    }
+    if (!dono || !valor || !dataPagTxt) {
+      window.mostrarAviso?.("Preencha o Dono, Valor e Data de Pagamento.", "Campos Obrigatórios", "alert") || alert("Campos obrigatórios em falta.");
+      return;
     }
 
-    async function carregarTecidos() {
-        const tbody = document.getElementById('tbody-tecidos');
-        tbody.innerHTML = `<tr><td colspan="4" class="empty"><div class="spinner" style="margin:0 auto;"></div></td></tr>`;
-        
-        const { data, error } = await db.from('tecidos_aluguer').select('*');
-
-        if (error) {
-            tbody.innerHTML = `<tr><td colspan="4" class="empty" style="color:red">Erro: ${error.message}</td></tr>`;
-            return;
-        }
-
-        tecidosAtuais = (data || []).sort((a, b) => 
-            String(a.posicao).localeCompare(String(b.posicao), undefined, { numeric: true, sensitivity: 'base' })
-        );
-        atualizarInterface();
+    const ocupada = tecidosAtuais.some(t => String(t.posicao || '').trim().toUpperCase() === posicao.toUpperCase());
+    if (ocupada) {
+      window.mostrarAviso?.(`A posição ${esc(posicao)} já está ocupada por outro tecido!`, "Posição Ocupada", "alert") || alert("Posição já ocupada!");
+      return;
     }
 
-    const todasPosicoes = [
-        '1A', '1B', '1C', '1D',
-        '2A', '2B', '2C', '2D',
-        '3',
-        '4',
-        '5',
-        '6A', '6B', '6C', '6D',
-        '7A', '7B', '7C', '7D',
-        '8A', '8B', '8C', '8D',
-        '9',
-        '10',
-        '11'
-    ];
+    const dPag = new Date(dataPagTxt);
+    const dVenc = new Date(dPag);
+    dVenc.setMonth(dVenc.getMonth() + 1);
+    const dataVencTxt = dVenc.toISOString().split('T')[0];
 
-    function atualizarInterface() {
-        const tbody = document.getElementById('tbody-tecidos');
-        const hoje = new Date();
-        hoje.setHours(0,0,0,0);
-        let temAtrasos = false;
+    const btn = document.getElementById('btn-guardar');
+    btn.disabled = true;
+    btn.textContent = 'A guardar...';
 
-        // Limpar visual do móvel
-        desenharMovelVazio();
-
-        if (tecidosAtuais.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" class="empty">Nenhum tecido no móvel.</td></tr>`;
-        } else {
-            tbody.innerHTML = tecidosAtuais.map(item => {
-                const vencimento = new Date(item.data_vencimento);
-                const isAtrasado = vencimento < hoje;
-                if (isAtrasado) temAtrasos = true;
-
-                // ATUALIZAR MÓVEL
-                // Acha a base da prateleira (ex: '1A' -> '1', '10' -> '10')
-                const baseId = item.posicao.toString().replace(/[A-Za-z]/g, '').trim();
-                const pratEl = document.getElementById(`prat-${baseId}`);
-                
-                if (pratEl) {
-                    const imgUrl = item.foto_url || 'https://via.placeholder.com/150/e0dbd0/888?text=Pano';
-                    const classAtrasado = isAtrasado ? 'atrasado' : '';
-                    pratEl.innerHTML += `
-                        <div class="pano-wrapper ${classAtrasado}" title="Posição ${item.posicao} - ${item.nome_dono}">
-                            <div class="pano-circle" style="background-image: url('${imgUrl}')"></div>
-                        </div>
-                    `;
-                }
-
-                // LINHA DA TABELA
-                const statusBadge = isAtrasado 
-                    ? `<span class="badge-status status-atrasado">Atrasado</span>` 
-                    : `<span class="badge-status status-ok">OK</span>`;
-
-                return `
-                <tr>
-                    <td style="font-weight:700; font-size:1.1rem; color:var(--dark)">#${item.posicao}</td>
-                    <td>
-                        <strong style="color: #1a1a2e">${item.nome_dono}</strong><br>
-                        <span style="font-size: 0.8rem; color:#666">💰 ${item.valor_venda}</span>
-                    </td>
-                    <td>
-                        ${formatarData(item.data_vencimento)}<br>
-                        ${statusBadge}
-                    </td>
-                    <td style="text-align: right;">
-                        <div class="acoes" style="justify-content: flex-end;">
-                            <button class="btn-sm btn-gold" onclick="venderTecido('${item.id}', '${item.posicao}', '${item.nome_dono}', '${item.valor_venda}')">💰 Vender</button>
-                            <button class="btn-sm btn-renovar" onclick="renovarMensalidade('${item.id}', '${item.data_vencimento}')">Renovar Mês</button>
-                            <button class="btn-sm btn-del" onclick="apagarTecido('${item.id}', '${item.posicao}')">Remover</button>
-                        </div>
-                    </td>
-                </tr>`;
-            }).join('');
-        }
-
-        // Mostrar Alerta se houver atrasos
-        document.getElementById('alerta-atrasos').style.display = temAtrasos ? 'flex' : 'none';
+    let dono_id = null;
+    try {
+      const { data: donos } = await db.from('tecidos_donos').select('id').eq('nome', dono);
+      if (!donos || donos.length === 0) {
+        const { data: newDono } = await db.from('tecidos_donos').insert([{ nome: dono }]).select();
+        if (newDono && newDono.length > 0) dono_id = newDono[0].id;
+      } else {
+        dono_id = donos[0].id;
+      }
+    } catch (e) {
+      console.warn("Erro ao associar dono:", e);
     }
 
-    function abrirModal() {
-        // Preencher o select de posições apenas com as disponíveis
-        const posOcupadas = tecidosAtuais.map(t => String(t.posicao || '').trim().toUpperCase());
-        const selPos = document.getElementById('pano-posicao');
-        selPos.innerHTML = '';
-        
-        let temLivre = false;
-        todasPosicoes.forEach(pos => {
-            if (!posOcupadas.includes(pos.toUpperCase())) {
-                selPos.innerHTML += `<option value="${pos}">Posição ${pos}</option>`;
-                temLivre = true;
-            }
-        });
+    const { error } = await db.from('tecidos_aluguer').insert([{
+      posicao,
+      nome_dono: dono,
+      dono_id: dono_id || null,
+      valor_venda: valor,
+      foto_url: foto || null,
+      data_pagamento: dataPagTxt,
+      data_vencimento: dataVencTxt
+    }]);
 
-        if (!temLivre) {
-            window.mostrarAviso?.("Não há posições livres no móvel!", "Aviso", "⚠️") || alert("Móvel cheio!");
-            return;
-        }
+    btn.disabled = false;
+    btn.textContent = 'Adicionar';
 
-        document.getElementById('pano-dono').value = '';
-        document.getElementById('pano-valor').value = '';
-        document.getElementById('pano-foto').value = '';
-        
-        // Data atual por defeito
-        const hojeIso = new Date().toISOString().split('T')[0];
-        document.getElementById('pano-data-pag').value = hojeIso;
-
-        document.getElementById('modal-pano').classList.add('active');
+    if (error) {
+      console.error(error);
+      window.mostrarAviso?.("Erro: " + esc(error.message), "Erro", "error") || alert("Erro: " + error.message);
+      return;
     }
 
-    function fecharModal() {
-        document.getElementById('modal-pano').classList.remove('active');
+    fecharModal();
+    await carregarTecidos();
+  }
+
+  async function renovarMensalidade(id, dataVencAtual) {
+    const confirmar = window.mostrarConfirmacao
+      ? await window.mostrarConfirmacao("Confirmar pagamento da mensalidade e adicionar +1 mês?", "Renovar Mensalidade", "check", "Renovar", "Cancelar")
+      : confirm("Confirmar renovação de +1 mês?");
+
+    if (!confirmar) return;
+
+    const d = new Date(dataVencAtual);
+    d.setMonth(d.getMonth() + 1);
+    const novoVenc = d.toISOString().split('T')[0];
+
+    const { error } = await db.from('tecidos_aluguer').update({
+      data_vencimento: novoVenc
+    }).eq('id', id);
+
+    if (error) {
+      window.mostrarAviso?.("Erro ao renovar: " + esc(error.message), "Erro", "error") || alert("Erro: " + error.message);
+    } else {
+      await carregarTecidos();
+    }
+  }
+
+  async function apagarTecido(id, pos) {
+    const confirmar = window.mostrarConfirmacao
+      ? await window.mostrarConfirmacao(`Tem a certeza que deseja remover o tecido da Posição ${esc(pos)}?`, "Remover Tecido", "alert", "Remover", "Cancelar")
+      : confirm(`Tem a certeza que deseja remover da Posição ${pos}?`);
+
+    if (!confirmar) return;
+
+    const { error } = await db.from('tecidos_aluguer').delete().eq('id', id);
+
+    if (error) {
+      window.mostrarAviso?.("Erro ao remover: " + esc(error.message), "Erro", "error") || alert("Erro: " + error.message);
+    } else {
+      await carregarTecidos();
+    }
+  }
+
+  // =========================================
+  // INICIALIZACAO E EVENTOS DELEGADOS
+  // =========================================
+  document.addEventListener("DOMContentLoaded", () => {
+    desenharMovelVazio();
+    sincronizarControlesFiltroTecidos();
+    carregarTecidos();
+
+    const movelEl = document.getElementById('movel-grid');
+    if (movelEl) {
+      movelEl.addEventListener('click', (e) => {
+        const emptySlot = e.target.closest('button[data-slot-empty]');
+        if (emptySlot) {
+          abrirModal(emptySlot.dataset.slotEmpty);
+          return;
+        }
+        const occSlot = e.target.closest('button[data-slot-pos]');
+        if (occSlot) {
+          selecionarPosicaoNoMovel(occSlot.dataset.slotPos);
+        }
+      });
     }
 
-    function fecharModalFora(e) {
-        if (e.target.id === 'modal-pano') fecharModal();
+    const tbodyTec = document.getElementById('tbody-tecidos');
+    if (tbodyTec) {
+      tbodyTec.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;
+        const row = btn.closest('tr[data-id]');
+        if (!row) return;
+        const { id, posicao, dono, valor, vencimento } = row.dataset;
+        const act = btn.dataset.action;
+        if (act === 'vender') venderTecido(id, posicao, dono, valor);
+        else if (act === 'renovar') renovarMensalidade(id, vencimento);
+        else if (act === 'remover') apagarTecido(id, posicao);
+      });
     }
 
-    async function salvarPano() {
-        const posicao = document.getElementById('pano-posicao').value.trim();
-        const dono = document.getElementById('pano-dono').value.trim();
-        const valor = document.getElementById('pano-valor').value.trim();
-        const foto = document.getElementById('pano-foto').value.trim();
-        const dataPagTxt = document.getElementById('pano-data-pag').value;
+    const tbodyDonos = document.getElementById('tbody-donos');
+    if (tbodyDonos) {
+      tbodyDonos.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-dono-action="acertar"]');
+        if (!btn) return;
+        const row = btn.closest('tr[data-dono-id]');
+        if (!row) return;
+        acertarContas(row.dataset.donoId, row.dataset.donoNome);
+      });
+    }
 
-        if (!posicao) {
-            window.mostrarAviso?.("Selecione uma posição disponível.", "Atenção", "⚠️") || alert("Selecione uma posição.");
-            return;
-        }
+    document.addEventListener('click', (e) => {
+      const pop = document.getElementById('popover-filtro-tecidos');
+      const btn = document.getElementById('btn-filter-tecidos');
+      if (pop && pop.classList.contains('aberto') && !pop.contains(e.target) && (!btn || !btn.contains(e.target))) {
+        fecharFiltroTecidos();
+      }
+    });
 
-        if (!dono || !valor || !dataPagTxt) {
-            window.mostrarAviso?.("Preencha o Dono, Valor e Data de Pagamento.", "Atenção", "⚠️") || alert("Campos obrigatórios em falta.");
-            return;
-        }
-
-        // Validação extra: nunca permitir 2 tecidos na mesma posição
-        const ocupada = tecidosAtuais.some(t => String(t.posicao || '').trim().toUpperCase() === posicao.toUpperCase());
-        if (ocupada) {
-            window.mostrarAviso?.(`A posição ${posicao} já está ocupada por outro tecido!`, "Posição Ocupada", "⚠️") || alert("Posição já ocupada!");
-            return;
-        }
-
-        // Calcula vencimento (+ 1 mês)
-        const dPag = new Date(dataPagTxt);
-        const dVenc = new Date(dPag);
-        dVenc.setMonth(dVenc.getMonth() + 1);
-        const dataVencTxt = dVenc.toISOString().split('T')[0];
-
-        const btn = document.getElementById('btn-guardar');
-        btn.disabled = true;
-        btn.textContent = 'A guardar...';
-
-        // Vincular ou criar dono se necessário
-        let dono_id = null;
-        try {
-            const { data: donos } = await db.from('tecidos_donos').select('id').eq('nome', dono);
-            if (!donos || donos.length === 0) {
-                const { data: newDono } = await db.from('tecidos_donos').insert([{ nome: dono }]).select();
-                if (newDono && newDono.length > 0) dono_id = newDono[0].id;
-            } else {
-                dono_id = donos[0].id;
-            }
-        } catch (e) {
-            console.warn("Erro ao associar dono:", e);
-        }
-
-        const { error } = await db.from('tecidos_aluguer').insert([{
-            posicao,
-            nome_dono: dono,
-            dono_id: dono_id || null,
-            valor_venda: valor,
-            foto_url: foto || null,
-            data_pagamento: dataPagTxt,
-            data_vencimento: dataVencTxt
-        }]);
-
-        btn.disabled = false;
-        btn.textContent = 'Adicionar';
-
-        if (error) {
-            console.error(error);
-            window.mostrarAviso?.("Erro: " + error.message, "Erro", "❌") || alert("Erro: " + error.message);
-            return;
-        }
-
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        fecharFiltroTecidos();
         fecharModal();
-        carregarTecidos();
-    }
-
-    async function renovarMensalidade(id, dataVencAtual) {
-        const confirmar = window.mostrarConfirmacao 
-            ? await window.mostrarConfirmacao("Confirmar pagamento da mensalidade e adicionar +1 mês?", "Renovar", "🔄", "Renovar", "Cancelar")
-            : confirm("Confirmar renovação de +1 mês?");
-            
-        if (!confirmar) return;
-
-        // Adiciona 1 mês à data de vencimento anterior
-        const d = new Date(dataVencAtual);
-        d.setMonth(d.getMonth() + 1);
-        const novoVenc = d.toISOString().split('T')[0];
-
-        const { error } = await db.from('tecidos_aluguer').update({
-            data_vencimento: novoVenc
-        }).eq('id', id);
-
-        if (error) {
-            window.mostrarAviso?.("Erro ao renovar: " + error.message, "Erro", "❌") || alert("Erro: " + error.message);
-        } else {
-            carregarTecidos();
-        }
-    }
-
-    async function apagarTecido(id, pos) {
-        const confirmar = window.mostrarConfirmacao 
-            ? await window.mostrarConfirmacao(`Tem a certeza que deseja remover o tecido da Posição ${pos}?`, "Remover", "🗑️", "Remover", "Cancelar")
-            : confirm(`Tem a certeza que deseja remover da Posição ${pos}?`);
-            
-        if (!confirmar) return;
-
-        const { error } = await db.from('tecidos_aluguer').delete().eq('id', id);
-
-        if (error) {
-            window.mostrarAviso?.("Erro ao remover: " + error.message, "Erro", "❌") || alert("Erro: " + error.message);
-        } else {
-            carregarTecidos();
-        }
-    }
+      }
+    });
+  });
 </script>
 
 </body>

@@ -2,59 +2,218 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Adicionar Pedido - Eva Leite Atelier</title>
-  <link rel="stylesheet" href="style.css">
-  
+  <link rel="stylesheet" href="style.css?v=2">
+  <script src="auth-guard.js"></script>
+  <script>
+    if (localStorage.getItem("tipoUsuario") === "cliente") {
+      window.location.href = "lista-espera.html";
+    }
+  </script>
+  <script src="navbar.js?v=7" defer></script>
+
   <style>
+    :root {
+      --ped-bg: #f5f1ea;
+      --ped-card: #ffffff;
+      --ped-dark: #141414;
+      --ped-text: #1f2937;
+      --ped-muted: #6b7280;
+      --ped-gold: #b8860b;
+      --ped-green: #15803d;
+      --ped-green-soft: #ecfdf3;
+      --ped-red: #dc2626;
+      --ped-red-soft: #fef2f2;
+      --ped-border: rgba(17, 24, 39, 0.075);
+      --ped-shadow: 0 2px 14px rgba(0, 0, 0, 0.035);
+      --ped-radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
     body {
-      font-family: sans-serif;
-      padding: 2rem;
-      background: #f9f9f9;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--ped-bg);
+      color: var(--ped-text);
+      margin: 0;
+      padding: 0;
     }
-    form {
-      max-width: 1000px;
-      margin: auto;
+
+    .pedido-page {
+      max-width: 1180px;
+      margin: 14px auto 64px;
+      padding: 0 24px 60px;
     }
-    input, textarea, select, button {
-      display: block;
-      width: 100%;
-      margin-bottom: 1rem;
-      padding: 0.8rem;
-      font-size: 1rem;
+
+    #form-pedido {
+      max-width: none;
+      margin: 0;
     }
-    .item {
-      background: #fff;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    .item textarea {
-      width: 100%;
-      margin-top: 10px;
-      padding: 8px;
-      box-sizing: border-box;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    #itens {
-      margin-top: 1rem;
-    }
+
     .form-layout {
       display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap: 30px;
+      grid-template-columns: 1.22fr 0.88fr;
+      gap: 22px;
       align-items: start;
     }
-    .col-left, .col-right {
+
+    .col-left,
+    .col-right {
       display: flex;
       flex-direction: column;
+      gap: 20px;
     }
-    @media (max-width: 850px) {
-      .form-layout {
-        grid-template-columns: 1fr; /* Responsivo */
-      }
+
+    .col-right {
+      position: sticky;
+      top: 90px;
     }
+
+    /* Cards Principais */
+    .ped-card {
+      background: var(--ped-card);
+      border: 1px solid var(--ped-border);
+      border-radius: var(--ped-radius);
+      padding: 22px 24px;
+      box-shadow: var(--ped-shadow);
+    }
+
+    .ped-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 14px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid #f2eee6;
+      flex-wrap: wrap;
+    }
+
+    .ped-card-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ped-card-ico {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #f5f1ea;
+      color: var(--ped-dark);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .ped-card-ico svg {
+      width: 15px;
+      height: 15px;
+      stroke: currentColor;
+      stroke-width: 1.9;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    .ped-card-title {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 650;
+      color: var(--ped-dark);
+      letter-spacing: -0.015em;
+      text-align: left !important;
+    }
+
+    .link-central-clientes {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 11px;
+      border-radius: 999px;
+      background: #f7f4ed;
+      border: 1px solid #e7e0d3;
+      color: #4b453c;
+      font-size: 0.76rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+    .link-central-clientes:hover {
+      background: var(--ped-dark);
+      border-color: var(--ped-dark);
+      color: #ffffff;
+    }
+    .link-central-clientes svg {
+      width: 13px;
+      height: 13px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+    }
+
+    /* Labels & Inputs dentro do formulario */
+    .ped-field {
+      margin-bottom: 15px;
+    }
+    .ped-field:last-child {
+      margin-bottom: 0;
+    }
+    .ped-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 15px;
+    }
+
+    #form-pedido label {
+      display: block;
+      margin: 0 0 6px !important;
+      font-size: 0.79rem;
+      font-weight: 600;
+      color: #4b5563;
+      text-align: left;
+    }
+
+    #form-pedido input[type="text"],
+    #form-pedido input[type="number"],
+    #form-pedido input[type="date"],
+    #form-pedido input[type="email"],
+    #form-pedido select,
+    #form-pedido textarea {
+      width: 100%;
+      margin: 0 !important;
+      padding: 10px 13px;
+      border: 1px solid #ddd6ca;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      background: #fdfcfa;
+      color: var(--ped-dark);
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    #form-pedido input:focus,
+    #form-pedido select:focus,
+    #form-pedido textarea:focus {
+      background: #ffffff;
+      border-color: var(--ped-dark);
+      box-shadow: 0 0 0 3px rgba(20, 20, 20, 0.06);
+    }
+
+    #form-pedido input[readonly] {
+      background: #f5f2eb;
+      color: var(--ped-dark);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      cursor: default;
+    }
+
+    /* Autocomplete de Cliente */
     .cliente-autocomplete-wrap {
       position: relative;
       width: 100%;
@@ -62,245 +221,602 @@
     .cliente-sugestoes-box {
       display: none;
       position: absolute;
-      top: calc(100% - 12px);
+      top: calc(100% + 6px);
       left: 0;
       right: 0;
-      background: #fff;
-      border: 1.5px solid #d4af37;
-      border-radius: 8px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+      background: #ffffff;
+      border: 1px solid #ddd5c7;
+      border-radius: 12px;
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.12);
       max-height: 240px;
       overflow-y: auto;
-      z-index: 1000;
+      z-index: 1200;
     }
     .cliente-sugestao-item {
       padding: 10px 14px;
-      border-bottom: 1px solid #f0ece4;
+      border-bottom: 1px solid #f4f1ea;
       cursor: pointer;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
+      transition: background 0.12s ease;
     }
-    .cliente-sugestao-item:last-child {
-      border-bottom: none;
+    .cliente-sugestao-item:last-child { border-bottom: none; }
+    .cliente-sugestao-item:hover { background: #faf7f0; }
+
+    .medidas-alerta {
+      display: none;
+      background: var(--ped-green-soft);
+      border: 1px solid rgba(21, 128, 61, 0.2);
+      color: #166534;
+      border-radius: 11px;
+      padding: 10px 13px;
+      font-size: 0.82rem;
+      line-height: 1.45;
+      margin-top: 8px;
     }
-    .cliente-sugestao-item:hover {
-      background: #fdf8eb;
+
+    /* Lista de Itens Dinamicos (#itens criada por script.js) */
+    #itens {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    #itens:empty::after {
+      content: 'Ainda não existem itens neste pedido. Clique abaixo para adicionar.';
+      display: block;
+      text-align: center;
+      padding: 22px 16px;
+      border-radius: 12px;
+      background: #faf8f4;
+      border: 1px dashed #dfd8cb;
+      color: var(--ped-muted);
+      font-size: 0.84rem;
+    }
+
+    #itens .item {
+      background: #faf8f4 !important;
+      border: 1px solid #e7e1d5 !important;
+      border-left: 3px solid var(--ped-dark) !important;
+      border-radius: 14px !important;
+      padding: 16px !important;
+      margin: 0 !important;
+      box-shadow: none;
+    }
+    #itens .item label {
+      margin-top: 12px !important;
+      margin-bottom: 5px !important;
+    }
+    #itens .item .combobox-container label:first-child {
+      margin-top: 0 !important;
+    }
+    #itens .item textarea {
+      min-height: 68px;
+      resize: vertical;
+      margin-top: 12px !important;
+      background: #ffffff;
+    }
+    #itens .item input {
+      background: #ffffff;
+    }
+
+    /* Botao + Adicionar Item */
+    .btn-add-item {
+      width: 100% !important;
+      margin: 0 !important;
+      padding: 11px 16px !important;
+      border-radius: 12px !important;
+      border: 1px dashed #cfc7b8 !important;
+      background: #faf8f4 !important;
+      color: var(--ped-dark) !important;
+      font-family: inherit;
+      font-size: 0.87rem !important;
+      font-weight: 600 !important;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+    }
+    .btn-add-item:hover {
+      background: var(--ped-dark) !important;
+      border-color: var(--ped-dark) !important;
+      border-style: solid !important;
+      color: #ffffff !important;
+    }
+    .btn-add-item svg {
+      width: 15px;
+      height: 15px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+    }
+
+    /* Sub-secoes no Card Financeiro (Sem caixas tracejadas antigas) */
+    .fin-subbox {
+      padding: 15px 16px;
+      border-radius: 14px;
+      background: #faf8f4;
+      border: 1px solid #ebe5da;
+      margin-bottom: 16px;
+    }
+    .fin-subbox.pagamento {
+      background: #f8fbf9;
+      border-color: #dcebe0;
+    }
+    .fin-subhead {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.84rem;
+      font-weight: 650;
+      color: var(--ped-dark);
+      margin-bottom: 11px;
+    }
+    .fin-subhead svg {
+      width: 15px;
+      height: 15px;
+      stroke: currentColor;
+      stroke-width: 1.9;
+      fill: none;
+      color: var(--ped-muted);
+    }
+    .fin-subbox.pagamento .fin-subhead svg {
+      color: var(--ped-green);
+    }
+
+    .cupao-row {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+    }
+    .cupao-row input {
+      flex: 1;
+      min-width: 0;
+      background: #ffffff !important;
+    }
+    .btn-verificar-cupao {
+      width: auto !important;
+      margin: 0 !important;
+      padding: 0 16px !important;
+      border-radius: 10px !important;
+      border: 1px solid var(--ped-dark) !important;
+      background: var(--ped-dark) !important;
+      color: #ffffff !important;
+      font-family: inherit;
+      font-size: 0.83rem !important;
+      font-weight: 600 !important;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s ease;
+    }
+    .btn-verificar-cupao:hover {
+      background: #2c2c2c !important;
+    }
+
+    .cupao-msg-ok {
+      margin-top: 10px;
+      padding: 11px 12px;
+      border-radius: 10px;
+      background: var(--ped-green-soft);
+      border: 1px solid rgba(21, 128, 61, 0.2);
+      color: #166534;
+      font-size: 0.83rem;
+      line-height: 1.45;
+    }
+    .cupao-msg-err {
+      margin-top: 9px;
+      padding: 9px 12px;
+      border-radius: 10px;
+      background: var(--ped-red-soft);
+      border: 1px solid rgba(220, 38, 38, 0.2);
+      color: var(--ped-red);
+      font-size: 0.83rem;
+      font-weight: 500;
+    }
+    .cupao-code-pill {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(21, 128, 61, 0.25);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--ped-dark);
+    }
+    .btn-aplicar-cupao {
+      width: auto !important;
+      margin: 8px 0 0 !important;
+      padding: 6px 12px !important;
+      border-radius: 8px !important;
+      border: none !important;
+      background: var(--ped-green) !important;
+      color: #ffffff !important;
+      font-size: 0.79rem !important;
+      font-weight: 600 !important;
+      cursor: pointer;
+    }
+    .btn-aplicar-cupao:hover {
+      background: #166534 !important;
+    }
+    .btn-remover-cupao {
+      width: auto !important;
+      margin: 0 !important;
+      padding: 3px 9px !important;
+      border-radius: 999px !important;
+      border: 1px solid rgba(220, 38, 38, 0.25) !important;
+      background: #ffffff !important;
+      color: var(--ped-red) !important;
+      font-size: 0.75rem !important;
+      font-weight: 600 !important;
+      cursor: pointer;
+    }
+    .btn-remover-cupao:hover {
+      background: var(--ped-red) !important;
+      color: #ffffff !important;
+    }
+
+    /* Resumo Financeiro */
+    .resumo-box {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      background: #ffffff;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid #e5dfd4;
+      margin-top: 12px;
+    }
+    .resumo-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.92rem;
+      font-variant-numeric: tabular-nums;
+      color: var(--ped-dark);
+    }
+    .resumo-row.pago {
+      color: var(--ped-green);
+      padding-bottom: 9px;
+      border-bottom: 1px solid #f2eee6;
+    }
+    .resumo-row.falta {
+      font-size: 1.06rem;
+      font-weight: 700;
+      color: var(--ped-red);
+    }
+
+    .btn-submit-pedido {
+      width: 100% !important;
+      margin: 0 !important;
+      height: 48px !important;
+      padding: 0 20px !important;
+      border-radius: 12px !important;
+      border: none !important;
+      background: var(--ped-dark) !important;
+      color: #ffffff !important;
+      font-family: inherit;
+      font-size: 0.96rem !important;
+      font-weight: 650 !important;
+      letter-spacing: -0.01em;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
+      transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    }
+    .btn-submit-pedido:hover {
+      background: #2b2b2b !important;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+    }
+    .btn-submit-pedido:disabled {
+      opacity: 0.65;
+      cursor: wait;
+      transform: none;
+    }
+
+    @media (max-width: 900px) {
+      .form-layout { grid-template-columns: 1fr; }
+      .col-right { position: static; }
+    }
+    @media (max-width: 600px) {
+      .pedido-page { padding: 0 14px 50px; }
+      .ped-card { padding: 18px 16px; }
+      .ped-grid-2 { grid-template-columns: 1fr; gap: 12px; }
     }
   </style>
-
-  <script src="auth-guard.js"></script>
-  <script>
-    if (localStorage.getItem("tipoUsuario") === "cliente") {
-        window.location.href = "lista-espera.html";
-    }
-  </script>
 </head>
 
 <body>
 
-  <h1>Adicionar Novo Pedido</h1>
-  
+<div class="pedido-page">
   <form id="form-pedido">
     <div class="form-layout">
-      <!-- LADO ESQUERDO: Dados e Itens -->
+
+      <!-- LADO ESQUERDO: Dados da Cliente & Itens -->
       <div class="col-left">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <label for="nome" style="margin-top:0;">Nome da Cliente:</label>
-          <a href="clientes.html" style="font-size:0.8rem; color:#b8933a; text-decoration:none; font-weight:600;">👥 Ver Central de Clientes</a>
-        </div>
-        <div class="cliente-autocomplete-wrap">
-          <input type="text" id="nome" placeholder="Comece a digitar para buscar cliente existente ou criar novo..." autocomplete="off" style="margin-top:5px;">
-          <div id="cliente-sugestoes-lista" class="cliente-sugestoes-box"></div>
-        </div>
-        <div id="cliente-medidas-alerta" style="display:none; background:#f4fbf4; border:1px solid #b7dfb9; color:#256029; border-radius:7px; padding:9px 12px; font-size:0.84rem; margin-top:-6px; margin-bottom:10px;"></div>
-        
-        <label for="data" style="margin-top:15px;">Data desejada para início:</label>
-        <input type="date" id="data" style="margin-top:5px;">
-
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-          <div>
-            <label for="telefone_cliente" style="margin-top:15px;">Telefone / WhatsApp:</label>
-            <input type="text" id="telefone_cliente" placeholder="Ex: +351 912 345 678" style="margin-top:5px;" />
+        <div class="ped-card">
+          <div class="ped-card-head">
+            <div class="ped-card-title-wrap">
+              <span class="ped-card-ico" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </span>
+              <h2 class="ped-card-title">Dados da Cliente</h2>
+            </div>
+            <a href="clientes.html" class="link-central-clientes">
+              <span>Central de Clientes</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </a>
           </div>
-          <div>
-            <label for="nif_cliente" style="margin-top:15px;">NIF (Opcional - Faturação):</label>
-            <input type="text" id="nif_cliente" placeholder="Ex: 123456789" style="margin-top:5px;" />
+
+          <div class="ped-field">
+            <label for="nome">Nome da Cliente *</label>
+            <div class="cliente-autocomplete-wrap">
+              <input type="text" id="nome" placeholder="Comece a digitar para buscar cliente existente ou criar novo..." autocomplete="off">
+              <div id="cliente-sugestoes-lista" class="cliente-sugestoes-box"></div>
+            </div>
+            <div id="cliente-medidas-alerta" class="medidas-alerta"></div>
+          </div>
+
+          <div class="ped-grid-2">
+            <div>
+              <label for="data">Data desejada para início *</label>
+              <input type="date" id="data">
+            </div>
+            <div>
+              <label for="telefone_cliente">Telefone / WhatsApp</label>
+              <input type="text" id="telefone_cliente" placeholder="Ex: +351 912 345 678">
+            </div>
+          </div>
+
+          <div class="ped-grid-2" style="margin-bottom: 0;">
+            <div>
+              <label for="nif_cliente">NIF (Opcional - Faturação)</label>
+              <input type="text" id="nif_cliente" placeholder="Ex: 123456789">
+            </div>
+            <div>
+              <label for="email_cliente">Email (Opcional - Notificação)</label>
+              <input type="email" id="email_cliente" name="email_cliente" placeholder="exemplo@email.com">
+            </div>
           </div>
         </div>
 
-        <label for="email_cliente" style="margin-top:5px;">Email (para notificação opcional):</label>
-        <input type="email" id="email_cliente" name="email_cliente" placeholder="exemplo@email.com" style="margin-top:5px;" />
+        <div class="ped-card">
+          <div class="ped-card-head">
+            <div class="ped-card-title-wrap">
+              <span class="ped-card-ico" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <path d="M16 10a4 4 0 0 1-8 0"></path>
+                </svg>
+              </span>
+              <h2 class="ped-card-title">Itens do Pedido</h2>
+            </div>
+          </div>
 
-        <h3 style="margin-top:25px; text-align:left;">Itens do Pedido</h3>
-        <div id="itens" style="margin-top:5px;"></div>
-        
-        <button type="button" onclick="adicionarItem()" style="background:#555; color:#fff;">+ Adicionar Item</button>
+          <div id="itens"></div>
+
+          <button type="button" id="btn-adicionar-item" class="btn-add-item" onclick="adicionarItem()">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Adicionar Item</span>
+          </button>
+        </div>
       </div>
-      
-      <!-- LADO DIREITO: Finanças -->
+
+      <!-- LADO DIREITO: Resumo Financeiro & Pagamento -->
       <div class="col-right">
-        
-        <label for="preco_total" style="margin-top:0;">Preço original dos itens (€):</label>
-        <input type="number" id="preco_total" step="0.01" readonly style="margin-bottom:20px; background:#f0f0f0;">
-        
-        <!-- SECÇÃO DE CUPÃO -->
-        <div style="background:#fffdf5; border:2px dashed #d4af37; border-radius:8px; padding:16px; margin-bottom:1rem;">
-          <label style="display:block; font-weight:bold; font-size:0.95rem; margin-bottom:8px; color:#7a5c00; margin-top:0;">
-            🎟️ Cupão de Desconto (opcional)
-          </label>
-          <div style="display:flex; gap:8px; align-items:stretch;">
-            <input type="text" id="cupao-busca" placeholder="Código ou nome" style="flex:1; width:auto; min-width:0; margin-bottom:0; box-sizing:border-box;">
-            <button type="button" onclick="buscarCupaoFormulario()" style="flex-shrink:0; margin-top:0; padding:0.8rem 18px; white-space:nowrap; background:#d4af37; color:#000; font-weight:bold; width:auto;">Verificar</button>
-          </div>
-          <div id="cupao-resultado" style="margin-top:8px; font-size:0.9rem; display:none;"></div>
-          <input type="hidden" id="cupao-id-selecionado" value="">
-          <input type="hidden" id="cupao-codigo" value="">
-          <input type="hidden" id="cupao-desconto" value="">
-        </div>
-        
-        <!-- SECÇÃO DE ADIANTAMENTO E TOTAIS -->
-        <div style="background:#f4f9f4; border:2px dashed #a5d6a7; border-radius:8px; padding:16px; margin-bottom:1rem;">
-          <label style="display:block; font-weight:bold; font-size:0.95rem; margin-bottom:8px; color:#2e7d32; margin-top:0;">
-            💶 Pagamento Inicial (Opcional)
-          </label>
-          <div style="display:flex; gap:8px; margin-bottom:15px;">
-            <input type="number" id="valor_adiantado" placeholder="Valor (€)" step="0.01" min="0"
-              onkeyup="atualizarPrecoTotal()" onchange="atualizarPrecoTotal()"
-              style="flex:1; margin:0;">
-            <input type="date" id="data_pagamento_inicial"
-              style="flex:1; margin:0; padding:0.8rem; font-size:1rem; border:1px solid #ccc; border-radius:4px;">
-          </div>
-          <div style="margin-bottom:15px;">
-            <select id="metodo_pagamento_inicial" style="width:100%; margin:0; padding:0.8rem; font-size:1rem; border:1px solid #ccc; border-radius:4px; background:#fff; box-sizing:border-box;">
-              <option value="">Método de pagamento...</option>
-              <option value="mbway">MB Way</option>
-              <option value="dinheiro">Dinheiro</option>
-              <option value="multibanco">Multibanco</option>
-            </select>
+        <div class="ped-card">
+          <div class="ped-card-head">
+            <div class="ped-card-title-wrap">
+              <span class="ped-card-ico" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                  <line x1="2" y1="10" x2="22" y2="10"></line>
+                </svg>
+              </span>
+              <h2 class="ped-card-title">Pagamento &amp; Resumo</h2>
+            </div>
           </div>
 
-          <div id="resumo-financeiro" style="display:flex; flex-direction:column; gap:10px; background:#fff; padding:15px; border-radius:6px; border:1px solid #ddd;">
-            <div style="display:flex; justify-content:space-between; font-size:1.1rem; color:#000;">
-              <span><strong>Total:</strong></span>
-              <span>€<span id="final_total_display">0.00</span></span>
+          <div class="ped-field">
+            <label for="preco_total">Valor dos itens com desconto (€)</label>
+            <input type="number" id="preco_total" step="0.01" readonly placeholder="0.00">
+          </div>
+
+          <!-- CUPAO DE DESCONTO -->
+          <div class="fin-subbox">
+            <div class="fin-subhead">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                <line x1="7" y1="7" x2="7.01" y2="7"></line>
+              </svg>
+              <span>Cupão de Desconto (opcional)</span>
             </div>
-            <div style="display:flex; justify-content:space-between; font-size:1.1rem; color:#2e7d32; border-bottom:1px solid #eee; padding-bottom:10px;">
-              <span><strong>Pago:</strong></span>
-              <span>€<span id="final_pago_display">0.00</span></span>
+            <div class="cupao-row">
+              <input type="text" id="cupao-busca" placeholder="Código ou nome da cliente">
+              <button type="button" class="btn-verificar-cupao" onclick="buscarCupaoFormulario()">Verificar</button>
             </div>
-            <div style="display:flex; justify-content:space-between; font-size:1.2rem; color:#c62828;">
-              <span><strong>Falta Pagar:</strong></span>
-              <span><strong>€<span id="final_falta_display">0.00</span></strong></span>
+            <div id="cupao-resultado" style="display:none;"></div>
+            <input type="hidden" id="cupao-id-selecionado" value="">
+            <input type="hidden" id="cupao-codigo" value="">
+            <input type="hidden" id="cupao-desconto" value="">
+          </div>
+
+          <!-- PAGAMENTO INICIAL & TOTAIS -->
+          <div class="fin-subbox pagamento">
+            <div class="fin-subhead">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <line x1="12" y1="1" x2="12" y2="23"></line>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
+              <span>Pagamento Inicial (Opcional)</span>
+            </div>
+
+            <div class="ped-grid-2" style="margin-bottom: 10px;">
+              <input type="number" id="valor_adiantado" placeholder="Valor (€)" step="0.01" min="0"
+                onkeyup="atualizarPrecoTotal()" onchange="atualizarPrecoTotal()">
+              <input type="date" id="data_pagamento_inicial">
+            </div>
+
+            <div>
+              <select id="metodo_pagamento_inicial">
+                <option value="">Método de pagamento...</option>
+                <option value="mbway">MB Way</option>
+                <option value="dinheiro">Dinheiro</option>
+                <option value="multibanco">Multibanco</option>
+              </select>
+            </div>
+
+            <div id="resumo-financeiro" class="resumo-box">
+              <div class="resumo-row">
+                <span><strong>Total</strong></span>
+                <span>€<span id="final_total_display">0.00</span></span>
+              </div>
+              <div class="resumo-row pago">
+                <span><strong>Pago</strong></span>
+                <span>€<span id="final_pago_display">0.00</span></span>
+              </div>
+              <div class="resumo-row falta">
+                <span><strong>Falta Pagar</strong></span>
+                <span>€<span id="final_falta_display">0.00</span></span>
+              </div>
             </div>
           </div>
+
+          <button type="submit" id="btn-salvar-pedido" class="btn-submit-pedido">Salvar Pedido</button>
         </div>
-        
-        <button type="submit" style="margin-top:auto; padding:15px; font-size:1.1rem; font-weight:bold; background:#000; color:#fff;">✓ Salvar Pedido</button>
       </div>
+
     </div>
   </form>
+</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-  
-  <script src="email-notification.js"></script> 
-  <script src="vouchers.js"></script>
-  <script src="script.js"></script>
-  
-  <script src="navbar.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script src="email-notification.js"></script>
+<script src="vouchers.js"></script>
+<script src="script.js"></script>
 
-  <script>
-    // Preenche a data de hoje no campo de data do pagamento inicial
-    document.addEventListener('DOMContentLoaded', () => {
-      const dp = document.getElementById('data_pagamento_inicial');
-      if (dp) dp.value = new Date().toISOString().split('T')[0];
-    });
+<script>
+  function escPedido(str) {
+    return String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
 
-    // Busca e exibe resultado do cupão no formulário de pedido
-    async function buscarCupaoFormulario() {
-      const termo = document.getElementById('cupao-busca').value.trim();
-      const resultadoDiv = document.getElementById('cupao-resultado');
-      const idHidden = document.getElementById('cupao-id-selecionado');
-      const codigoHidden = document.getElementById('cupao-codigo');
-      const descontoHidden = document.getElementById('cupao-desconto');
+  // Preenche a data de hoje no campo de data do pagamento inicial
+  document.addEventListener('DOMContentLoaded', () => {
+    const dp = document.getElementById('data_pagamento_inicial');
+    if (dp) dp.value = new Date().toISOString().split('T')[0];
+  });
 
-      resultadoDiv.style.display = 'none';
-      idHidden.value = '';
-      codigoHidden.value = '';
-      descontoHidden.value = '';
+  // Busca e exibe resultado do cupao no formulario de pedido
+  async function buscarCupaoFormulario() {
+    const termo = document.getElementById('cupao-busca').value.trim();
+    const resultadoDiv = document.getElementById('cupao-resultado');
+    const idHidden = document.getElementById('cupao-id-selecionado');
+    const codigoHidden = document.getElementById('cupao-codigo');
+    const descontoHidden = document.getElementById('cupao-desconto');
 
-      if (!termo) {
-        alert('Insira o código do cupão ou o nome da cliente.');
+    resultadoDiv.style.display = 'none';
+    idHidden.value = '';
+    codigoHidden.value = '';
+    descontoHidden.value = '';
+
+    if (!termo) {
+      window.mostrarAviso?.('Insira o código do cupão ou o nome da cliente.', 'Atenção', 'alert') || alert('Insira o código do cupão ou o nome da cliente.');
+      return;
+    }
+
+    resultadoDiv.style.display = 'block';
+    resultadoDiv.innerHTML = '<div style="margin-top:8px; color:#6b7280; font-size:0.83rem;">A verificar...</div>';
+
+    const voucher = await buscarVoucher(termo);
+
+    if (!voucher) {
+      resultadoDiv.innerHTML = '<div class="cupao-msg-err">Cupão não encontrado ou já utilizado/expirado.</div>';
+      return;
+    }
+
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    if (!voucher.vitalicio && voucher.data_validade) {
+      const val = new Date(voucher.data_validade + 'T00:00:00');
+      if (val < hoje) {
+        const dtStr = new Date(voucher.data_validade + 'T00:00:00').toLocaleDateString('pt-PT');
+        resultadoDiv.innerHTML = `<div class="cupao-msg-err">Cupão expirado em ${escPedido(dtStr)}.</div>`;
         return;
       }
-
-      resultadoDiv.style.display = 'block';
-      resultadoDiv.innerHTML = '<span style="color:#888;">A verificar...</span>';
-
-      const voucher = await buscarVoucher(termo);
-
-      if (!voucher) {
-        resultadoDiv.innerHTML = `<span style="color:#c62828;">❌ Cupão não encontrado ou já utilizado/expirado.</span>`;
-        return;
-      }
-
-      // Validar expiração
-      const hoje = new Date(); hoje.setHours(0,0,0,0);
-      if (!voucher.vitalicio && voucher.data_validade) {
-        const val = new Date(voucher.data_validade + 'T00:00:00');
-        if (val < hoje) {
-          resultadoDiv.innerHTML = `<span style="color:#c62828;">⌛ Cupão expirado em ${new Date(voucher.data_validade+'T00:00:00').toLocaleDateString('pt-PT')}.</span>`;
-          return;
-        }
-      }
-
-      const validadeStr = voucher.vitalicio ? '♾️ Vitalício' : `📅 Válido até ${new Date(voucher.data_validade+'T00:00:00').toLocaleDateString('pt-PT')}`;
-      const nomeStr = voucher.nome_cliente || 'Sem cliente associado';
-      const desconto = voucher.desconto_percentagem || 0;
-
-      resultadoDiv.innerHTML = `
-        <div style="background:#e8f5e9; border:1px solid #a5d6a7; border-radius:6px; padding:10px;">
-          <strong>✅ Cupão encontrado!</strong><br>
-          <span>👤 ${nomeStr}</span>&nbsp;&nbsp;
-          <span style="font-family:monospace; font-weight:bold;">${voucher.codigo}</span>&nbsp;&nbsp;
-          <span>${validadeStr}</span>&nbsp;&nbsp;
-          <strong style="color:#7a5c00;">(${desconto}% OFF)</strong>
-          <div style="margin-top:6px;">
-            <button type="button" onclick="selecionarCupao('${voucher.id}', '${voucher.codigo}', ${desconto})" 
-              style="margin-top:4px; background:#2e7d32; color:#fff; border:none; padding:6px 14px; border-radius:4px; cursor:pointer; font-size:0.85rem;">
-              ✔️ Usar este cupão
-            </button>
-          </div>
-        </div>`;
     }
 
-    function selecionarCupao(id, codigo, desconto) {
-      document.getElementById('cupao-id-selecionado').value = id;
-      document.getElementById('cupao-codigo').value = codigo;
-      document.getElementById('cupao-desconto').value = desconto;
+    const validadeStr = voucher.vitalicio
+      ? 'Vitalício'
+      : `Válido até ${new Date(voucher.data_validade + 'T00:00:00').toLocaleDateString('pt-PT')}`;
+    const nomeStr = voucher.nome_cliente || 'Sem cliente associado';
+    const desconto = Number(voucher.desconto_percentagem) || 0;
 
-      const resultadoDiv = document.getElementById('cupao-resultado');
-      resultadoDiv.innerHTML = `
-        <div style="background:#e8f5e9; border:1px solid #a5d6a7; border-radius:6px; padding:10px; display:flex; align-items:center; flex-wrap:wrap; gap:10px;">
-          <span>🎟️ Cupão <strong>${codigo}</strong> <span style="color:#7a5c00; font-weight:bold;">(${desconto}% OFF)</span> será aplicado.</span>
-          <button type="button" onclick="removerCupao()" style="margin-top:0; background:transparent; color:#c62828; border:none; cursor:pointer; font-size:0.85rem; padding:0; text-decoration:underline;">✖ Remover</button>
-        </div>`;
-      
-      if(typeof atualizarPrecoTotal === 'function') atualizarPrecoTotal();
-    }
+    resultadoDiv.innerHTML = `
+      <div class="cupao-msg-ok">
+        <div style="font-weight:650; margin-bottom:4px;">Cupão disponível</div>
+        <div>
+          <span>${escPedido(nomeStr)}</span> ·
+          <span class="cupao-code-pill">${escPedido(voucher.codigo)}</span> ·
+          <span>${escPedido(validadeStr)}</span> ·
+          <strong>${desconto}% OFF</strong>
+        </div>
+        <div>
+          <button type="button" class="btn-aplicar-cupao"
+            data-cupao-id="${escPedido(voucher.id)}"
+            data-cupao-codigo="${escPedido(voucher.codigo)}"
+            data-cupao-desconto="${desconto}"
+            onclick="selecionarCupao(this.dataset.cupaoId, this.dataset.cupaoCodigo, Number(this.dataset.cupaoDesconto))">
+            Aplicar cupão
+          </button>
+        </div>
+      </div>`;
+  }
 
-    function removerCupao() {
-      document.getElementById('cupao-id-selecionado').value = '';
-      document.getElementById('cupao-codigo').value = '';
-      document.getElementById('cupao-desconto').value = '';
-      document.getElementById('cupao-resultado').style.display = 'none';
-      document.getElementById('cupao-busca').value = '';
-      
-      if(typeof atualizarPrecoTotal === 'function') atualizarPrecoTotal();
-    }
-  </script>
+  function selecionarCupao(id, codigo, desconto) {
+    document.getElementById('cupao-id-selecionado').value = id;
+    document.getElementById('cupao-codigo').value = codigo;
+    document.getElementById('cupao-desconto').value = desconto;
+
+    const resultadoDiv = document.getElementById('cupao-resultado');
+    resultadoDiv.innerHTML = `
+      <div class="cupao-msg-ok" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+        <span>Cupão <span class="cupao-code-pill">${escPedido(codigo)}</span> <strong>(${Number(desconto) || 0}% OFF)</strong> aplicado.</span>
+        <button type="button" class="btn-remover-cupao" onclick="removerCupao()">Remover</button>
+      </div>`;
+
+    if (typeof atualizarPrecoTotal === 'function') atualizarPrecoTotal();
+  }
+
+  function removerCupao() {
+    document.getElementById('cupao-id-selecionado').value = '';
+    document.getElementById('cupao-codigo').value = '';
+    document.getElementById('cupao-desconto').value = '';
+    document.getElementById('cupao-resultado').style.display = 'none';
+    document.getElementById('cupao-busca').value = '';
+
+    if (typeof atualizarPrecoTotal === 'function') atualizarPrecoTotal();
+  }
+</script>
 
 </body>
 </html>

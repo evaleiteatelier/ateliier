@@ -1,920 +1,1712 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cartões de Fidelidade | Eva Leite Atelier</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="style.css">
-    <script src="auth-guard.js"></script>
-    <script src="navbar.js" defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cartões de Fidelidade - Eva Leite Atelier</title>
+  <link rel="stylesheet" href="style.css?v=2">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth-guard.js"></script>
+  <script src="navbar.js?v=7" defer></script>
 
-    <style>
-        * { box-sizing: border-box; }
+  <style>
+    :root {
+      --fid-bg: #f5f1ea;
+      --fid-card: #ffffff;
+      --fid-dark: #141414;
+      --fid-text: #1f2937;
+      --fid-muted: #6b7280;
+      --fid-gold: #b8860b;
+      --fid-gold-accent: #c8a248;
+      --fid-gold-soft: #fdf8eb;
+      --fid-green: #15803d;
+      --fid-green-soft: #ecfdf3;
+      --fid-blue: #1d4ed8;
+      --fid-blue-soft: #eff6ff;
+      --fid-red: #dc2626;
+      --fid-red-soft: #fef2f2;
+      --fid-border: rgba(17, 24, 39, 0.07);
+      --fid-shadow: 0 2px 12px rgba(0, 0, 0, 0.035);
+      --fid-radius: 16px;
+    }
 
-        body {
-            font-family: 'Inter', system-ui, sans-serif;
-            background: #faf9f7;
-            color: #1a1a2e;
-            margin: 0;
-        }
+    * { box-sizing: border-box; }
 
-        .page-wrapper {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 32px 24px;
-        }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--fid-bg);
+      color: var(--fid-text);
+      margin: 0;
+      padding: 0;
+    }
 
-        /* ─── HEADER ─── */
-        .page-header {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 16px;
-            margin-bottom: 32px;
-            flex-wrap: wrap;
-        }
-        .page-header h1 {
-            font-size: 1.8rem;
-            font-weight: 800;
-            margin: 0 0 4px 0;
-            color: #1a1a2e;
-        }
-        .page-header p {
-            color: #888;
-            margin: 0;
-            font-size: 0.9rem;
-        }
+    .fid-page {
+      max-width: 1220px;
+      margin: 14px auto 64px;
+      padding: 0 24px 60px;
+      box-sizing: border-box;
+    }
 
-        /* ─── METRICS ROW ─── */
-        .metrics-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 16px;
-            margin-bottom: 28px;
-        }
-        .metric-card {
-            background: #fff;
-            border-radius: 14px;
-            padding: 20px 22px;
-            border: 1px solid #ede9e3;
-            box-shadow: 0 2px 8px rgba(0,0,0,.04);
-        }
-        .metric-card .metric-value {
-            font-size: 2rem;
-            font-weight: 800;
-            color: #1a1a2e;
-            line-height: 1.1;
-        }
-        .metric-card .metric-label {
-            font-size: 0.78rem;
-            font-weight: 600;
-            color: #aaa;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            margin-top: 4px;
-        }
-        .metric-card.gold .metric-value { color: #b8860b; }
-        .metric-card.green .metric-value { color: #2e7d32; }
-        .metric-card.red .metric-value   { color: #c62828; }
+    /* Botao primario movido pela navbar.js para #liquid-dynamic-right */
+    .btn-fid-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      width: auto !important;
+      margin: 0 !important;
+      padding: 0 16px !important;
+      height: 40px !important;
+      border-radius: 12px !important;
+      border: 1px solid rgba(20, 20, 20, 0.9) !important;
+      background: var(--fid-dark) !important;
+      color: #ffffff !important;
+      font-family: inherit;
+      font-size: 0.84rem !important;
+      font-weight: 600 !important;
+      letter-spacing: -0.01em;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+      transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    }
+    .btn-fid-primary:hover {
+      background: #2b2b2b !important;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.16);
+    }
+    .btn-fid-primary svg { flex-shrink: 0; }
 
-        /* ─── SEARCH + FILTERS ─── */
-        .filters-bar {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        .search-input {
-            flex: 1;
-            min-width: 220px;
-            padding: 10px 14px;
-            border: 1px solid #e0d5c1;
-            border-radius: 8px;
-            font-family: inherit;
-            font-size: 0.9rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .search-input:focus { border-color: #d4af37; }
-        .filter-btn {
-            padding: 9px 16px;
-            border: 1px solid #e0d5c1;
-            border-radius: 8px;
-            background: #fff;
-            font-family: inherit;
-            font-size: 0.82rem;
-            font-weight: 600;
-            cursor: pointer;
-            color: #555;
-            transition: all 0.2s;
-        }
-        .filter-btn:hover, .filter-btn.active {
-            border-color: #d4af37;
-            background: #d4af37;
-            color: #fff;
-        }
+    /* Pills dentro do popover de filtro */
+    .fid-filter-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .fid-filter-pills button,
+    .liquid-left .fid-filter-pills button {
+      width: auto !important;
+      margin: 0 !important;
+      padding: 6px 11px !important;
+      border-radius: 8px !important;
+      border: 1px solid #e2ddd5 !important;
+      background: #faf9f6 !important;
+      color: #4b5563 !important;
+      font-family: inherit;
+      font-size: 0.78rem !important;
+      font-weight: 500 !important;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .fid-filter-pills button:hover,
+    .liquid-left .fid-filter-pills button:hover {
+      background: #f0ece4 !important;
+      color: #111 !important;
+    }
+    .fid-filter-pills button.ativo,
+    .liquid-left .fid-filter-pills button.ativo {
+      background: var(--fid-dark) !important;
+      color: #ffffff !important;
+      border-color: var(--fid-dark) !important;
+    }
 
-        /* ─── CARDS GRID ─── */
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
+    .fid-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-dark { background: #141414; }
+    .dot-blue { background: #2563eb; }
+    .dot-gold { background: #c59b27; }
+    .dot-green { background: #16a34a; }
+    .dot-red { background: #dc2626; }
 
-        .fidelidade-card {
-            background: #fff;
-            border-radius: 16px;
-            padding: 22px;
-            border: 1px solid #ede9e3;
-            box-shadow: 0 2px 10px rgba(0,0,0,.05);
-            transition: transform 0.2s, box-shadow 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-        .fidelidade-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #d4af37, #f5e6a3, #d4af37);
-        }
-        .fidelidade-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,.09);
-        }
+    /* Faixa de 5 KPIs clicaveis */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .metric-card {
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid var(--fid-border);
+      border-radius: var(--fid-radius);
+      padding: 16px 18px;
+      box-shadow: var(--fid-shadow);
+      cursor: pointer;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+      text-align: left;
+      user-select: none;
+    }
+    .metric-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.055);
+      border-color: rgba(20, 20, 20, 0.16);
+    }
+    .metric-card.ativo {
+      background: #ffffff;
+      border-color: var(--fid-dark);
+      box-shadow: 0 6px 18px rgba(20, 20, 20, 0.08);
+    }
+    .metric-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--fid-muted);
+      margin-bottom: 8px;
+    }
+    .metric-value {
+      font-size: 1.65rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: var(--fid-dark);
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+    .metric-sub {
+      font-size: 0.75rem;
+      color: var(--fid-muted);
+      margin-top: 5px;
+    }
 
-        .card-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 14px;
-        }
-        .card-client-name {
-            font-size: 1rem;
-            font-weight: 700;
-            color: #1a1a2e;
-        }
-        .card-client-phone {
-            font-size: 0.8rem;
-            color: #999;
-            margin-top: 2px;
-        }
+    /* Chip bar de filtro ativo */
+    .fid-filter-chip-bar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 14px;
+      margin-bottom: 16px;
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid var(--fid-border);
+      border-radius: 12px;
+      font-size: 0.81rem;
+      color: #4b5563;
+    }
+    .fid-filter-chip-bar.visivel {
+      display: flex;
+    }
+    .btn-limpar-fid {
+      width: auto !important;
+      margin: 0 !important;
+      padding: 4px 10px !important;
+      border-radius: 999px !important;
+      border: 1px solid #ddd6ca !important;
+      background: #ffffff !important;
+      color: var(--fid-dark) !important;
+      font-size: 0.75rem !important;
+      font-weight: 600 !important;
+      cursor: pointer;
+    }
+    .btn-limpar-fid:hover {
+      background: var(--fid-dark) !important;
+      color: #ffffff !important;
+      border-color: var(--fid-dark) !important;
+    }
 
-        .status-badge {
-            font-size: 0.72rem;
-            font-weight: 700;
-            padding: 4px 10px;
-            border-radius: 20px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            white-space: nowrap;
-        }
-        .status-badge.em-curso   { background: #f0f4ff; color: #4f46e5; }
-        .status-badge.completo   { background: #fef9e7; color: #b8860b; }
-        .status-badge.utilizado  { background: #f0f0f0; color: #888; }
-        .status-badge.vencido    { background: #fdecea; color: #c62828; }
+    /* Grid de Cartoes */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+      gap: 18px;
+    }
 
-        /* ─── PROGRESS DOTS ─── */
-        .progress-label {
-            font-size: 0.72rem;
-            font-weight: 600;
-            color: #aaa;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            margin-bottom: 8px;
-        }
-        .dots-row {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            margin-bottom: 14px;
-        }
-        .dot {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            border: 2px solid #e5e7eb;
-            background: #f9fafb;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: #ccc;
-            transition: all 0.2s;
-        }
-        .dot.filled {
-            background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
-            border-color: transparent;
-            color: #fff;
-            box-shadow: 0 3px 8px rgba(212,175,55,.35);
-        }
-        .dot.filled::before { content: '✓'; }
+    .fidelidade-card {
+      background: var(--fid-card);
+      border: 1px solid var(--fid-border);
+      border-radius: 18px;
+      padding: 20px 20px 18px;
+      box-shadow: var(--fid-shadow);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+    }
+    .fidelidade-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #e2d4b0 0%, #c8a248 100%);
+      opacity: 0.8;
+    }
+    .fidelidade-card.status-completo::before {
+      background: linear-gradient(90deg, #16a34a 0%, #c8a248 100%);
+      opacity: 1;
+    }
+    .fidelidade-card.status-utilizado::before {
+      background: #d6d3cd;
+      opacity: 0.7;
+    }
+    .fidelidade-card.status-vencido::before {
+      background: #dc2626;
+      opacity: 0.85;
+    }
+    .fidelidade-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.06);
+      border-color: rgba(20, 20, 20, 0.12);
+    }
 
-        /* ─── PROGRESS BAR ─── */
-        .progress-bar-wrap {
-            height: 6px;
-            background: #f0ece5;
-            border-radius: 10px;
-            margin-bottom: 14px;
-            overflow: hidden;
-        }
-        .progress-bar-fill {
-            height: 100%;
-            border-radius: 10px;
-            background: linear-gradient(90deg, #d4af37, #f5e6a3);
-            transition: width 0.5s ease;
-        }
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .card-ident {
+      min-width: 0;
+      flex: 1;
+    }
+    .card-client-name {
+      font-size: 1rem;
+      font-weight: 650;
+      color: var(--fid-dark);
+      letter-spacing: -0.015em;
+      line-height: 1.3;
+      word-break: break-word;
+    }
+    .card-client-name.sem-nome {
+      color: #9ca3af;
+      font-weight: 500;
+      font-style: italic;
+    }
+    .card-sub-meta {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .card-client-phone {
+      font-size: 0.79rem;
+      color: var(--fid-muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .origin-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: #f5f2eb;
+      color: #6b6356;
+      font-size: 0.67rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+    .expires-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 6px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: #f8f6f1;
+      color: #57534e;
+      font-size: 0.72rem;
+      font-weight: 500;
+    }
+    .expires-tag.urgent {
+      background: var(--fid-red-soft);
+      color: var(--fid-red);
+      font-weight: 600;
+    }
 
-        /* ─── CARD FOOTER ─── */
-        .card-footer {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding-top: 12px;
-            border-top: 1px solid #f0ece5;
-        }
-        .card-progress-text {
-            font-size: 0.82rem;
-            color: #888;
-        }
-        .card-progress-text strong {
-            font-size: 1rem;
-            color: #1a1a2e;
-        }
-        .card-actions {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        .btn-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            border: 1px solid #e0d5c1;
-            background: #fff;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: all 0.2s;
-            text-decoration: none;
-            flex-shrink: 0;
-            line-height: 1;
-            padding: 0;
-            vertical-align: middle;
-            box-sizing: border-box;
-        }
-        .btn-icon:hover { border-color: #d4af37; background: #fef9e7; }
-        .btn-icon.danger:hover { border-color: #e53935; background: #fdecea; }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.71rem;
+      font-weight: 650;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .status-badge.em-curso {
+      background: var(--fid-blue-soft);
+      color: var(--fid-blue);
+      border: 1px solid rgba(29, 78, 216, 0.14);
+    }
+    .status-badge.completo {
+      background: var(--fid-green-soft);
+      color: var(--fid-green);
+      border: 1px solid rgba(21, 128, 61, 0.16);
+    }
+    .status-badge.utilizado {
+      background: #f3f4f6;
+      color: #4b5563;
+      border: 1px solid rgba(107, 114, 128, 0.16);
+    }
+    .status-badge.vencido {
+      background: var(--fid-red-soft);
+      color: var(--fid-red);
+      border: 1px solid rgba(220, 38, 38, 0.16);
+    }
 
-        /* ─── EMPTY STATE ─── */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #aaa;
-            grid-column: 1 / -1;
-        }
-        .empty-state .empty-icon { font-size: 3rem; margin-bottom: 12px; }
-        .empty-state p { font-size: 0.95rem; }
+    /* Progresso & Carimbos */
+    .progress-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      font-weight: 650;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--fid-muted);
+      margin-bottom: 10px;
+    }
+    .dots-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .dots-row .dot {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1.5px solid #e2ddd2;
+      background: #faf9f6;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: transparent;
+      transition: all 0.2s ease;
+    }
+    .dots-row .dot svg {
+      width: 13px;
+      height: 13px;
+      stroke: currentColor;
+      stroke-width: 2.3;
+      fill: none;
+    }
+    .dots-row .dot.filled {
+      border-color: var(--fid-dark);
+      background: var(--fid-dark);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(20, 20, 20, 0.16);
+    }
 
-        /* ─── LOADING ─── */
-        .loading-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #aaa;
-            grid-column: 1 / -1;
-        }
-        .spinner {
-            width: 32px; height: 32px;
-            border: 3px solid #e0d5c1;
-            border-top-color: #d4af37;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 14px;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
+    .progress-bar-wrap {
+      width: 100%;
+      height: 4px;
+      background: #f0ece3;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--fid-dark) 0%, #52525b 100%);
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+    .fidelidade-card.status-completo .progress-bar-fill {
+      background: linear-gradient(90deg, #16a34a 0%, #c8a248 100%);
+    }
 
-        /* ─── MODAL ─── */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,.5);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(4px);
-            animation: fadeIn 0.2s ease;
-        }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .modal-box {
-            background: #fff;
-            border-radius: 16px;
-            padding: 28px;
-            width: 90%;
-            max-width: 440px;
-            box-shadow: 0 20px 50px rgba(0,0,0,.2);
-            animation: slideUp 0.25s ease;
-        }
-        @keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .modal-box h3 { margin: 0 0 18px; font-size: 1.1rem; font-weight: 700; }
-        .modal-box label { display: block; font-size: 0.8rem; font-weight: 600; color: #555; margin-bottom: 5px; }
-        .modal-box input, .modal-box select {
-            width: 100%;
-            padding: 9px 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-family: inherit;
-            font-size: 0.9rem;
-            margin-bottom: 14px;
-            outline: none;
-        }
-        .modal-box input:focus, .modal-box select:focus { border-color: #d4af37; }
-        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
-        .btn-cancel {
-            padding: 9px 18px;
-            background: #f0ece5;
-            border: none;
-            border-radius: 8px;
-            font-family: inherit;
-            font-weight: 600;
-            cursor: pointer;
-            color: #555;
-        }
-        .btn-primary-gold {
-            padding: 9px 18px;
-            background: #d4af37;
-            border: none;
-            border-radius: 8px;
-            font-family: inherit;
-            font-weight: 700;
-            cursor: pointer;
-            color: #fff;
-            transition: background 0.2s;
-        }
-        .btn-primary-gold:hover { background: #b8960b; }
-        .btn-danger {
-            padding: 9px 18px;
-            background: #e53935;
-            border: none;
-            border-radius: 8px;
-            font-family: inherit;
-            font-weight: 700;
-            cursor: pointer;
-            color: #fff;
-        }
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 12px;
+      border-top: 1px solid #f4f1ea;
+      margin-top: auto;
+    }
+    .card-progress-text {
+      font-size: 0.81rem;
+      color: var(--fid-muted);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .card-progress-text strong {
+      color: var(--fid-dark);
+      font-weight: 700;
+    }
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
 
-        .add-btn {
-            padding: 10px 20px;
-            background: linear-gradient(135deg, #d4af37, #b8860b);
-            border: none;
-            border-radius: 10px;
-            color: #fff;
-            font-family: inherit;
-            font-weight: 700;
-            font-size: 0.9rem;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(212,175,55,.3);
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 7px;
-        }
-        .add-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(212,175,55,.4); }
+    .fid-ico-btn {
+      width: 32px !important;
+      height: 32px !important;
+      min-width: 32px;
+      margin: 0 !important;
+      padding: 0 !important;
+      border-radius: 50% !important;
+      border: 1px solid #e5dfd5 !important;
+      background: #ffffff !important;
+      color: #2c2a27 !important;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      text-decoration: none;
+      flex-shrink: 0;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .fid-ico-btn svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      stroke-width: 1.85;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      pointer-events: none;
+    }
+    .fid-ico-btn:hover {
+      background: var(--fid-dark) !important;
+      border-color: var(--fid-dark) !important;
+      color: #ffffff !important;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    .fid-ico-btn.btn-fid-stamp {
+      background: var(--fid-green-soft) !important;
+      border-color: #c2e0c4 !important;
+      color: var(--fid-green) !important;
+    }
+    .fid-ico-btn.btn-fid-stamp:hover {
+      background: var(--fid-green) !important;
+      border-color: var(--fid-green) !important;
+      color: #ffffff !important;
+    }
+    .fid-ico-btn.btn-fid-redeem {
+      background: var(--fid-gold-soft) !important;
+      border-color: #e6d196 !important;
+      color: #8a6408 !important;
+    }
+    .fid-ico-btn.btn-fid-redeem:hover {
+      background: var(--fid-dark) !important;
+      border-color: var(--fid-dark) !important;
+      color: #ffffff !important;
+    }
+    .fid-ico-btn.danger {
+      background: #fdf6f6 !important;
+      border-color: #f2dada !important;
+      color: var(--fid-red) !important;
+    }
+    .fid-ico-btn.danger:hover {
+      background: var(--fid-red) !important;
+      border-color: var(--fid-red) !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 10px rgba(220, 38, 38, 0.18);
+    }
 
-        .expires-tag {
-            font-size: 0.72rem;
-            color: #999;
-            margin-top: 4px;
-        }
-        .expires-tag.urgent { color: #e53935; font-weight: 700; }
+    /* Estados Vazios & Loading */
+    .loading-state,
+    .empty-state {
+      grid-column: 1 / -1;
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid var(--fid-border);
+      border-radius: 18px;
+      padding: 46px 24px;
+      text-align: center;
+      color: var(--fid-muted);
+      box-shadow: var(--fid-shadow);
+    }
+    .empty-ico-circle {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 12px;
+      border-radius: 50%;
+      background: #f5f1ea;
+      color: var(--fid-muted);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .empty-state p,
+    .loading-state p {
+      margin: 0;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    .spin-fid {
+      animation: spinFid 0.85s linear infinite;
+      color: var(--fid-muted);
+      margin-bottom: 10px;
+    }
+    @keyframes spinFid {
+      to { transform: rotate(360deg); }
+    }
 
-        /* ─── TOAST ─── */
-        .toast {
-            position: fixed;
-            bottom: 28px;
-            right: 24px;
-            background: #1a1a2e;
-            color: #fff;
-            padding: 12px 20px;
-            border-radius: 10px;
-            font-size: 0.88rem;
-            font-weight: 600;
-            box-shadow: 0 8px 24px rgba(0,0,0,.2);
-            z-index: 99999;
-            animation: slideUp 0.3s ease;
-        }
-    </style>
+    /* MODAIS MINIMALISTAS */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 15, 15, 0.44);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 4000;
+    }
+    .modal-box {
+      background: #ffffff;
+      width: 100%;
+      max-width: 460px;
+      border-radius: 18px;
+      border: 1px solid #eae6df;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+      overflow: hidden;
+      animation: slideModalFid 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes slideModalFid {
+      from { transform: translateY(10px) scale(0.985); opacity: 0; }
+      to   { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    .modal-header {
+      padding: 18px 22px;
+      border-bottom: 1px solid #f2eee6;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .modal-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .modal-badge-ico {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #f5f1ea;
+      color: var(--fid-dark);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .modal-box h3 {
+      font-size: 1.02rem;
+      font-weight: 650;
+      margin: 0;
+      color: var(--fid-dark);
+      letter-spacing: -0.015em;
+    }
+    .modal-close-btn {
+      width: 32px !important;
+      height: 32px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border-radius: 50% !important;
+      border: none !important;
+      background: #f6f4ef !important;
+      color: #4b5563 !important;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .modal-close-btn:hover {
+      background: #eae4da !important;
+      color: var(--fid-dark) !important;
+    }
+    .modal-body {
+      padding: 20px 22px 10px;
+    }
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .form-group {
+      margin-bottom: 14px;
+    }
+    .modal-body label {
+      display: block;
+      font-size: 0.79rem;
+      font-weight: 600;
+      color: #4b5563;
+      margin: 0 0 6px !important;
+    }
+    .modal-body input {
+      width: 100%;
+      margin: 0 !important;
+      padding: 10px 12px;
+      border: 1px solid #ddd6ca;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      background: #fdfcfa;
+      color: var(--fid-dark);
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+    }
+    .modal-body input:focus {
+      background: #ffffff;
+      border-color: var(--fid-dark);
+      box-shadow: 0 0 0 3px rgba(20, 20, 20, 0.06);
+    }
+
+    .parceria-box {
+      margin-top: 4px;
+      margin-bottom: 6px;
+      background: #faf8f4;
+      border: 1px solid #ece7dc;
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .parceria-label {
+      font-size: 0.71rem;
+      font-weight: 700;
+      color: var(--fid-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+    .parceria-desc {
+      font-size: 0.79rem;
+      color: var(--fid-muted);
+      margin: 0 0 10px;
+      line-height: 1.45;
+    }
+    .btn-parceria {
+      width: auto !important;
+      margin: 0 !important;
+      padding: 8px 16px !important;
+      border-radius: 10px !important;
+      border: 1.5px solid #e0d5c1 !important;
+      background: #ffffff !important;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.16s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-parceria.ativo {
+      border-color: var(--fid-dark) !important;
+      box-shadow: 0 0 0 3px rgba(20, 20, 20, 0.08);
+    }
+    .parceria-info {
+      font-size: 0.75rem;
+      color: var(--fid-green);
+      font-weight: 500;
+      margin: 8px 0 0;
+    }
+
+    .modal-desc {
+      color: var(--fid-muted);
+      font-size: 0.86rem;
+      line-height: 1.5;
+      margin: 0 0 16px;
+    }
+    .modal-error {
+      color: var(--fid-red);
+      font-size: 0.8rem;
+      min-height: 18px;
+      margin: 6px 0 0;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 14px 22px 20px;
+    }
+    .btn-cancel {
+      width: auto !important;
+      margin: 0 !important;
+      background: #f4f1ea !important;
+      color: #4b5563 !important;
+      border: none !important;
+      padding: 10px 16px !important;
+      border-radius: 10px !important;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.85rem !important;
+      font-weight: 600 !important;
+    }
+    .btn-cancel:hover {
+      background: #e9e4da !important;
+      color: var(--fid-dark) !important;
+    }
+    .btn-primary-gold {
+      width: auto !important;
+      margin: 0 !important;
+      background: var(--fid-dark) !important;
+      color: #ffffff !important;
+      border: none !important;
+      padding: 10px 18px !important;
+      border-radius: 10px !important;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.85rem !important;
+      font-weight: 600 !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+    .btn-primary-gold:hover { background: #2c2c2c !important; }
+    .btn-primary-gold:disabled { opacity: 0.65; cursor: wait; }
+
+    .btn-danger {
+      width: auto !important;
+      margin: 0 !important;
+      background: var(--fid-red) !important;
+      color: #ffffff !important;
+      border: none !important;
+      padding: 10px 18px !important;
+      border-radius: 10px !important;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.85rem !important;
+      font-weight: 600 !important;
+    }
+    .btn-danger:hover { background: #b91c1c !important; }
+
+    /* Toast discreto */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 11px 18px;
+      border-radius: 12px;
+      background: rgba(20, 20, 20, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: #ffffff;
+      font-size: 0.84rem;
+      font-weight: 500;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+      z-index: 5000;
+      animation: slideUpToast 0.18s ease-out;
+    }
+    @keyframes slideUpToast {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 1040px) {
+      .metrics-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    @media (max-width: 640px) {
+      .fid-page { padding: 0 14px 50px; }
+      .metrics-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .cards-grid { grid-template-columns: 1fr; }
+      .form-grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
 
-<div class="page-wrapper">
-    <!-- PAGE HEADER -->
+<div class="fid-page">
 
-    <div class="page-header">
-        <div>
-            <h1>🎁 Cartões de Fidelidade</h1>
-            <p>Cartões do programa de fidelidade Eva Leite Atelier — apenas serviços deste Atelier.</p>
-        </div>
-        <button class="add-btn" onclick="abrirModalNovo()">
-            ＋ Novo Cartão
+  <!-- Controlos absorvidos para a Barra Superior Flutuante Liquid Glass -->
+  <div class="page-toolbar">
+    <div class="page-toolbar-controls">
+      <div class="toolbar-search-wrap">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="search-input" placeholder="Pesquisar nome ou telefone..." oninput="filtrarCartoes()">
+      </div>
+
+      <div class="filter-dropdown-wrap">
+        <button type="button" class="btn-filter-icon" id="btn-filter-fidelidade" onclick="toggleFiltroFidelidade(event)" title="Filtrar cartões" aria-expanded="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <line x1="4" y1="6" x2="20" y2="6"></line>
+            <line x1="7" y1="12" x2="17" y2="12"></line>
+            <line x1="10" y1="18" x2="14" y2="18"></line>
+          </svg>
+          <span class="filter-badge-dot" id="dot-filtro-fidelidade"></span>
         </button>
+
+        <div class="filter-popover" id="popover-filtro-fidelidade" onclick="event.stopPropagation()">
+          <div class="filter-popover-section">
+            <span class="filter-popover-label">Estado do Cartão</span>
+            <div class="fid-filter-pills" id="pills-filtro-fidelidade">
+              <button type="button" class="filter-btn active ativo" data-filtro="todos" onclick="mudarFiltro(this, 'todos')">Todos</button>
+              <button type="button" class="filter-btn" data-filtro="em-curso" onclick="mudarFiltro(this, 'em-curso')"><span class="fid-dot dot-blue"></span>Em Curso</button>
+              <button type="button" class="filter-btn" data-filtro="completo" onclick="mudarFiltro(this, 'completo')"><span class="fid-dot dot-gold"></span>Completos</button>
+              <button type="button" class="filter-btn" data-filtro="utilizado" onclick="mudarFiltro(this, 'utilizado')"><span class="fid-dot dot-green"></span>Utilizados</button>
+              <button type="button" class="filter-btn" data-filtro="vencido" onclick="mudarFiltro(this, 'vencido')"><span class="fid-dot dot-red"></span>Vencidos</button>
+            </div>
+          </div>
+
+          <div class="filter-popover-section">
+            <span class="filter-popover-label">Origem</span>
+            <div class="fid-filter-pills" id="pills-origem-fidelidade">
+              <button type="button" class="ativo" data-origem="todos" onclick="mudarOrigem(this, 'todos')">Todas</button>
+              <button type="button" data-origem="atelier" onclick="mudarOrigem(this, 'atelier')">Atelier</button>
+              <button type="button" data-origem="linha" onclick="mudarOrigem(this, 'linha')">Parceria Linha</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="btn-fid-primary" id="btn-novo-cartao-topbar" onclick="abrirModalNovo()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        <span>Novo Cartão</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 5 METRICAS CLICAVEIS -->
+  <div class="metrics-row" id="metrics-row">
+    <div class="metric-card ativo" id="kpi-fid-todos" onclick="mudarFiltro(null, 'todos')">
+      <div class="metric-head">
+        <span>Total de Cartões</span>
+        <span class="fid-dot dot-dark"></span>
+      </div>
+      <div class="metric-value" id="m-total">—</div>
+      <div class="metric-sub">Programa de fidelidade</div>
     </div>
 
-    <!-- MÉTRICAS -->
-    <div class="metrics-row" id="metrics-row">
-        <div class="metric-card">
-            <div class="metric-value" id="m-total">—</div>
-            <div class="metric-label">Total de Cartões</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-value" id="m-ativos">—</div>
-            <div class="metric-label">Em Curso</div>
-        </div>
-        <div class="metric-card gold">
-            <div class="metric-value" id="m-completos">—</div>
-            <div class="metric-label">Completos (p/ usar)</div>
-        </div>
-        <div class="metric-card green">
-            <div class="metric-value" id="m-utilizados">—</div>
-            <div class="metric-label">Utilizados</div>
-        </div>
-        <div class="metric-card red">
-            <div class="metric-value" id="m-vencidos">—</div>
-            <div class="metric-label">Vencidos</div>
-        </div>
+    <div class="metric-card" id="kpi-fid-em-curso" onclick="alternarFiltroKpiFid('em-curso')">
+      <div class="metric-head">
+        <span>Em Curso</span>
+        <span class="fid-dot dot-blue"></span>
+      </div>
+      <div class="metric-value" id="m-ativos">—</div>
+      <div class="metric-sub">A acumular carimbos</div>
     </div>
 
-    <!-- FILTROS -->
-    <div class="filters-bar">
-        <input type="text" class="search-input" id="search-input" placeholder="🔍  Pesquisar por nome ou telefone..." oninput="filtrarCartoes()">
-        <button class="filter-btn active" data-filtro="todos" onclick="mudarFiltro(this, 'todos')">Todos</button>
-        <button class="filter-btn" data-filtro="em-curso" onclick="mudarFiltro(this, 'em-curso')">Em Curso</button>
-        <button class="filter-btn" data-filtro="completo" onclick="mudarFiltro(this, 'completo')">Completos</button>
-        <button class="filter-btn" data-filtro="utilizado" onclick="mudarFiltro(this, 'utilizado')">Utilizados</button>
-        <button class="filter-btn" data-filtro="vencido" onclick="mudarFiltro(this, 'vencido')">Vencidos</button>
+    <div class="metric-card" id="kpi-fid-completo" onclick="alternarFiltroKpiFid('completo')">
+      <div class="metric-head">
+        <span>Completos</span>
+        <span class="fid-dot dot-gold"></span>
+      </div>
+      <div class="metric-value" id="m-completos">—</div>
+      <div class="metric-sub">Prontos para desconto</div>
     </div>
 
-    <!-- GRID DE CARTÕES -->
-    <div class="cards-grid" id="cards-grid">
-        <div class="loading-state">
-            <div class="spinner"></div>
-            <p>A carregar cartões de fidelidade...</p>
-        </div>
+    <div class="metric-card" id="kpi-fid-utilizado" onclick="alternarFiltroKpiFid('utilizado')">
+      <div class="metric-head">
+        <span>Utilizados</span>
+        <span class="fid-dot dot-green"></span>
+      </div>
+      <div class="metric-value" id="m-utilizados">—</div>
+      <div class="metric-sub">Recompensas resgatadas</div>
     </div>
+
+    <div class="metric-card" id="kpi-fid-vencido" onclick="alternarFiltroKpiFid('vencido')">
+      <div class="metric-head">
+        <span>Vencidos</span>
+        <span class="fid-dot dot-red"></span>
+      </div>
+      <div class="metric-value" id="m-vencidos">—</div>
+      <div class="metric-sub">Validade expirada</div>
+    </div>
+  </div>
+
+  <!-- Barra de estado do filtro ativo -->
+  <div class="fid-filter-chip-bar" id="fid-filter-chip-bar">
+    <span id="fid-filter-resumo"></span>
+    <button type="button" class="btn-limpar-fid" onclick="limparFiltrosFidelidade()">Limpar</button>
+  </div>
+
+  <!-- GRID DE CARTOES -->
+  <div class="cards-grid" id="cards-grid">
+    <div class="loading-state">
+      <svg class="spin-fid" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" stroke-dasharray="42" stroke-dashoffset="16"></circle>
+      </svg>
+      <p>A carregar cartões de fidelidade...</p>
+    </div>
+  </div>
 </div>
 
-<!-- MODAL: NOVO CARTÃO -->
-<div id="modal-novo" style="display:none;" class="modal-overlay" onclick="fecharModalFora(event, 'modal-novo')">
-    <div class="modal-box">
-        <h3>🎁 Novo Cartão de Fidelidade</h3>
-        <label>Nome da Cliente *</label>
+<!-- MODAL: NOVO CARTAO -->
+<div id="modal-novo" style="display:none;" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-novo-titulo" onclick="fecharModalFora(event, 'modal-novo')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-header-left">
+        <span class="modal-badge-ico" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+            <line x1="2" y1="10" x2="22" y2="10"></line>
+          </svg>
+        </span>
+        <h3 id="modal-novo-titulo">Novo Cartão de Fidelidade</h3>
+      </div>
+      <button type="button" class="modal-close-btn" onclick="fecharModal('modal-novo')" title="Fechar" aria-label="Fechar janela">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="novo-nome">Nome da Cliente *</label>
         <input type="text" id="novo-nome" placeholder="Ex: Ana Silva">
+      </div>
 
-        <label>Telefone</label>
+      <div class="form-group">
+        <label for="novo-telefone">Telefone</label>
         <input type="tel" id="novo-telefone" placeholder="Ex: 912 345 678">
+      </div>
 
-        <label>Total de Serviços (carimbos para completar)</label>
-        <input type="number" id="novo-total" value="5" min="1" max="20">
-
-        <label>Desconto ao completar (%)</label>
-        <input type="number" id="novo-desconto" value="25" min="1" max="100">
-
-        <!-- PARCERIA -->
-        <div style="margin-top:6px; margin-bottom:14px; background:#f8f7f5; border-radius:10px; padding:14px;">
-            <div style="font-size:0.78rem; font-weight:700; color:#aaa; text-transform:uppercase; letter-spacing:0.6px; margin-bottom:10px;">Parceria</div>
-            <p style="font-size:0.8rem; color:#999; margin:0 0 10px 0; line-height:1.5;">Se este cartão for emitido em parceria, escolha abaixo. Caso contrário, o cartão fica só no Atelier.</p>
-            <button type="button" id="btn-parceria-linha" onclick="toggleParceria('linha')" style="padding:8px 18px; border-radius:8px; border:2px solid #e0d5c1; background:#fff; font-family:inherit; cursor:pointer; transition:all .2s; display:inline-flex; align-items:center; gap:8px;">
-                <img src="img/logo_linha.png" alt="Linha" style="height:22px; width:auto; object-fit:contain;">
-            </button>
-            <p id="parceria-info" style="font-size:0.75rem; color:#aaa; margin:8px 0 0;"></p>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="novo-total">Total de Serviços</label>
+          <input type="number" id="novo-total" value="5" min="1" max="20">
         </div>
 
-        <div class="modal-actions">
-            <button class="btn-cancel" onclick="fecharModal('modal-novo')">Cancelar</button>
-            <button class="btn-primary-gold" id="btn-criar" onclick="criarCartao()">✨ Criar Cartão</button>
+        <div class="form-group">
+          <label for="novo-desconto">Desconto (%)</label>
+          <input type="number" id="novo-desconto" value="25" min="1" max="100">
         </div>
+      </div>
+
+      <!-- PARCERIA -->
+      <div class="parceria-box">
+        <div class="parceria-label">Parceria</div>
+        <p class="parceria-desc">Se este cartão for emitido em parceria, escolha abaixo. Caso contrário, o cartão fica apenas no Atelier.</p>
+        <button type="button" id="btn-parceria-linha" class="btn-parceria" onclick="toggleParceria('linha')">
+          <img src="img/logo_linha.png" alt="Linha" style="height:22px; width:auto; object-fit:contain;">
+        </button>
+        <p id="parceria-info" class="parceria-info"></p>
+      </div>
     </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" onclick="fecharModal('modal-novo')">Cancelar</button>
+      <button type="button" class="btn-primary-gold" id="btn-criar" onclick="criarCartao()">Criar Cartão</button>
+    </div>
+  </div>
 </div>
 
-<!-- MODAL: ADICIONAR SERVIÇO (PIN) -->
-<div id="modal-pin" style="display:none;" class="modal-overlay" onclick="fecharModalFora(event, 'modal-pin')">
-    <div class="modal-box">
-        <h3 id="modal-pin-title">✅ Registar Serviço</h3>
-        <p style="color:#888; font-size:0.88rem; margin-bottom:18px;" id="modal-pin-desc">Introduza a senha para confirmar o registo do serviço neste cartão.</p>
-        <label>Senha de Confirmação</label>
-        <input type="password" id="pin-input" placeholder="••••" onkeydown="if(event.key==='Enter') confirmarPin()">
-        <p id="pin-error" style="color:#e53935; font-size:0.8rem; min-height:18px; margin-bottom:10px;"></p>
-        <div class="modal-actions">
-            <button class="btn-cancel" onclick="fecharModal('modal-pin')">Cancelar</button>
-            <button class="btn-primary-gold" onclick="confirmarPin()">Confirmar</button>
-        </div>
+<!-- MODAL: ADICIONAR SERVICO (PIN) -->
+<div id="modal-pin" style="display:none;" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-pin-title" onclick="fecharModalFora(event, 'modal-pin')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-header-left">
+        <span class="modal-badge-ico" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </span>
+        <h3 id="modal-pin-title">Registar Serviço</h3>
+      </div>
+      <button type="button" class="modal-close-btn" onclick="fecharModal('modal-pin')" title="Fechar" aria-label="Fechar janela">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
     </div>
+
+    <div class="modal-body">
+      <p class="modal-desc" id="modal-pin-desc">Introduza a senha para confirmar o registo do serviço neste cartão.</p>
+      <div class="form-group" style="margin-bottom: 4px;">
+        <label for="pin-input">Senha de Confirmação</label>
+        <input type="password" id="pin-input" placeholder="••••" onkeydown="if(event.key==='Enter') confirmarPin()">
+      </div>
+      <p id="pin-error" class="modal-error"></p>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" onclick="fecharModal('modal-pin')">Cancelar</button>
+      <button type="button" class="btn-primary-gold" onclick="confirmarPin()">Confirmar</button>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL: USAR DESCONTO (PIN) -->
-<div id="modal-resgatar" style="display:none;" class="modal-overlay" onclick="fecharModalFora(event, 'modal-resgatar')">
-    <div class="modal-box">
-        <h3>🎉 Usar Desconto</h3>
-        <p style="color:#888; font-size:0.88rem; margin-bottom:18px;">Confirme a utilização do desconto neste cartão. Esta ação é irreversível.</p>
-        <label>Senha de Confirmação</label>
-        <input type="password" id="resgatar-pin-input" placeholder="••••" onkeydown="if(event.key==='Enter') confirmarResgate()">
-        <p id="resgatar-pin-error" style="color:#e53935; font-size:0.8rem; min-height:18px; margin-bottom:10px;"></p>
-        <div class="modal-actions">
-            <button class="btn-cancel" onclick="fecharModal('modal-resgatar')">Cancelar</button>
-            <button class="btn-danger" onclick="confirmarResgate()">Usar Desconto</button>
-        </div>
+<div id="modal-resgatar" style="display:none;" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-resgatar-titulo" onclick="fecharModalFora(event, 'modal-resgatar')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-header-left">
+        <span class="modal-badge-ico" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 12 20 22 4 22 4 12"></polyline>
+            <rect x="2" y="7" width="20" height="5"></rect>
+            <line x1="12" y1="22" x2="12" y2="7"></line>
+            <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+            <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+          </svg>
+        </span>
+        <h3 id="modal-resgatar-titulo">Usar Desconto</h3>
+      </div>
+      <button type="button" class="modal-close-btn" onclick="fecharModal('modal-resgatar')" title="Fechar" aria-label="Fechar janela">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
     </div>
+
+    <div class="modal-body">
+      <p class="modal-desc">Confirme a utilização do desconto neste cartão. Esta ação é irreversível.</p>
+      <div class="form-group" style="margin-bottom: 4px;">
+        <label for="resgatar-pin-input">Senha de Confirmação</label>
+        <input type="password" id="resgatar-pin-input" placeholder="••••" onkeydown="if(event.key==='Enter') confirmarResgate()">
+      </div>
+      <p id="resgatar-pin-error" class="modal-error"></p>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" onclick="fecharModal('modal-resgatar')">Cancelar</button>
+      <button type="button" class="btn-danger" onclick="confirmarResgate()">Usar Desconto</button>
+    </div>
+  </div>
 </div>
 
 <script>
-    // ─── BASE DE DADOS DO ATELIER (próprio) ───
-    const ATELIER_URL = 'https://cixjmwfkfmeedajpmzmp.supabase.co';
-    const ATELIER_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeGptd2ZrZm1lZWRhanBtem1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MzM5ODIsImV4cCI6MjA2OTEwOTk4Mn0.vFvgRMK_oabG19FNauNaBu_CoQTL8QRSXcptyfY6rbM';
-    const dbAtelier = window.supabase.createClient(ATELIER_URL, ATELIER_KEY);
+  // BASE DE DADOS DO ATELIER (proprio)
+  const ATELIER_URL = 'https://cixjmwfkfmeedajpmzmp.supabase.co';
+  const ATELIER_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeGptd2ZrZm1lZWRhanBtem1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MzM5ODIsImV4cCI6MjA2OTEwOTk4Mn0.vFvgRMK_oabG19FNauNaBu_CoQTL8QRSXcptyfY6rbM';
+  const dbAtelier = window.supabase.createClient(ATELIER_URL, ATELIER_KEY);
 
-    // ─── BASE DE DADOS DO SITE DE FIDELIDADE (VendasLinha) ───
-    const FIDELIDADE_URL = 'https://ygyomwclmfqehhbtjaxy.supabase.co';
-    const FIDELIDADE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlneW9td2NsbWZxZWhoYnRqYXh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMTk5ODksImV4cCI6MjA4ODU5NTk4OX0.sXsc3vS6wtsLE8iMIdXrpqxKjoYM14WGhQbyK3p5rj4';
-    const dbFidelidade = window.supabase.createClient(FIDELIDADE_URL, FIDELIDADE_KEY);
+  // BASE DE DADOS DO SITE DE FIDELIDADE (VendasLinha)
+  const FIDELIDADE_URL = 'https://ygyomwclmfqehhbtjaxy.supabase.co';
+  const FIDELIDADE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlneW9td2NsbWZxZWhoYnRqYXh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMTk5ODksImV4cCI6MjA4ODU5NTk4OX0.sXsc3vS6wtsLE8iMIdXrpqxKjoYM14WGhQbyK3p5rj4';
+  const dbFidelidade = window.supabase.createClient(FIDELIDADE_URL, FIDELIDADE_KEY);
 
-    let todosCartoes = [];
-    let filtroAtivo = 'todos';
-    let cardParaAcao = null; // Cartão em espera de ação (pin/resgate)
+  let todosCartoes = [];
+  let filtroAtivo = 'todos';
+  let origemAtiva = 'todos';
+  let parceiroSelecionado = null;
+  let cardParaAcao = null;
 
-    // ─── IDENTIFICAR USER_ID DO ATELIER ───
-    // Como os cartões do Atelier têm total_services = 6, filtramos por esse campo.
-    // Em alternativa, se a tabela tiver um campo "partner" ou similar, usaríamos isso.
-    // Por enquanto filtramos por total_services = 6 (modelo atelier) e discount_pct = 25.
+  function esc(str) {
+    return String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
 
-    async function init() {
-        await carregarCartoes();
-    }
+  function dbDoCartao(card) {
+    return card && card._origem === 'atelier' ? dbAtelier : dbFidelidade;
+  }
 
-    async function carregarCartoes() {
-        const grid = document.getElementById('cards-grid');
-        grid.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>A carregar...</p></div>';
+  async function init() {
+    sincronizarControlesFidelidade();
+    await carregarCartoes();
+  }
 
-        // Cartões próprios do Atelier (base de dados do Atelier)
-        const { data: dataAtelier, error: errAtelier } = await dbAtelier
-            .from('loyalty_cards')
-            .select('*')
-            .order('created_at', { ascending: false });
+  async function carregarCartoes() {
+    const grid = document.getElementById('cards-grid');
+    grid.innerHTML = `
+      <div class="loading-state">
+        <svg class="spin-fid" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" stroke-dasharray="42" stroke-dashoffset="16"></circle>
+        </svg>
+        <p>A carregar cartões de fidelidade...</p>
+      </div>`;
 
-        // Cartões de parceria com a LINHA (filtramos por total_services = 5)
-        const { data: dataLinha } = await dbFidelidade
-            .from('loyalty_cards')
-            .select('*')
-            .eq('total_services', 5)
-            .order('created_at', { ascending: false });
+    const { data: dataAtelier, error: errAtelier } = await dbAtelier
+      .from('loyalty_cards')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-        if (errAtelier) {
-            // A tabela pode ainda não ter sido criada — mostrar aviso amigável
-            grid.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><p>Tabela <b>loyalty_cards</b> ainda não existe no Atelier.<br>Corre o <b>setup_db.sql</b> no Supabase do Atelier primeiro!</p></div>`;
-            return;
-        }
+    const { data: dataLinha } = await dbFidelidade
+      .from('loyalty_cards')
+      .select('*')
+      .eq('total_services', 5)
+      .order('created_at', { ascending: false });
 
-        // Marcar origem dos cartões para saber qual DB usar depois
-        const atelierCards = (dataAtelier || []).map(c => ({ ...c, _origem: 'atelier' }));
-        const linhaCards   = (dataLinha   || []).map(c => ({ ...c, _origem: 'linha' }));
-
-        todosCartoes = [...atelierCards, ...linhaCards];
-        atualizarMetricas();
-        renderCartoes();
-    }
-
-    function getStatusCartao(c) {
-        if (c.current_services > c.total_services) return 'utilizado';
-        if (c.current_services >= c.total_services) {
-            const exp = c.expires_at ? new Date(c.expires_at) : null;
-            if (exp && new Date() > exp) return 'vencido';
-            return 'completo';
-        }
-        return 'em-curso';
-    }
-
-    function atualizarMetricas() {
-        const total = todosCartoes.length;
-        const ativos = todosCartoes.filter(c => getStatusCartao(c) === 'em-curso').length;
-        const completos = todosCartoes.filter(c => getStatusCartao(c) === 'completo').length;
-        const utilizados = todosCartoes.filter(c => getStatusCartao(c) === 'utilizado').length;
-        const vencidos = todosCartoes.filter(c => getStatusCartao(c) === 'vencido').length;
-
-        document.getElementById('m-total').textContent = total;
-        document.getElementById('m-ativos').textContent = ativos;
-        document.getElementById('m-completos').textContent = completos;
-        document.getElementById('m-utilizados').textContent = utilizados;
-        document.getElementById('m-vencidos').textContent = vencidos;
-    }
-
-    function renderCartoes() {
-        const grid = document.getElementById('cards-grid');
-        const termoBusca = document.getElementById('search-input').value.toLowerCase();
-
-        let lista = todosCartoes.filter(c => {
-            const status = getStatusCartao(c);
-            if (filtroAtivo !== 'todos' && status !== filtroAtivo) return false;
-            if (termoBusca) {
-                const nome = (c.client_name || '').toLowerCase();
-                const tel = (c.client_phone || '').toLowerCase();
-                if (!nome.includes(termoBusca) && !tel.includes(termoBusca)) return false;
-            }
-            return true;
-        });
-
-        if (!lista.length) {
-            grid.innerHTML = `<div class="empty-state"><div class="empty-icon">🎴</div><p>Nenhum cartão encontrado.</p></div>`;
-            return;
-        }
-
-        grid.innerHTML = lista.map(c => renderCard(c)).join('');
-    }
-
-    function renderCard(c) {
-        const status = getStatusCartao(c);
-        const progresso = Math.min(c.current_services, c.total_services);
-        const percentagem = Math.round((progresso / c.total_services) * 100);
-
-        const badgeMap = {
-            'em-curso':  ['em-curso',  'Em Curso'],
-            'completo':  ['completo',  '🎉 Pronto a Usar'],
-            'utilizado': ['utilizado', '✓ Utilizado'],
-            'vencido':   ['vencido',   '⚠️ Vencido'],
-        };
-        const [badgeCls, badgeTxt] = badgeMap[status];
-
-        // Dots
-        let dotsHTML = '';
-        for (let i = 0; i < c.total_services; i++) {
-            dotsHTML += `<div class="dot ${i < c.current_services ? 'filled' : ''}"></div>`;
-        }
-
-        // Data de validade
-        let expiresHTML = '';
-        if (status === 'completo' && c.expires_at) {
-            const exp = new Date(c.expires_at);
-            const dias = Math.ceil((exp - new Date()) / (1000 * 60 * 60 * 24));
-            const urgente = dias <= 15;
-            expiresHTML = `<div class="expires-tag ${urgente ? 'urgent' : ''}">Desconto válido até ${exp.toLocaleDateString('pt-PT')} (${dias} dias)</div>`;
-        }
-
-        // Link para o cartão público
-        const linkCartao = `https://fidelidade.linhaofficial.pt/?card=${c.id}`;
-
-        // Botão de resgate (só aparece quando completo)
-        let acaoBotao = '';
-        if (status === 'completo') {
-            acaoBotao = `<button class="btn-icon" title="Usar Desconto" onclick="pedirPinResgate('${c.id}')">🎁</button>`;
-        }
-
-        return `
-        <div class="fidelidade-card" id="card-${c.id}">
-            <div class="card-top">
-                <div>
-                    <div class="card-client-name">${c.client_name || '<span style="color:#ccc;font-style:italic;">Sem nome registado</span>'}</div>
-                    <div class="card-client-phone">${c.client_phone || ''}</div>
-                    ${expiresHTML}
-                </div>
-                <span class="status-badge ${badgeCls}">${badgeTxt}</span>
-            </div>
-
-            <div class="progress-label">Progresso do Cartão</div>
-            <div class="dots-row">${dotsHTML}</div>
-
-            <div class="progress-bar-wrap">
-                <div class="progress-bar-fill" style="width: ${percentagem}%"></div>
-            </div>
-
-            <div class="card-footer">
-                <div class="card-progress-text"><strong>${progresso}</strong> / ${c.total_services} serviços · ${c.discount_pct}% OFF</div>
-                <div class="card-actions">
-                    ${acaoBotao}
-                    <a class="btn-icon" href="https://fidelidade.linhaofficial.pt/?card=${c.id}" target="_blank" title="Ver cartão do cliente">👁️</a>
-                    <button class="btn-icon danger" title="Apagar cartão" onclick="apagarCartao('${c.id}')">🗑️</button>
-                </div>
-            </div>
+    if (errAtelier) {
+      grid.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-ico-circle" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+          </div>
+          <p>Tabela <b>loyalty_cards</b> ainda não existe no Atelier.<br>Corre o <b>setup_db.sql</b> no Supabase do Atelier primeiro.</p>
         </div>`;
+      return;
     }
 
-    function mudarFiltro(btn, filtro) {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        filtroAtivo = filtro;
-        renderCartoes();
+    const atelierCards = (dataAtelier || []).map(c => ({ ...c, _origem: 'atelier' }));
+    const linhaCards = (dataLinha || []).map(c => ({ ...c, _origem: 'linha' }));
+
+    todosCartoes = [...atelierCards, ...linhaCards];
+    atualizarMetricas();
+    renderCartoes();
+  }
+
+  function getStatusCartao(c) {
+    const total = Number(c.total_services) || 1;
+    const current = Number(c.current_services) || 0;
+    if (current > total) return 'utilizado';
+    if (current >= total) {
+      const exp = c.expires_at ? new Date(c.expires_at) : null;
+      if (exp && new Date() > exp) return 'vencido';
+      return 'completo';
+    }
+    return 'em-curso';
+  }
+
+  function cartoesPorOrigem() {
+    if (origemAtiva === 'todos') return todosCartoes;
+    return todosCartoes.filter(c => c._origem === origemAtiva);
+  }
+
+  function atualizarMetricas() {
+    const base = cartoesPorOrigem();
+    const total = base.length;
+    const ativos = base.filter(c => getStatusCartao(c) === 'em-curso').length;
+    const completos = base.filter(c => getStatusCartao(c) === 'completo').length;
+    const utilizados = base.filter(c => getStatusCartao(c) === 'utilizado').length;
+    const vencidos = base.filter(c => getStatusCartao(c) === 'vencido').length;
+
+    document.getElementById('m-total').textContent = total;
+    document.getElementById('m-ativos').textContent = ativos;
+    document.getElementById('m-completos').textContent = completos;
+    document.getElementById('m-utilizados').textContent = utilizados;
+    document.getElementById('m-vencidos').textContent = vencidos;
+  }
+
+  function renderCartoes() {
+    const grid = document.getElementById('cards-grid');
+    const termoBusca = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
+
+    const lista = cartoesPorOrigem().filter(c => {
+      const status = getStatusCartao(c);
+      if (filtroAtivo !== 'todos' && status !== filtroAtivo) return false;
+      if (termoBusca) {
+        const nome = String(c.client_name || '').toLowerCase();
+        const tel = String(c.client_phone || '').toLowerCase();
+        if (!nome.includes(termoBusca) && !tel.includes(termoBusca)) return false;
+      }
+      return true;
+    });
+
+    const chipBar = document.getElementById('fid-filter-chip-bar');
+    const chipTxt = document.getElementById('fid-filter-resumo');
+    if (chipBar && chipTxt) {
+      const ativo = filtroAtivo !== 'todos' || origemAtiva !== 'todos' || Boolean(termoBusca);
+      chipBar.classList.toggle('visivel', ativo);
+      if (ativo) {
+        const statusLabels = {
+          'em-curso': 'Em Curso',
+          'completo': 'Completos',
+          'utilizado': 'Utilizados',
+          'vencido': 'Vencidos'
+        };
+        const partes = [];
+        if (filtroAtivo !== 'todos') partes.push(statusLabels[filtroAtivo] || filtroAtivo);
+        if (origemAtiva === 'atelier') partes.push('Atelier');
+        if (origemAtiva === 'linha') partes.push('Parceria Linha');
+        if (termoBusca) partes.push(`"${termoBusca}"`);
+        chipTxt.textContent = `${lista.length} cartão${lista.length === 1 ? '' : 'ões'}${partes.length ? ' · ' + partes.join(' · ') : ''}`;
+      }
     }
 
-    function filtrarCartoes() {
-        renderCartoes();
+    if (!lista.length) {
+      const msgVazio = (filtroAtivo !== 'todos' || origemAtiva !== 'todos' || termoBusca)
+        ? 'Nenhum cartão encontrado para o filtro selecionado.'
+        : 'Nenhum cartão de fidelidade registado.';
+      grid.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-ico-circle" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+              <line x1="2" y1="10" x2="22" y2="10"></line>
+            </svg>
+          </div>
+          <p>${esc(msgVazio)}</p>
+        </div>`;
+      return;
     }
 
-    // ─── CRIAR CARTÃO ───
-    function abrirModalNovo() {
-        parceiroSelecionado = null;
-        document.getElementById('novo-nome').value = '';
-        document.getElementById('novo-telefone').value = '';
-        document.getElementById('novo-total').value = '5';
-        document.getElementById('novo-desconto').value = '25';
-        // Resetar botão de parceria
-        document.getElementById('btn-parceria-linha').style.background = '#fff';
-        document.getElementById('btn-parceria-linha').style.borderColor = '#e0d5c1';
-        document.getElementById('btn-parceria-linha').style.color = '#555';
-        document.getElementById('parceria-info').textContent = '';
-        document.getElementById('modal-novo').style.display = 'flex';
+    grid.innerHTML = lista.map(c => renderCard(c)).join('');
+  }
+
+  function renderCard(c) {
+    const status = getStatusCartao(c);
+    const totalServices = Math.max(Number(c.total_services) || 5, 1);
+    const currentServices = Math.max(Number(c.current_services) || 0, 0);
+    const progresso = Math.min(currentServices, totalServices);
+    const percentagem = Math.round((progresso / totalServices) * 100);
+    const discountPct = Number(c.discount_pct) || 0;
+
+    const badgeMap = {
+      'em-curso':  ['em-curso',  'dot-blue',  'Em Curso'],
+      'completo':  ['completo',  'dot-green', 'Pronto a Usar'],
+      'utilizado': ['utilizado', 'dot-dark',  'Utilizado'],
+      'vencido':   ['vencido',   'dot-red',   'Vencido']
+    };
+    const [badgeCls, dotCls, badgeTxt] = badgeMap[status];
+
+    let dotsHTML = '';
+    for (let i = 0; i < totalServices; i++) {
+      const filled = i < currentServices;
+      dotsHTML += `<div class="dot ${filled ? 'filled' : ''}">${filled ? '<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>' : ''}</div>`;
     }
 
-    function toggleParceria(parceiro) {
-        const btn = document.getElementById('btn-parceria-linha');
-        const info = document.getElementById('parceria-info');
-        if (parceiroSelecionado === parceiro) {
-            parceiroSelecionado = null;
-            btn.style.borderColor = '#e0d5c1';
-            btn.style.background = '#fff';
-            info.textContent = '';
-        } else {
-            parceiroSelecionado = parceiro;
-            btn.style.borderColor = '#1a1a2e';
-            btn.style.background = '#fff';
-            info.textContent = '✔️ Cartão será criado na base de dados da LINHA (VendasLinha).';
-        }
+    let expiresHTML = '';
+    if (status === 'completo' && c.expires_at) {
+      const exp = new Date(c.expires_at);
+      if (!Number.isNaN(exp.getTime())) {
+        const dias = Math.ceil((exp - new Date()) / (1000 * 60 * 60 * 24));
+        const urgente = dias <= 15;
+        expiresHTML = `<div class="expires-tag ${urgente ? 'urgent' : ''}">Válido até ${exp.toLocaleDateString('pt-PT')} (${dias}d)</div>`;
+      }
     }
 
-    async function criarCartao() {
-        const nome = document.getElementById('novo-nome').value.trim();
-        const tel = document.getElementById('novo-telefone').value.trim();
-        const total = parseInt(document.getElementById('novo-total').value) || 5;
-        const desconto = parseFloat(document.getElementById('novo-desconto').value) || 25;
+    const origemTag = c._origem === 'linha'
+      ? '<span class="origin-pill">Linha</span>'
+      : '<span class="origin-pill">Atelier</span>';
 
-        if (!nome) { mostrarToast('⚠️ O nome da cliente é obrigatório.'); return; }
+    const linkCartao = `https://fidelidade.linhaofficial.pt/?card=${encodeURIComponent(c.id)}`;
 
-        const btn = document.getElementById('btn-criar');
-        btn.disabled = true;
-        btn.textContent = 'A criar...';
+    let acaoBotao = '';
+    if (status === 'em-curso') {
+      acaoBotao = `
+        <button type="button" class="fid-ico-btn btn-fid-stamp" data-fid-action="stamp" title="Registar serviço" aria-label="Registar serviço no cartão">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>`;
+    } else if (status === 'completo') {
+      acaoBotao = `
+        <button type="button" class="fid-ico-btn btn-fid-redeem" data-fid-action="redeem" title="Usar desconto" aria-label="Usar desconto do cartão">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <polyline points="20 12 20 22 4 22 4 12"></polyline>
+            <rect x="2" y="7" width="20" height="5"></rect>
+            <line x1="12" y1="22" x2="12" y2="7"></line>
+            <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+            <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+          </svg>
+        </button>`;
+    }
 
-        let error;
-        if (parceiroSelecionado === 'linha') {
-            // Criar na base de dados da LINHA
-            let userId = todosCartoes.find(c => c._origem === 'linha')?.user_id || null;
-            let collaboratorId = todosCartoes.find(c => c._origem === 'linha')?.collaborator_id || null;
-            const res = await dbFidelidade.from('loyalty_cards').insert([{
-                user_id: userId,
-                collaborator_id: collaboratorId,
-                client_name: nome,
-                client_phone: tel || null,
-                total_services: total,
-                current_services: 0,
-                discount_pct: desconto,
-                status: 'active'
-            }]);
-            error = res.error;
-        } else {
-            // Criar na base de dados do Atelier
-            const res = await dbAtelier.from('loyalty_cards').insert([{
-                client_name: nome,
-                client_phone: tel || null,
-                total_services: total,
-                current_services: 0,
-                discount_pct: desconto,
-                status: 'active'
-            }]);
-            error = res.error;
-        }
+    const nomeHtml = c.client_name
+      ? `<div class="card-client-name">${esc(c.client_name)}</div>`
+      : `<div class="card-client-name sem-nome">Sem nome registado</div>`;
 
-        btn.disabled = false;
-        btn.textContent = '✨ Criar Cartão';
+    const phoneHtml = c.client_phone
+      ? `<span class="card-client-phone">${esc(c.client_phone)}</span>`
+      : '';
 
-        if (error) { mostrarToast('❌ Erro: ' + error.message); return; }
+    return `
+      <div class="fidelidade-card status-${status}" id="card-${esc(c.id)}" data-card-id="${esc(c.id)}">
+        <div class="card-top">
+          <div class="card-ident">
+            ${nomeHtml}
+            <div class="card-sub-meta">
+              ${origemTag}
+              ${phoneHtml}
+            </div>
+            ${expiresHTML}
+          </div>
+          <span class="status-badge ${badgeCls}"><span class="fid-dot ${dotCls}"></span>${badgeTxt}</span>
+        </div>
 
+        <div class="progress-label">
+          <span>Progresso do Cartão</span>
+          <span>${percentagem}%</span>
+        </div>
+        <div class="dots-row">${dotsHTML}</div>
+
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" style="width: ${percentagem}%"></div>
+        </div>
+
+        <div class="card-footer">
+          <div class="card-progress-text"><strong>${progresso}</strong> / ${totalServices} serviços · ${discountPct}% OFF</div>
+          <div class="card-actions">
+            ${acaoBotao}
+            <button type="button" class="fid-ico-btn" data-fid-action="copy" title="Copiar link do cartão" aria-label="Copiar link do cartão">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+            <a class="fid-ico-btn" href="${linkCartao}" target="_blank" rel="noopener noreferrer" title="Ver cartão do cliente" aria-label="Ver cartão do cliente">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </a>
+            <button type="button" class="fid-ico-btn danger" data-fid-action="delete" title="Apagar cartão" aria-label="Apagar cartão">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                <path d="M10 11v6"></path>
+                <path d="M14 11v6"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // FILTROS E NAVEGACAO
+  function toggleFiltroFidelidade(e) {
+    if (e) e.stopPropagation();
+    if (window.fecharMenuMobile) window.fecharMenuMobile();
+    const pop = document.getElementById('popover-filtro-fidelidade');
+    const btn = document.getElementById('btn-filter-fidelidade');
+    if (!pop || !btn) return;
+    const aberto = pop.classList.toggle('aberto');
+    btn.classList.toggle('ativo', aberto);
+    btn.setAttribute('aria-expanded', String(aberto));
+  }
+
+  function fecharFiltroFidelidade() {
+    const pop = document.getElementById('popover-filtro-fidelidade');
+    const btn = document.getElementById('btn-filter-fidelidade');
+    if (pop) pop.classList.remove('aberto');
+    if (btn) {
+      btn.classList.remove('ativo');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+  }
+
+  function mudarFiltro(btn, filtro) {
+    filtroAtivo = filtro || 'todos';
+    sincronizarControlesFidelidade();
+    renderCartoes();
+  }
+
+  function alternarFiltroKpiFid(filtro) {
+    mudarFiltro(null, filtroAtivo === filtro ? 'todos' : filtro);
+  }
+
+  function mudarOrigem(btn, origem) {
+    origemAtiva = origem || 'todos';
+    sincronizarControlesFidelidade();
+    atualizarMetricas();
+    renderCartoes();
+  }
+
+  function limparFiltrosFidelidade() {
+    filtroAtivo = 'todos';
+    origemAtiva = 'todos';
+    const inp = document.getElementById('search-input');
+    if (inp) inp.value = '';
+    sincronizarControlesFidelidade();
+    atualizarMetricas();
+    renderCartoes();
+  }
+
+  function sincronizarControlesFidelidade() {
+    document.querySelectorAll('#pills-filtro-fidelidade button').forEach(b => {
+      const ativo = b.dataset.filtro === filtroAtivo;
+      b.classList.toggle('ativo', ativo);
+      b.classList.toggle('active', ativo);
+    });
+    document.querySelectorAll('#pills-origem-fidelidade button').forEach(b => {
+      b.classList.toggle('ativo', b.dataset.origem === origemAtiva);
+    });
+    const kpiMap = {
+      'kpi-fid-todos': 'todos',
+      'kpi-fid-em-curso': 'em-curso',
+      'kpi-fid-completo': 'completo',
+      'kpi-fid-utilizado': 'utilizado',
+      'kpi-fid-vencido': 'vencido'
+    };
+    Object.entries(kpiMap).forEach(([id, f]) => {
+      const card = document.getElementById(id);
+      if (card) card.classList.toggle('ativo', filtroAtivo === f);
+    });
+    const btnFilter = document.getElementById('btn-filter-fidelidade');
+    if (btnFilter) {
+      btnFilter.classList.toggle('tem-filtro', filtroAtivo !== 'todos' || origemAtiva !== 'todos');
+    }
+  }
+
+  function filtrarCartoes() {
+    renderCartoes();
+  }
+
+  // CRIAR CARTAO
+  function abrirModalNovo() {
+    parceiroSelecionado = null;
+    document.getElementById('novo-nome').value = '';
+    document.getElementById('novo-telefone').value = '';
+    document.getElementById('novo-total').value = '5';
+    document.getElementById('novo-desconto').value = '25';
+    const btnLinha = document.getElementById('btn-parceria-linha');
+    if (btnLinha) btnLinha.classList.remove('ativo');
+    document.getElementById('parceria-info').textContent = '';
+    document.getElementById('modal-novo').style.display = 'flex';
+    if (window.fecharMenuMobile) window.fecharMenuMobile();
+    setTimeout(() => {
+      const inpNome = document.getElementById('novo-nome');
+      if (inpNome) inpNome.focus();
+    }, 40);
+  }
+
+  function toggleParceria(parceiro) {
+    const btn = document.getElementById('btn-parceria-linha');
+    const info = document.getElementById('parceria-info');
+    if (parceiroSelecionado === parceiro) {
+      parceiroSelecionado = null;
+      if (btn) btn.classList.remove('ativo');
+      info.textContent = '';
+    } else {
+      parceiroSelecionado = parceiro;
+      if (btn) btn.classList.add('ativo');
+      info.textContent = 'Cartão será criado na base de dados da LINHA (VendasLinha).';
+    }
+  }
+
+  async function criarCartao() {
+    const nome = document.getElementById('novo-nome').value.trim();
+    const tel = document.getElementById('novo-telefone').value.trim();
+    const total = parseInt(document.getElementById('novo-total').value, 10) || 5;
+    const desconto = parseFloat(document.getElementById('novo-desconto').value) || 25;
+
+    if (!nome) {
+      mostrarToast('O nome da cliente é obrigatório.');
+      return;
+    }
+
+    const btn = document.getElementById('btn-criar');
+    btn.disabled = true;
+    btn.textContent = 'A criar...';
+
+    let error;
+    if (parceiroSelecionado === 'linha') {
+      const userId = todosCartoes.find(c => c._origem === 'linha')?.user_id || null;
+      const collaboratorId = todosCartoes.find(c => c._origem === 'linha')?.collaborator_id || null;
+      const res = await dbFidelidade.from('loyalty_cards').insert([{
+        user_id: userId,
+        collaborator_id: collaboratorId,
+        client_name: nome,
+        client_phone: tel || null,
+        total_services: total,
+        current_services: 0,
+        discount_pct: desconto,
+        status: 'active'
+      }]);
+      error = res.error;
+    } else {
+      const res = await dbAtelier.from('loyalty_cards').insert([{
+        client_name: nome,
+        client_phone: tel || null,
+        total_services: total,
+        current_services: 0,
+        discount_pct: desconto,
+        status: 'active'
+      }]);
+      error = res.error;
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Criar Cartão';
+
+    if (error) {
+      mostrarToast('Erro: ' + error.message);
+      return;
+    }
+
+    fecharModal('modal-novo');
+    mostrarToast(parceiroSelecionado === 'linha' ? 'Cartão LINHA criado com sucesso.' : 'Cartão Atelier criado com sucesso.');
+    await carregarCartoes();
+  }
+
+  // REGISTAR SERVICO (com PIN)
+  function pedirPinServico(cardId) {
+    cardParaAcao = { id: cardId, tipo: 'servico' };
+    document.getElementById('modal-pin-title').textContent = 'Registar Serviço';
+    document.getElementById('modal-pin-desc').textContent = 'Introduza a senha para confirmar o registo do serviço neste cartão.';
+    document.getElementById('pin-input').value = '';
+    document.getElementById('pin-error').textContent = '';
+    document.getElementById('modal-pin').style.display = 'flex';
+    setTimeout(() => {
+      const inp = document.getElementById('pin-input');
+      if (inp) inp.focus();
+    }, 60);
+  }
+
+  async function confirmarPin() {
+    if (!cardParaAcao) return;
+    const pin = document.getElementById('pin-input').value.trim();
+    if (!pin) return;
+
+    const { data: colabs } = await dbFidelidade.from('collaborators').select('loyalty_password').limit(50);
+    const pinValido = colabs && colabs.some(c => c.loyalty_password === pin);
+
+    if (!pinValido) {
+      document.getElementById('pin-error').textContent = 'Senha incorreta.';
+      return;
+    }
+
+    const card = todosCartoes.find(c => String(c.id) === String(cardParaAcao.id));
+    if (!card) return;
+
+    const newCount = (Number(card.current_services) || 0) + 1;
+    const updateData = { current_services: newCount };
+
+    if (newCount >= (Number(card.total_services) || 5)) {
+      const expiry = new Date();
+      expiry.setMonth(expiry.getMonth() + 3);
+      updateData.expires_at = expiry.toISOString();
+    }
+
+    const { error } = await dbDoCartao(card).from('loyalty_cards').update(updateData).eq('id', card.id);
+    if (error) {
+      mostrarToast('Erro: ' + error.message);
+      return;
+    }
+
+    fecharModal('modal-pin');
+    mostrarToast('Serviço registado com sucesso.');
+    await carregarCartoes();
+  }
+
+  // RESGATAR DESCONTO (com PIN)
+  function pedirPinResgate(cardId) {
+    cardParaAcao = { id: cardId, tipo: 'resgate' };
+    document.getElementById('resgatar-pin-input').value = '';
+    document.getElementById('resgatar-pin-error').textContent = '';
+    document.getElementById('modal-resgatar').style.display = 'flex';
+    setTimeout(() => {
+      const inp = document.getElementById('resgatar-pin-input');
+      if (inp) inp.focus();
+    }, 60);
+  }
+
+  async function confirmarResgate() {
+    if (!cardParaAcao) return;
+    const pin = document.getElementById('resgatar-pin-input').value.trim();
+    if (!pin) return;
+
+    const { data: colabs } = await dbFidelidade.from('collaborators').select('loyalty_password').limit(50);
+    const pinValido = colabs && colabs.some(c => c.loyalty_password === pin);
+
+    if (!pinValido) {
+      document.getElementById('resgatar-pin-error').textContent = 'Senha incorreta.';
+      return;
+    }
+
+    const card = todosCartoes.find(c => String(c.id) === String(cardParaAcao.id));
+    if (!card) return;
+
+    const { error } = await dbDoCartao(card).from('loyalty_cards')
+      .update({ current_services: (Number(card.total_services) || 5) + 1 })
+      .eq('id', card.id);
+
+    if (error) {
+      mostrarToast('Erro: ' + error.message);
+      return;
+    }
+
+    fecharModal('modal-resgatar');
+    mostrarToast('Desconto utilizado com sucesso.');
+    await carregarCartoes();
+  }
+
+  // APAGAR CARTAO
+  async function apagarCartao(id) {
+    const confirmar = window.mostrarConfirmacao
+      ? await window.mostrarConfirmacao('Tem a certeza que deseja apagar este cartão? Esta ação é permanente.', 'Apagar Cartão', 'alert', 'Apagar', 'Cancelar')
+      : confirm('Tem a certeza que deseja apagar este cartão? Esta ação é permanente.');
+
+    if (!confirmar) return;
+
+    const card = todosCartoes.find(c => String(c.id) === String(id));
+    const { error } = await dbDoCartao(card).from('loyalty_cards').delete().eq('id', id);
+    if (error) {
+      mostrarToast('Erro: ' + error.message);
+      return;
+    }
+    mostrarToast('Cartão apagado.');
+    await carregarCartoes();
+  }
+
+  // COPIAR LINK
+  function copiarLink(id) {
+    const url = 'https://fidelidade.linhaofficial.pt/?card=' + encodeURIComponent(id);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(() => {
+        mostrarToast('Link copiado para o clipboard.');
+      }).catch(() => {
+        prompt('Copie o link:', url);
+      });
+    } else {
+      prompt('Copie o link:', url);
+    }
+  }
+
+  // MODAIS UTILITARIOS
+  function fecharModal(id) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  }
+
+  function fecharModalFora(event, id) {
+    if (event.target.id === id) fecharModal(id);
+  }
+
+  function mostrarToast(msg) {
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3200);
+  }
+
+  // INICIO E EVENTOS DELEGADOS
+  document.addEventListener('DOMContentLoaded', () => {
+    init();
+
+    const grid = document.getElementById('cards-grid');
+    if (grid) {
+      grid.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-fid-action]');
+        if (!btn) return;
+        const cardEl = btn.closest('.fidelidade-card[data-card-id]');
+        if (!cardEl) return;
+        const id = cardEl.dataset.cardId;
+        const act = btn.dataset.fidAction;
+        if (act === 'stamp') pedirPinServico(id);
+        else if (act === 'redeem') pedirPinResgate(id);
+        else if (act === 'copy') copiarLink(id);
+        else if (act === 'delete') apagarCartao(id);
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      const pop = document.getElementById('popover-filtro-fidelidade');
+      const btn = document.getElementById('btn-filter-fidelidade');
+      if (pop && pop.classList.contains('aberto') && !pop.contains(e.target) && (!btn || !btn.contains(e.target))) {
+        fecharFiltroFidelidade();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        fecharFiltroFidelidade();
         fecharModal('modal-novo');
-        mostrarToast(parceiroSelecionado === 'linha' ? '🧵 Cartão LINHA criado com sucesso!' : '🎁 Cartão Atelier criado com sucesso!');
-        await carregarCartoes();
-    }
-
-    // ─── REGISTAR SERVIÇO (com PIN) ───
-    function pedirPinServico(cardId) {
-        cardParaAcao = { id: cardId, tipo: 'servico' };
-        document.getElementById('modal-pin-title').textContent = '✅ Registar Serviço';
-        document.getElementById('modal-pin-desc').textContent = 'Introduza a senha para confirmar o registo do serviço neste cartão.';
-        document.getElementById('pin-input').value = '';
-        document.getElementById('pin-error').textContent = '';
-        document.getElementById('modal-pin').style.display = 'flex';
-        setTimeout(() => document.getElementById('pin-input').focus(), 100);
-    }
-
-    async function confirmarPin() {
-        if (!cardParaAcao) return;
-        const pin = document.getElementById('pin-input').value.trim();
-        if (!pin) return;
-
-        // Verificar PIN contra colaboradores da base de dados
-        const { data: colabs } = await dbFidelidade.from('collaborators').select('loyalty_password').limit(50);
-        const pinValido = colabs && colabs.some(c => c.loyalty_password === pin);
-
-        if (!pinValido) {
-            document.getElementById('pin-error').textContent = 'Senha incorreta.';
-            return;
-        }
-
-        const card = todosCartoes.find(c => c.id === cardParaAcao.id);
-        if (!card) return;
-
-        const newCount = card.current_services + 1;
-        let updateData = { current_services: newCount };
-
-        if (newCount >= card.total_services) {
-            const expiry = new Date();
-            expiry.setMonth(expiry.getMonth() + 3);
-            updateData.expires_at = expiry.toISOString();
-        }
-
-        const { error } = await dbFidelidade.from('loyalty_cards').update(updateData).eq('id', card.id);
-        if (error) { mostrarToast('❌ Erro: ' + error.message); return; }
-
         fecharModal('modal-pin');
-        mostrarToast('✅ Serviço registado com sucesso!');
-        await carregarCartoes();
-    }
-
-    // ─── RESGATAR DESCONTO (com PIN) ───
-    function pedirPinResgate(cardId) {
-        cardParaAcao = { id: cardId, tipo: 'resgate' };
-        document.getElementById('resgatar-pin-input').value = '';
-        document.getElementById('resgatar-pin-error').textContent = '';
-        document.getElementById('modal-resgatar').style.display = 'flex';
-        setTimeout(() => document.getElementById('resgatar-pin-input').focus(), 100);
-    }
-
-    async function confirmarResgate() {
-        const pin = document.getElementById('resgatar-pin-input').value.trim();
-        if (!pin) return;
-
-        const { data: colabs } = await dbFidelidade.from('collaborators').select('loyalty_password').limit(50);
-        const pinValido = colabs && colabs.some(c => c.loyalty_password === pin);
-
-        if (!pinValido) {
-            document.getElementById('resgatar-pin-error').textContent = 'Senha incorreta.';
-            return;
-        }
-
-        const card = todosCartoes.find(c => c.id === cardParaAcao.id);
-        if (!card) return;
-
-        // Marcar como resgatado (current_services = total_services + 1)
-        const { error } = await dbFidelidade.from('loyalty_cards')
-            .update({ current_services: card.total_services + 1 })
-            .eq('id', card.id);
-
-        if (error) { mostrarToast('❌ Erro: ' + error.message); return; }
-
         fecharModal('modal-resgatar');
-        mostrarToast('🎉 Desconto utilizado com sucesso!');
-        await carregarCartoes();
-    }
-
-    // ─── APAGAR CARTÃO ───
-    async function apagarCartao(id) {
-        if (!confirm('Tem a certeza que deseja apagar este cartão? Esta ação é permanente.')) return;
-        const { error } = await dbFidelidade.from('loyalty_cards').delete().eq('id', id);
-        if (error) { mostrarToast('❌ Erro: ' + error.message); return; }
-        mostrarToast('🗑️ Cartão apagado.');
-        await carregarCartoes();
-    }
-
-    // ─── COPIAR LINK ───
-    function copiarLink(id) {
-        const url = 'https://fidelidade.linhaofficial.pt/?card=' + id;
-        navigator.clipboard.writeText(url).then(() => {
-            mostrarToast('🔗 Link copiado para o clipboard!');
-        }).catch(() => {
-            prompt('Copie o link:', url);
-        });
-    }
-
-    // ─── MODAIS UTILITÁRIOS ───
-    function fecharModal(id) {
-        document.getElementById(id).style.display = 'none';
-    }
-    function fecharModalFora(event, id) {
-        if (event.target.id === id) fecharModal(id);
-    }
-
-    // ─── TOAST ───
-    function mostrarToast(msg) {
-        const t = document.createElement('div');
-        t.className = 'toast';
-        t.textContent = msg;
-        document.body.appendChild(t);
-        setTimeout(() => t.remove(), 3200);
-    }
-
-    // ─── INÍCIO ───
-    document.addEventListener('DOMContentLoaded', init);
+      }
+    });
+  });
 </script>
 </body>
 </html>

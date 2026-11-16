@@ -4,217 +4,732 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finanças - Eva Leite Atelier</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <script src="auth-guard.js"></script>
-    <script src="navbar.js" defer></script>
+    <script src="navbar.js?v=7" defer></script>
 
     <style>
         :root {
-            --gold: #d4af37;
-            --gold-light: #f5e6a3;
-            --dark: #1a1a2e;
+            --gold: #b8860b;
+            --gold-accent: #c59b27;
+            --dark: #141414;
             --card-bg: #ffffff;
-            --text: #2d2d2d;
-            --text-muted: #888;
+            --text: #1f2937;
+            --text-muted: #6b7280;
             --bg: #f5f1ea;
-            --radius: 14px;
-            --shadow: 0 4px 20px rgba(0,0,0,.08);
+            --border-subtle: rgba(17, 24, 39, 0.07);
+            --radius: 16px;
+            --shadow: 0 2px 12px rgba(0, 0, 0, 0.035);
         }
 
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
-        .financas-wrapper { max-width: 1100px; margin: 0 auto; padding: 30px 20px 60px; }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+        }
 
-        .financas-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 14px; }
-        .financas-header h1 { margin: 0; font-size: 1.9rem; color: var(--dark); }
+        .financas-wrapper {
+            max-width: 1180px;
+            margin: 14px auto 60px;
+            padding: 0 24px 60px;
+            box-sizing: border-box;
+        }
 
-        .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
-        @media (max-width: 700px) { .card-grid { grid-template-columns: 1fr; } }
-        
-        .card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 22px 24px; }
-        .card-title { font-size: 0.95rem; font-weight: 700; color: var(--dark); margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
-        .card-desc { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.4; }
-        
-        .btn-gold {
-            background: var(--gold);
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 600;
+        /* Botao primario movido pela navbar.js para #liquid-dynamic-right */
+        .btn-fin-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            width: auto !important;
+            margin: 0 !important;
+            padding: 8px 16px !important;
+            border-radius: 999px !important;
+            border: 1px solid rgba(20, 20, 20, 0.9) !important;
+            background: #141414 !important;
+            color: #ffffff !important;
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 0.84rem !important;
+            font-weight: 600 !important;
+            letter-spacing: -0.01em;
             cursor: pointer;
-            transition: all 0.2s;
-            font-family: 'Inter', sans-serif;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+            transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
         }
-        .btn-gold:hover { background: #b8972e; transform: translateY(-1px); }
+        .btn-fin-primary:hover {
+            background: #2b2b2b !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+        }
+        .btn-fin-primary svg {
+            flex-shrink: 0;
+        }
 
-        .faturas-list {
-            margin-top: 20px;
-            background: #fff;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,.05);
+        /* Grade unificada de 5 KPIs */
+        .fin-kpi-grid {
+            display: grid;
+            grid-template-columns: 1.45fr repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 18px;
         }
-        
-        .table-custom { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-        .table-custom th { text-align: left; padding: 12px 10px; border-bottom: 2px solid #eee; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; }
-        .table-custom td { padding: 14px 10px; border-bottom: 1px solid #f5f5f5; color: var(--text); }
-        .table-custom tr:last-child td { border-bottom: none; }
-        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 0.9rem; }
-        
-        .btn-voltar {
-            display: inline-flex; align-items: center; gap: 8px;
-            margin-top: 40px; padding: 12px 24px;
-            background: var(--dark); color: #fff;
-            text-decoration: none; border-radius: 30px;
-            font-size: 0.9rem; font-weight: 600; transition: background 0.2s;
+
+        .fin-kpi-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 8px;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
         }
-        .btn-voltar:hover { background: #0a0a1a; }
+        .fin-kpi-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .fin-kpi-head {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+        }
+        .fin-kpi-head strong {
+            color: var(--dark);
+            font-weight: 700;
+        }
+
+        .fin-kpi-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .dot-gold { background: var(--gold-accent); }
+        .dot-slate { background: #64748b; }
+        .dot-green { background: #16a34a; }
+        .dot-blue { background: #2563eb; }
+        .dot-amber { background: #d97706; }
+
+        .fin-kpi-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            color: var(--dark);
+            font-variant-numeric: tabular-nums;
+            line-height: 1.15;
+        }
+        .fin-kpi-value.is-green { color: #15803d; }
+        .fin-kpi-value.is-blue { color: #1d4ed8; }
+        .fin-kpi-value.is-amber { color: #b45309; }
+
+        .fin-kpi-sub {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+            line-height: 1.3;
+        }
+
+        /* Alerta de prazos compacto e recolhivel */
+        .fin-alert-banner {
+            display: none;
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(220, 38, 38, 0.22);
+            border-left: 3px solid #dc2626;
+            border-radius: 14px;
+            padding: 13px 18px;
+            margin-bottom: 18px;
+            box-shadow: var(--shadow);
+        }
+
+        .fin-alert-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .fin-alert-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .fin-alert-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(220, 38, 38, 0.08);
+            color: #dc2626;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .fin-alert-title {
+            font-size: 0.86rem;
+            font-weight: 700;
+            color: #991b1b;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .fin-alert-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 22px;
+            height: 22px;
+            padding: 0 7px;
+            border-radius: 999px;
+            background: #dc2626;
+            color: #ffffff;
+            font-size: 0.74rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .fin-alert-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .btn-alert-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            width: auto !important;
+            margin: 0 !important;
+            padding: 6px 12px !important;
+            border-radius: 999px !important;
+            border: 1px solid rgba(220, 38, 38, 0.25) !important;
+            background: rgba(220, 38, 38, 0.05) !important;
+            color: #991b1b !important;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.78rem !important;
+            font-weight: 600 !important;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+        .btn-alert-toggle:hover {
+            background: rgba(220, 38, 38, 0.11) !important;
+        }
+
+        .fin-alert-chips {
+            display: none;
+            flex-wrap: wrap;
+            gap: 7px;
+            list-style: none;
+            padding: 12px 0 2px;
+            margin: 12px 0 0;
+            border-top: 1px solid rgba(220, 38, 38, 0.12);
+        }
+        .fin-alert-chips.open {
+            display: flex;
+        }
+        .fin-alert-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 11px;
+            border-radius: 999px;
+            background: #fef2f2;
+            border: 1px solid rgba(220, 38, 38, 0.16);
+            color: #991b1b;
+            font-size: 0.78rem;
+            line-height: 1.2;
+        }
+        .fin-alert-chip b {
+            color: #7f1d1d;
+            font-weight: 600;
+        }
+        .fin-alert-chip-days {
+            color: #b91c1c;
+            font-weight: 500;
+            font-size: 0.74rem;
+        }
+
+        /* Secoes de tabelas */
+        .fin-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px 24px;
+            margin-bottom: 18px;
+        }
+
+        .fin-section-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        .fin-section-title {
+            margin: 0;
+            font-size: 0.96rem;
+            font-weight: 700;
+            color: var(--dark);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: -0.01em;
+        }
+        .fin-section-title svg {
+            color: var(--gold);
+            flex-shrink: 0;
+        }
+
+        .fin-section-sub {
+            margin: 0;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .fin-table-scroll {
+            overflow-x: auto;
+        }
+
+        .table-custom {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.86rem;
+        }
+        .table-custom th {
+            text-align: left;
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(17, 24, 39, 0.08);
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+        .table-custom td {
+            padding: 13px 12px;
+            border-bottom: 1px solid rgba(17, 24, 39, 0.05);
+            color: var(--text);
+            vertical-align: middle;
+        }
+        .table-custom tbody tr:hover td {
+            background: rgba(245, 241, 234, 0.45);
+        }
+        .table-custom tr:last-child td {
+            border-bottom: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 36px 20px !important;
+            color: var(--text-muted);
+            font-size: 0.86rem;
+        }
+
+        .btn-pdf-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 11px;
+            border-radius: 999px;
+            border: 1px solid rgba(184, 134, 11, 0.28);
+            background: rgba(184, 134, 11, 0.07);
+            color: #8a6405;
+            text-decoration: none;
+            font-size: 0.78rem;
+            font-weight: 600;
+            transition: background 0.15s ease, border-color 0.15s ease;
+            white-space: nowrap;
+        }
+        .btn-pdf-link:hover {
+            background: rgba(184, 134, 11, 0.14);
+            border-color: rgba(184, 134, 11, 0.45);
+        }
+
+        /* Modal Fatura Avulsa / Antiga */
+        .fin-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.38);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+
+        .fin-modal-card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 440px;
+            padding: 24px 26px;
+            border-radius: 18px;
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.16);
+            max-height: 90vh;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+
+        .fin-modal-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 14px;
+            margin-bottom: 18px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        .fin-modal-head h3 {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--dark);
+            letter-spacing: -0.01em;
+        }
+        .fin-modal-close {
+            width: 30px !important;
+            height: 30px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border-radius: 50% !important;
+            border: 1px solid var(--border-subtle) !important;
+            background: #f9fafb !important;
+            color: var(--text-muted) !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+        .fin-modal-close:hover {
+            background: #f3f4f6 !important;
+            color: var(--dark) !important;
+        }
+
+        .fin-field-label {
+            display: block;
+            font-size: 0.74rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .fin-input {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid rgba(17, 24, 39, 0.14);
+            border-radius: 10px;
+            margin-bottom: 14px;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.88rem;
+            color: var(--dark);
+            background: #ffffff;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .fin-input:focus {
+            outline: none;
+            border-color: var(--gold-accent);
+            box-shadow: 0 0 0 3px rgba(197, 155, 39, 0.12);
+        }
+
+        .fin-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .btn-modal-cancel {
+            width: auto !important;
+            margin: 0 !important;
+            padding: 9px 16px !important;
+            border-radius: 999px !important;
+            border: 1px solid var(--border-subtle) !important;
+            background: #f5f5f4 !important;
+            color: #4b5563 !important;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.84rem !important;
+            font-weight: 600 !important;
+            cursor: pointer;
+        }
+        .btn-modal-cancel:hover {
+            background: #e7e5e4 !important;
+        }
+        .btn-modal-save {
+            width: auto !important;
+            margin: 0 !important;
+            padding: 9px 18px !important;
+            border-radius: 999px !important;
+            border: none !important;
+            background: #141414 !important;
+            color: #ffffff !important;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.84rem !important;
+            font-weight: 600 !important;
+            cursor: pointer;
+        }
+        .btn-modal-save:hover {
+            background: #2b2b2b !important;
+        }
+
+        @media (max-width: 980px) {
+            .fin-kpi-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        @media (max-width: 640px) {
+            .financas-wrapper {
+                padding: 0 14px 48px;
+            }
+            .fin-kpi-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .fin-kpi-highlight {
+                grid-column: 1 / -1;
+            }
+            .fin-section {
+                padding: 16px;
+            }
+        }
     </style>
 </head>
 <body>
 
     <div class="financas-wrapper">
-        <div class="financas-header">
-            <div>
-                <h1>Finanças</h1>
-                <span style="color: var(--text-muted); font-size: 0.9rem;">Gestão de Faturas e Clientes Fiscais</span>
-            </div>
-            <button onclick="abrirModalFaturaAntiga()" class="btn-gold" style="display:flex; align-items:center; gap:8px;">
-                + Adicionar Fatura Antiga
-            </button>
-        </div>
-
-        <!-- MEGA CARD ANUAL -->
-        <div style="background: linear-gradient(135deg, #d4af37, #fcf6d6); border-radius: 14px; padding: 25px 30px; margin-bottom: 25px; box-shadow: 0 8px 30px rgba(212,175,55,0.3); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
-            <div>
-                <h2 style="margin: 0 0 5px 0; color: #1a1a2e; font-size: 1.5rem;">Faturação Acumulada Anual</h2>
-                <p style="margin: 0; color: #555; font-size: 0.95rem; font-weight: 500;">Total de receitas registadas no ano de <strong id="ano-atual-label">2026</strong></p>
-            </div>
-            <div style="font-size: 2.8rem; font-weight: 900; color: #1a1a2e; letter-spacing: -1px;" id="total-faturado-ano">
-                €0.00
+        <!-- Toolbar absorvida pela barra flutuante Liquid Glass -->
+        <div class="page-toolbar">
+            <div class="page-toolbar-controls">
+                <button type="button" onclick="abrirModalFaturaAntiga()" class="btn-fin-primary">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span>Adicionar Fatura Antiga</span>
+                </button>
             </div>
         </div>
 
-        <!-- ALERTA EMERGÊNCIA (PRAZOS > 4 DIAS) -->
-        <div id="alerta-prazos" style="display:none; background:#ffebee; border:2px solid #ef5350; color:#c62828; padding:15px; border-radius:8px; margin-bottom:25px;">
-            <strong style="display:flex; align-items:center; gap:8px; font-size:1.1rem;">⚠️ AVISO DE PRAZO DE FATURAÇÃO (5 DIAS ÚTEIS)</strong>
-            <p style="margin:5px 0 0 0; font-size:0.9rem;">As seguintes encomendas atingiram ou ultrapassaram os 4 dias úteis e ainda não têm fatura associada:</p>
-            <ul id="lista-atrasados" style="margin:10px 0 0 0; font-size:0.85rem; font-weight:bold;"></ul>
-        </div>
-
-        <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-            <div class="card" style="padding:15px; text-align:center;">
-                <div class="card-desc" style="margin-bottom:5px;">A Declarar (Semana)</div>
-                <div class="card-title" id="metric-a-declarar" style="font-size:1.8rem; justify-content:center;">-</div>
+        <!-- GRADE UNIFICADA DE KPIS -->
+        <div class="fin-kpi-grid">
+            <div class="fin-kpi-card fin-kpi-highlight">
+                <div class="fin-kpi-head">
+                    <span class="fin-kpi-dot dot-gold"></span>
+                    <span>Faturação Anual (<strong id="ano-atual-label">2026</strong>)</span>
+                </div>
+                <div class="fin-kpi-value" id="total-faturado-ano">€0.00</div>
+                <div class="fin-kpi-sub">Total de receitas registadas</div>
             </div>
-            <div class="card" style="padding:15px; text-align:center;">
-                <div class="card-desc" style="margin-bottom:5px;">Declaradas (Semana)</div>
-                <div class="card-title" id="metric-declaradas" style="font-size:1.8rem; justify-content:center; color:#2e7d32;">-</div>
+
+            <div class="fin-kpi-card">
+                <div class="fin-kpi-head">
+                    <span class="fin-kpi-dot dot-slate"></span>
+                    <span>A Declarar (Semana)</span>
+                </div>
+                <div class="fin-kpi-value" id="metric-a-declarar">-</div>
+                <div class="fin-kpi-sub">Pendentes esta semana</div>
             </div>
-            <div class="card" style="padding:15px; text-align:center;">
-                <div class="card-desc" style="margin-bottom:5px;">Enviadas (Semana)</div>
-                <div class="card-title" id="metric-enviadas" style="font-size:1.8rem; justify-content:center; color:#1565c0;">-</div>
+
+            <div class="fin-kpi-card">
+                <div class="fin-kpi-head">
+                    <span class="fin-kpi-dot dot-green"></span>
+                    <span>Declaradas (Semana)</span>
+                </div>
+                <div class="fin-kpi-value is-green" id="metric-declaradas">-</div>
+                <div class="fin-kpi-sub">Comunicadas à AT</div>
             </div>
-            <div class="card" style="padding:15px; text-align:center; background:#fff8e1; border:1px solid #ffe082;">
-                <div class="card-desc" style="margin-bottom:5px; color:#f57f17;">Por Enviar / Pendentes</div>
-                <div class="card-title" id="metric-pendentes" style="font-size:1.8rem; justify-content:center; color:#f57f17;">-</div>
+
+            <div class="fin-kpi-card">
+                <div class="fin-kpi-head">
+                    <span class="fin-kpi-dot dot-blue"></span>
+                    <span>Enviadas (Semana)</span>
+                </div>
+                <div class="fin-kpi-value is-blue" id="metric-enviadas">-</div>
+                <div class="fin-kpi-sub">Entregues ao cliente</div>
+            </div>
+
+            <div class="fin-kpi-card">
+                <div class="fin-kpi-head">
+                    <span class="fin-kpi-dot dot-amber"></span>
+                    <span>Por Enviar</span>
+                </div>
+                <div class="fin-kpi-value is-amber" id="metric-pendentes">-</div>
+                <div class="fin-kpi-sub">A aguardar envio</div>
             </div>
         </div>
 
-        <!-- SECÇÃO: FATURAS EMITIDAS -->
-        <div class="faturas-list" style="margin-bottom: 30px; border: 2px solid #e0d5c1;">
-            <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--gold); margin-bottom: 16px; display:flex; align-items:center; gap:8px;">
-                📄 Faturas Emitidas
-            </h3>
-            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:-10px; margin-bottom:15px;">Lista de todas as faturas completas emitidas e guardadas no sistema.</p>
-            
-            <table class="table-custom">
-                <thead>
-                    <tr>
-                        <th>Cliente</th>
-                        <th>NIF</th>
-                        <th>Data</th>
-                        <th>Valor Total</th>
-                        <th>Fatura</th>
-                    </tr>
-                </thead>
-                <tbody id="faturas-fisicas-tbody">
-                    <tr><td colspan="5" class="empty-state">A procurar faturas emitidas...</td></tr>
-                </tbody>
-            </table>
+        <!-- ALERTA DE PRAZOS COMPACTO E RECOLHIVEL (PRAZOS > 4 DIAS) -->
+        <div id="alerta-prazos" class="fin-alert-banner">
+            <div class="fin-alert-header">
+                <div class="fin-alert-info">
+                    <span class="fin-alert-icon" aria-hidden="true">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                    </span>
+                    <div>
+                        <div class="fin-alert-title">
+                            <span>Prazo de Faturação (5 dias úteis)</span>
+                            <span class="fin-alert-count" id="alerta-atraso-count">0</span>
+                        </div>
+                        <div class="fin-alert-desc">Encomendas que atingiram 4+ dias úteis sem fatura associada.</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-alert-toggle" id="btn-toggle-atrasos" onclick="toggleListaAtrasos()">
+                    <span id="label-toggle-atrasos">Ver lista</span>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+            </div>
+            <ul id="lista-atrasados" class="fin-alert-chips"></ul>
         </div>
 
-        <div class="faturas-list" style="margin-bottom: 20px;">
-            <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--dark); margin-bottom: 16px;">Clientes com NIF Registado</h3>
-            <table class="table-custom">
-                <thead>
-                    <tr>
-                        <th>Nome do Cliente</th>
-                        <th>Email</th>
-                        <th>NIF</th>
-                    </tr>
-                </thead>
-                <tbody id="clientes-nif-tbody">
-                    <tr><td colspan="3" class="empty-state">A carregar...</td></tr>
-                </tbody>
-            </table>
+        <!-- SECCAO: FATURAS EMITIDAS -->
+        <div class="fin-section">
+            <div class="fin-section-header">
+                <h3 class="fin-section-title">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                    <span>Faturas Emitidas</span>
+                </h3>
+                <p class="fin-section-sub">Faturas completas emitidas e guardadas no sistema</p>
+            </div>
+
+            <div class="fin-table-scroll">
+                <table class="table-custom">
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>NIF</th>
+                            <th>Data</th>
+                            <th>Valor Total</th>
+                            <th>Fatura</th>
+                        </tr>
+                    </thead>
+                    <tbody id="faturas-fisicas-tbody">
+                        <tr><td colspan="5" class="empty-state">A procurar faturas emitidas...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <div class="faturas-list" style="border-top: 4px solid #f5f1ea;">
-            <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--text-muted); margin-bottom: 16px;">Consumidor Final (Sem NIF)</h3>
-            <table class="table-custom">
-                <thead>
-                    <tr>
-                        <th>Nome do Cliente</th>
-                        <th>Email</th>
-                        <th>NIF Padrão</th>
-                    </tr>
-                </thead>
-                <tbody id="clientes-sem-nif-tbody">
-                    <tr><td colspan="3" class="empty-state">A carregar...</td></tr>
-                </tbody>
-            </table>
+        <div class="fin-section">
+            <div class="fin-section-header">
+                <h3 class="fin-section-title">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <span>Clientes com NIF Registado</span>
+                </h3>
+            </div>
+            <div class="fin-table-scroll">
+                <table class="table-custom">
+                    <thead>
+                        <tr>
+                            <th>Nome do Cliente</th>
+                            <th>Email</th>
+                            <th>NIF</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clientes-nif-tbody">
+                        <tr><td colspan="3" class="empty-state">A carregar...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <div style="text-align: center;">
-            <a href="dashboard.html" class="btn-voltar">
-                Voltar para o Dashboard
-            </a>
+        <div class="fin-section">
+            <div class="fin-section-header">
+                <h3 class="fin-section-title" style="color: var(--text-muted);">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--text-muted);">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span>Consumidor Final (Sem NIF)</span>
+                </h3>
+            </div>
+            <div class="fin-table-scroll">
+                <table class="table-custom">
+                    <thead>
+                        <tr>
+                            <th>Nome do Cliente</th>
+                            <th>Email</th>
+                            <th>NIF Padrão</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clientes-sem-nif-tbody">
+                        <tr><td colspan="3" class="empty-state">A carregar...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <!-- MODAL FATURA ANTIGA / AVULSA (SIMPLIFICADO) -->
-    <div class="modal-overlay" id="modal-fatura-antiga" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
-        <div style="background:#fff; width:90%; max-width:440px; padding:24px; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
-            <h3 style="margin-top:0; font-size:1.25rem; color:#1a1a2e; border-bottom: 2px solid #eee; padding-bottom:10px;">
-                + Inserir Fatura Avulsa / Antiga
-            </h3>
-            
-            <label style="font-size:0.85rem; font-weight:bold; color:#555;">Nome do Cliente *</label>
-            <input type="text" id="fa-nome" placeholder="Ex: Maria Joaquina" style="width:100%; padding:9px; border:1px solid #ccc; border-radius:6px; margin-bottom:12px; box-sizing:border-box;">
+    <!-- MODAL FATURA ANTIGA / AVULSA -->
+    <div class="fin-modal-overlay" id="modal-fatura-antiga">
+        <div class="fin-modal-card">
+            <div class="fin-modal-head">
+                <h3>Inserir Fatura Avulsa / Antiga</h3>
+                <button type="button" class="fin-modal-close" aria-label="Fechar" onclick="document.getElementById('modal-fatura-antiga').style.display='none'">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
 
-            <div style="display:flex; gap:10px; margin-bottom:12px;">
+            <label class="fin-field-label" for="fa-nome">Nome do Cliente *</label>
+            <input type="text" id="fa-nome" class="fin-input" placeholder="Ex: Maria Joaquina">
+
+            <div style="display:flex; gap:12px;">
                 <div style="flex:1;">
-                    <label style="font-size:0.85rem; font-weight:bold; color:#555;">NIF (Opcional)</label>
-                    <input type="text" id="fa-nif" placeholder="999999990" style="width:100%; padding:9px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
+                    <label class="fin-field-label" for="fa-nif">NIF (Opcional)</label>
+                    <input type="text" id="fa-nif" class="fin-input" placeholder="999999990">
                 </div>
                 <div style="flex:1;">
-                    <label style="font-size:0.85rem; font-weight:bold; color:#555;">Valor Total (€) *</label>
-                    <input type="number" id="fa-valor" placeholder="150.00" step="0.01" style="width:100%; padding:9px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
+                    <label class="fin-field-label" for="fa-valor">Valor Total (€) *</label>
+                    <input type="number" id="fa-valor" class="fin-input" placeholder="150.00" step="0.01">
                 </div>
             </div>
 
-            <label style="font-size:0.85rem; font-weight:bold; color:#555;">Data de Emissão *</label>
-            <input type="date" id="fa-data" style="width:100%; padding:9px; border:1px solid #ccc; border-radius:6px; margin-bottom:12px; box-sizing:border-box;">
+            <label class="fin-field-label" for="fa-data">Data de Emissão *</label>
+            <input type="date" id="fa-data" class="fin-input">
 
-            <label style="font-size:0.85rem; font-weight:bold; color:#555;">Link da Fatura Completa *</label>
-            <input type="url" id="fa-final" placeholder="https://..." style="width:100%; padding:9px; border:1px solid #ccc; border-radius:6px; margin-bottom:20px; box-sizing:border-box;">
+            <label class="fin-field-label" for="fa-final">Link da Fatura Completa *</label>
+            <input type="url" id="fa-final" class="fin-input" placeholder="https://..." style="margin-bottom: 18px;">
 
-            <div style="display:flex; justify-content:flex-end; gap:10px;">
-                <button onclick="document.getElementById('modal-fatura-antiga').style.display='none'" style="padding:10px 18px; background:#f5f5f5; border:none; border-radius:6px; cursor:pointer; color:#555;">Cancelar</button>
-                <button onclick="salvarFaturaAntiga()" id="btn-salvar-fa" style="padding:10px 18px; background:#d4af37; border:none; border-radius:6px; cursor:pointer; color:#fff; font-weight:bold;">Guardar Fatura</button>
+            <div class="fin-modal-actions">
+                <button type="button" class="btn-modal-cancel" onclick="document.getElementById('modal-fatura-antiga').style.display='none'">Cancelar</button>
+                <button type="button" class="btn-modal-save" onclick="salvarFaturaAntiga()" id="btn-salvar-fa">Guardar Fatura</button>
             </div>
         </div>
     </div>
@@ -306,7 +821,7 @@
                         <td>${dataFormatada}</td>
                         <td style="font-weight:700; color:#2e7d32;">${valorFormatado}</td>
                         <td>
-                            ${link ? `<a href="${link}" target="_blank" class="btn-action" style="text-decoration:none; background:#fff8e1; border:1px solid #ffe082; padding:5px 10px; border-radius:6px; color:#b8972e; font-weight:700; font-size:0.82rem;" title="Abrir Fatura Completa">🔗 Abrir PDF</a>` : '-'}
+                            ${link ? `<a href="${link}" target="_blank" rel="noopener" class="btn-pdf-link" title="Abrir Fatura Completa"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg><span>Abrir PDF</span></a>` : '<span style="color:#9ca3af;">—</span>'}
                         </td>
                     </tr>
                 `;
@@ -372,9 +887,9 @@
                 const temFatura = f && (f.simples_link || f.final_link);
                 const is100Pago = Number(p.valor_adiantado || 0) >= Number(p.preco_final || 0) && Number(p.preco_final || 0) > 0;
                 
-                if (!temFatura && p.status !== 'arquivado') aDeclarar++;
+                if (!temFatura) aDeclarar++;
 
-                if (!temFatura && p.data_real && p.status !== 'arquivado' && is100Pago) {
+                if (!temFatura && p.data_real && is100Pago) {
                     const dias = getDiasUteis(p.data_real);
                     if (dias >= 4) {
                         atrasados.push({ nome: p.nome, dias });
@@ -388,11 +903,23 @@
             document.getElementById('metric-enviadas').textContent = enviadasSemana;
             document.getElementById('metric-pendentes').textContent = pendentesEnvio;
 
+            window.toggleListaAtrasos = function() {
+                const lista = document.getElementById('lista-atrasados');
+                const label = document.getElementById('label-toggle-atrasos');
+                if (!lista) return;
+                const aberto = lista.classList.toggle('open');
+                if (label) label.textContent = aberto ? 'Ocultar' : 'Ver lista';
+            };
             const alerta = document.getElementById('alerta-prazos');
             const listaAtrasados = document.getElementById('lista-atrasados');
+            const badgeAtraso = document.getElementById('alerta-atraso-count');
+            const labelToggle = document.getElementById('label-toggle-atrasos');
             if(atrasados.length > 0) {
                 alerta.style.display = 'block';
-                listaAtrasados.innerHTML = atrasados.map(a => `<li><b>${a.nome}</b> (Passaram ${a.dias} dias úteis)</li>`).join('');
+                if (badgeAtraso) badgeAtraso.textContent = String(atrasados.length);
+                listaAtrasados.classList.remove('open');
+                if (labelToggle) labelToggle.textContent = 'Ver lista';
+                listaAtrasados.innerHTML = atrasados.map(a => `<li class="fin-alert-chip"><b>${a.nome}</b><span class="fin-alert-chip-days">${a.dias}d úteis</span></li>`).join('');
             } else {
                 alerta.style.display = 'none';
             }
@@ -436,9 +963,9 @@
             const valor = parseFloat(document.getElementById('fa-valor').value) || 0;
             const final = document.getElementById('fa-final').value.trim() || null;
 
-            if(!nome) return alert("O Nome do Cliente é obrigatório.");
-            if(!dataEmissao) return alert("A Data de Emissão é obrigatória.");
-            if(!final) return alert("O Link da Fatura Completa é obrigatório.");
+            if(!nome) return typeof mostrarAviso === 'function' ? mostrarAviso("O Nome do Cliente é obrigatório.", "erro") : alert("O Nome do Cliente é obrigatório.");
+            if(!dataEmissao) return typeof mostrarAviso === 'function' ? mostrarAviso("A Data de Emissão é obrigatória.", "erro") : alert("A Data de Emissão é obrigatória.");
+            if(!final) return typeof mostrarAviso === 'function' ? mostrarAviso("O Link da Fatura Completa é obrigatório.", "erro") : alert("O Link da Fatura Completa é obrigatório.");
 
             if (!nif) nif = '999999990';
 

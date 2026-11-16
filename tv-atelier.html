@@ -1,0 +1,1854 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TV do Atelier - Eva Leite Atelier</title>
+  <link rel="icon" href="img/logo.png" type="image/png">
+  <link rel="stylesheet" href="style.css?v=2">
+  <script src="auth-guard.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="navbar.js?v=7" defer></script>
+
+  <style>
+    :root {
+      --tv-bg: #f5f1ea;
+      --tv-card: #ffffff;
+      --tv-muted-card: #faf8f4;
+      --tv-dark: #141414;
+      --tv-text: #1f2937;
+      --tv-muted: #6b7280;
+      --tv-gold: #b8860b;
+      --tv-green: #15803d;
+      --tv-green-soft: #ecfdf3;
+      --tv-blue: #1d4ed8;
+      --tv-blue-soft: #eff6ff;
+      --tv-red: #dc2626;
+      --tv-red-soft: #fef2f2;
+      --tv-border: rgba(17, 24, 39, 0.07);
+      --tv-shadow: 0 2px 12px rgba(0, 0, 0, 0.035);
+      --tv-radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--tv-bg);
+      color: var(--tv-text);
+      margin: 0;
+      padding: 0;
+    }
+
+    .tv-page {
+      max-width: 1220px;
+      margin: 14px auto 64px;
+      padding: 0 24px 60px;
+    }
+
+    /* Botao primario movido pela navbar.js para #liquid-dynamic-right */
+    .btn-tv-primary,
+    .liquid-dynamic-right .btn-tv-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      width: auto !important;
+      margin: 0 !important;
+      padding: 0 16px !important;
+      height: 40px !important;
+      border-radius: 12px !important;
+      border: 1px solid rgba(20, 20, 20, 0.9) !important;
+      background: var(--tv-dark) !important;
+      color: #ffffff !important;
+      font-family: inherit;
+      font-size: 0.84rem !important;
+      font-weight: 600 !important;
+      letter-spacing: -0.01em;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+      transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    }
+    .btn-tv-primary:hover,
+    .liquid-dynamic-right .btn-tv-primary:hover {
+      background: #2b2b2b !important;
+      border-color: #2b2b2b !important;
+      color: #ffffff !important;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.16);
+    }
+    .btn-tv-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-tv-primary.btn-tv-compact {
+      height: 36px !important;
+      padding: 0 15px !important;
+      border-radius: 10px !important;
+      font-size: 0.82rem !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-tv-outline {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: auto !important;
+      margin: 0 !important;
+      height: 36px !important;
+      padding: 0 13px !important;
+      border-radius: 10px !important;
+      border: 1px solid #ddd6ca !important;
+      background: #ffffff !important;
+      color: var(--tv-dark) !important;
+      font-family: inherit;
+      font-size: 0.81rem !important;
+      font-weight: 600 !important;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+    .btn-tv-outline:hover {
+      background: #f5f1ea !important;
+      border-color: var(--tv-dark) !important;
+      color: var(--tv-dark) !important;
+    }
+
+    .btn-tv-ghost {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: auto !important;
+      margin: 0 !important;
+      height: 36px !important;
+      padding: 0 12px !important;
+      border-radius: 10px !important;
+      border: 1px solid transparent !important;
+      background: #f4f1ea !important;
+      color: #4b5563 !important;
+      font-family: inherit;
+      font-size: 0.8rem !important;
+      font-weight: 600 !important;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+    .btn-tv-ghost:hover {
+      background: #e9e4da !important;
+      color: var(--tv-dark) !important;
+    }
+
+    .btn-tv-danger {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: auto !important;
+      margin: 0 !important;
+      height: 38px !important;
+      padding: 0 16px !important;
+      border-radius: 10px !important;
+      border: none !important;
+      background: var(--tv-red) !important;
+      color: #ffffff !important;
+      font-family: inherit;
+      font-size: 0.83rem !important;
+      font-weight: 600 !important;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s ease;
+    }
+    .btn-tv-danger:hover {
+      background: #b91c1c !important;
+      color: #ffffff !important;
+    }
+    .btn-tv-danger:disabled {
+      opacity: 0.65;
+      cursor: wait;
+    }
+
+    /* Pills dentro do popover de filtro */
+    .tv-filter-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .tv-filter-pills button,
+    .liquid-left .tv-filter-pills button {
+      width: auto !important;
+      margin: 0 !important;
+      padding: 6px 11px !important;
+      border-radius: 8px !important;
+      border: 1px solid #e2ddd5 !important;
+      background: #faf9f6 !important;
+      color: #4b5563 !important;
+      font-family: inherit;
+      font-size: 0.78rem !important;
+      font-weight: 500 !important;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tv-filter-pills button:hover,
+    .liquid-left .tv-filter-pills button:hover {
+      background: #f0ece4 !important;
+      color: #111111 !important;
+    }
+    .tv-filter-pills button.ativo,
+    .liquid-left .tv-filter-pills button.ativo {
+      background: var(--tv-dark) !important;
+      color: #ffffff !important;
+      border-color: var(--tv-dark) !important;
+    }
+
+    .tv-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: inline-block;
+    }
+    .dot-dark  { background: #141414; }
+    .dot-green { background: #16a34a; }
+    .dot-blue  { background: #2563eb; }
+    .dot-gold  { background: #c59b27; }
+
+    /* Faixa de 4 KPIs clicaveis */
+    .tv-kpis-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .tv-kpi-card {
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid var(--tv-border);
+      border-radius: var(--tv-radius);
+      padding: 16px 18px;
+      box-shadow: var(--tv-shadow);
+      cursor: pointer;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+      text-align: left;
+      user-select: none;
+    }
+    .tv-kpi-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.055);
+      border-color: rgba(20, 20, 20, 0.16);
+    }
+    .tv-kpi-card.ativo {
+      background: #ffffff;
+      border-color: var(--tv-dark);
+      box-shadow: 0 6px 18px rgba(20, 20, 20, 0.08);
+    }
+    .tv-kpi-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.72rem;
+      font-weight: 650;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--tv-muted);
+      margin-bottom: 8px;
+    }
+    .tv-kpi-value {
+      font-size: 1.66rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: var(--tv-dark);
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+      margin-bottom: 5px;
+    }
+    .tv-kpi-sub {
+      font-size: 0.75rem;
+      color: var(--tv-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Barra de resumo de filtro ativo */
+    .tv-filter-chip-bar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 14px;
+      margin-bottom: 16px;
+      background: rgba(255, 255, 255, 0.82);
+      border: 1px solid var(--tv-border);
+      border-radius: 12px;
+      font-size: 0.81rem;
+      color: #4b5563;
+    }
+    .tv-filter-chip-bar.visivel {
+      display: flex;
+    }
+    .btn-limpar-tv {
+      width: auto !important;
+      margin: 0 !important;
+      padding: 4px 11px !important;
+      border-radius: 999px !important;
+      border: 1px solid #ddd6ca !important;
+      background: #ffffff !important;
+      color: var(--tv-dark) !important;
+      font-size: 0.75rem !important;
+      font-weight: 600 !important;
+      cursor: pointer;
+    }
+    .btn-limpar-tv:hover {
+      background: var(--tv-dark) !important;
+      color: #ffffff !important;
+      border-color: var(--tv-dark) !important;
+    }
+
+    /* Paineis principais */
+    .tv-panel-card {
+      background: var(--tv-card);
+      border: 1px solid var(--tv-border);
+      border-radius: 18px;
+      padding: 20px 22px;
+      box-shadow: var(--tv-shadow);
+      margin-bottom: 20px;
+    }
+    .tv-panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .tv-panel-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .tv-panel-title {
+      margin: 0;
+      font-size: 1.02rem;
+      font-weight: 650;
+      color: var(--tv-dark);
+      letter-spacing: -0.015em;
+      text-align: left;
+    }
+    .panel-count-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 26px;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: #f3efe7;
+      color: #4b453c;
+      font-size: 0.75rem;
+      font-weight: 650;
+      font-variant-numeric: tabular-nums;
+    }
+    .tv-panel-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .tv-panel-subnote {
+      font-size: 0.78rem;
+      color: var(--tv-muted);
+    }
+
+    /* Dropzone de upload multiplo */
+    #media-upload {
+      display: none;
+    }
+    .tv-dropzone {
+      border: 1.5px dashed #d5cdc0;
+      border-radius: 14px;
+      background: var(--tv-muted-card);
+      padding: 26px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
+    }
+    .tv-dropzone:hover,
+    .tv-dropzone.dragover {
+      border-color: var(--tv-dark);
+      background: #f3efe6;
+    }
+    .tv-drop-ico {
+      width: 44px;
+      height: 44px;
+      margin: 0 auto 10px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1px solid #e5dfd5;
+      color: var(--tv-dark);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    }
+    .tv-dropzone h3 {
+      margin: 0 0 4px;
+      font-size: 0.94rem;
+      font-weight: 650;
+      color: var(--tv-dark);
+      text-align: center;
+      letter-spacing: -0.01em;
+    }
+    .tv-dropzone p {
+      margin: 0;
+      font-size: 0.8rem;
+      color: var(--tv-muted);
+    }
+
+    /* Fila de upload multiplo */
+    .tv-queue-wrap {
+      display: none;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #f0ece3;
+    }
+    .tv-queue-wrap.visivel {
+      display: block;
+    }
+    .tv-queue-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .tv-queue-summary {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--tv-dark);
+    }
+    .tv-queue-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .tv-progress-wrap {
+      display: none;
+      margin-bottom: 14px;
+    }
+    .tv-progress-wrap.visivel {
+      display: block;
+    }
+    .tv-progress-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      color: var(--tv-muted);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    .tv-progress-track {
+      width: 100%;
+      height: 6px;
+      background: #efeae0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .tv-progress-fill {
+      width: 0%;
+      height: 100%;
+      background: var(--tv-dark);
+      border-radius: 999px;
+      transition: width 0.2s ease;
+    }
+
+    .tv-queue-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 10px;
+    }
+    .tv-queue-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid #eae4da;
+      background: #fcfbf9;
+      min-width: 0;
+    }
+    .tv-queue-item.is-uploading {
+      border-color: var(--tv-dark);
+      background: #ffffff;
+    }
+    .tv-queue-item.is-error {
+      border-color: rgba(220, 38, 38, 0.3);
+      background: var(--tv-red-soft);
+    }
+    .tv-queue-thumb {
+      width: 46px;
+      height: 46px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #141414;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .tv-queue-meta {
+      flex: 1;
+      min-width: 0;
+    }
+    .tv-queue-name {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--tv-dark);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tv-queue-sub {
+      font-size: 0.72rem;
+      color: var(--tv-muted);
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tv-queue-status-err {
+      color: var(--tv-red);
+      font-weight: 600;
+    }
+
+    /* Botao circular minimalista */
+    .tv-ico-btn {
+      width: 32px !important;
+      height: 32px !important;
+      min-width: 32px;
+      margin: 0 !important;
+      padding: 0 !important;
+      border-radius: 50% !important;
+      border: 1px solid #e5dfd5 !important;
+      background: #ffffff !important;
+      color: #2c2a27 !important;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .tv-ico-btn svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      stroke-width: 1.9;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      pointer-events: none;
+    }
+    .tv-ico-btn:hover {
+      background: var(--tv-dark) !important;
+      border-color: var(--tv-dark) !important;
+      color: #ffffff !important;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    .tv-ico-btn.danger {
+      background: #fdf6f6 !important;
+      border-color: #f2dada !important;
+      color: var(--tv-red) !important;
+    }
+    .tv-ico-btn.danger:hover {
+      background: var(--tv-red) !important;
+      border-color: var(--tv-red) !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 10px rgba(220, 38, 38, 0.18);
+    }
+
+    /* Galeria de midias ativas na TV */
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+      gap: 16px;
+    }
+    .media-card {
+      background: #ffffff;
+      border: 1px solid var(--tv-border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: var(--tv-shadow);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+    }
+    .media-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.065);
+      border-color: rgba(20, 20, 20, 0.14);
+    }
+    .media-preview-wrap {
+      position: relative;
+      width: 100%;
+      height: 184px;
+      background: #141414;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .media-preview {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .media-badge-type {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: var(--tv-dark);
+      font-size: 0.7rem;
+      font-weight: 650;
+      letter-spacing: 0.01em;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+    }
+    .media-order-pill {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(20, 20, 20, 0.72);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: #ffffff;
+      font-size: 0.69rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .media-play-indicator {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: rgba(20, 20, 20, 0.72);
+      color: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .media-card-foot {
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: #ffffff;
+    }
+    .media-meta {
+      min-width: 0;
+      flex: 1;
+    }
+    .media-title {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--tv-dark);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .media-date {
+      font-size: 0.73rem;
+      color: var(--tv-muted);
+      margin-top: 2px;
+      font-variant-numeric: tabular-nums;
+    }
+    .media-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .tv-empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 44px 20px;
+      color: var(--tv-muted);
+      font-size: 0.89rem;
+    }
+    .empty-ico-circle {
+      width: 46px;
+      height: 46px;
+      margin: 0 auto 12px;
+      border-radius: 50%;
+      background: #f5f1ea;
+      color: var(--tv-muted);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .spin-tv {
+      animation: spinTv 0.85s linear infinite;
+      color: var(--tv-muted);
+      margin-bottom: 8px;
+    }
+    @keyframes spinTv {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Modais Liquid Glass */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 15, 15, 0.48);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 4000;
+    }
+    .modal-overlay.active {
+      display: flex;
+      animation: fadeModalTv 0.16s ease-out;
+    }
+    @keyframes fadeModalTv {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    .modal-box {
+      background: #ffffff;
+      width: 100%;
+      max-width: 440px;
+      border-radius: 18px;
+      border: 1px solid #eae6df;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+      animation: slideModalTv 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .modal-box.modal-preview-box {
+      max-width: 780px;
+    }
+    @keyframes slideModalTv {
+      from { transform: translateY(10px) scale(0.985); opacity: 0; }
+      to   { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #f2eee6;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .modal-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .modal-badge-ico {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #f5f1ea;
+      color: var(--tv-dark);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .modal-header h3 {
+      margin: 0;
+      font-size: 0.98rem;
+      font-weight: 650;
+      color: var(--tv-dark);
+      letter-spacing: -0.015em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: left;
+    }
+    .modal-close-btn {
+      width: 32px !important;
+      height: 32px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border-radius: 50% !important;
+      border: none !important;
+      background: #f6f4ef !important;
+      color: #4b5563 !important;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .modal-close-btn:hover {
+      background: #eae4da !important;
+      color: var(--tv-dark) !important;
+    }
+    .modal-body {
+      padding: 18px 20px;
+    }
+    .modal-preview-stage {
+      background: #141414;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      max-height: 64vh;
+    }
+    .modal-preview-stage img,
+    .modal-preview-stage video {
+      max-width: 100%;
+      max-height: 64vh;
+      object-fit: contain;
+      display: block;
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 12px 20px 18px;
+      border-top: 1px solid #f5f2eb;
+    }
+
+    /* Toast discreto */
+    .tv-toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 11px 18px;
+      border-radius: 12px;
+      background: rgba(20, 20, 20, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: #ffffff;
+      font-size: 0.84rem;
+      font-weight: 500;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+      z-index: 6000;
+      animation: slideUpToastTv 0.18s ease-out;
+    }
+    .tv-toast.is-error {
+      background: rgba(185, 28, 28, 0.94);
+    }
+    @keyframes slideUpToastTv {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 900px) {
+      .tv-kpis-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 600px) {
+      .tv-page {
+        padding: 0 14px 50px;
+      }
+      .tv-kpis-row {
+        gap: 10px;
+      }
+      .tv-panel-card {
+        padding: 16px;
+      }
+      .media-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+
+  <div class="tv-page">
+    <!-- Controlos absorvidos para a Barra Superior Flutuante Liquid Glass -->
+    <div class="page-toolbar">
+      <div class="page-toolbar-controls">
+        <div class="toolbar-search-wrap">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="pesquisa-tv" placeholder="Pesquisar mídia..." oninput="aplicarFiltrosTv()">
+        </div>
+
+        <div class="filter-dropdown-wrap">
+          <button type="button" class="btn-filter-icon" id="btn-filter-tv" onclick="toggleFiltroTvPopover(event)" title="Filtrar e ordenar" aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <line x1="4" y1="6" x2="20" y2="6"></line>
+              <line x1="7" y1="12" x2="17" y2="12"></line>
+              <line x1="10" y1="18" x2="14" y2="18"></line>
+            </svg>
+            <span class="filter-badge-dot" id="dot-filtro-tv"></span>
+          </button>
+
+          <div class="filter-popover" id="popover-filtro-tv" onclick="event.stopPropagation()">
+            <div class="filter-popover-section">
+              <span class="filter-popover-label">Tipo de Mídia</span>
+              <div class="tv-filter-pills" id="pills-filtro-tv">
+                <button type="button" class="ativo" data-filtro="todos" onclick="mudarFiltroTv('todos')">Todas</button>
+                <button type="button" data-filtro="image" onclick="mudarFiltroTv('image')"><span class="tv-dot dot-green"></span>Imagens</button>
+                <button type="button" data-filtro="video" onclick="mudarFiltroTv('video')"><span class="tv-dot dot-blue"></span>Vídeos</button>
+              </div>
+            </div>
+
+            <div class="filter-popover-section">
+              <span class="filter-popover-label">Ordenação</span>
+              <div class="tv-filter-pills" id="pills-ordem-tv">
+                <button type="button" class="ativo" data-ordem="recentes" onclick="mudarOrdemTv('recentes')">Mais recentes</button>
+                <button type="button" data-ordem="tv" onclick="mudarOrdemTv('tv')">Ordem na TV</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="btn-tv-primary" id="btn-selecionar-tv-topbar" onclick="abrirSeletorMidias()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Adicionar Mídias</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 4 KPIs Minimalistas Clicáveis -->
+    <div class="tv-kpis-row">
+      <div class="tv-kpi-card ativo" id="kpi-tv-todos" onclick="mudarFiltroTv('todos')">
+        <div class="tv-kpi-head">
+          <span>Total na TV</span>
+          <span class="tv-dot dot-dark"></span>
+        </div>
+        <div class="tv-kpi-value" id="kpi-val-total">—</div>
+        <div class="tv-kpi-sub">Ativas em rotação contínua</div>
+      </div>
+
+      <div class="tv-kpi-card" id="kpi-tv-image" onclick="alternarKpiFiltroTv('image')">
+        <div class="tv-kpi-head">
+          <span>Imagens</span>
+          <span class="tv-dot dot-green"></span>
+        </div>
+        <div class="tv-kpi-value" id="kpi-val-imagens">—</div>
+        <div class="tv-kpi-sub">10 segundos por slide</div>
+      </div>
+
+      <div class="tv-kpi-card" id="kpi-tv-video" onclick="alternarKpiFiltroTv('video')">
+        <div class="tv-kpi-head">
+          <span>Vídeos</span>
+          <span class="tv-dot dot-blue"></span>
+        </div>
+        <div class="tv-kpi-value" id="kpi-val-videos">—</div>
+        <div class="tv-kpi-sub">Reprodução automática</div>
+      </div>
+
+      <div class="tv-kpi-card" id="kpi-tv-fila" onclick="abrirSeletorMidias()">
+        <div class="tv-kpi-head">
+          <span>Fila de Envio</span>
+          <span class="tv-dot dot-gold"></span>
+        </div>
+        <div class="tv-kpi-value" id="kpi-val-fila">0</div>
+        <div class="tv-kpi-sub" id="kpi-sub-fila">Selecione várias imagens de uma vez</div>
+      </div>
+    </div>
+
+    <!-- Chip Bar de Filtro Ativo -->
+    <div class="tv-filter-chip-bar" id="tv-filter-chip-bar">
+      <span id="tv-filter-resumo"></span>
+      <button type="button" class="btn-limpar-tv" onclick="limparFiltrosTv()">Limpar filtros</button>
+    </div>
+
+    <!-- Zona de Upload Múltiplo -->
+    <section class="tv-panel-card">
+      <div class="tv-panel-head">
+        <div class="tv-panel-title-wrap">
+          <h2 class="tv-panel-title">Enviar Mídias para a TV</h2>
+        </div>
+        <span class="tv-panel-subnote">Suporta envio múltiplo simultâneo (imagens e vídeos)</span>
+      </div>
+
+      <input type="file" id="media-upload" accept="image/*,video/*" multiple>
+
+      <div class="tv-dropzone" id="tv-dropzone" onclick="abrirSeletorMidias()">
+        <div class="tv-drop-ico">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+        </div>
+        <h3>Arraste várias imagens ou vídeos para aqui</h3>
+        <p id="file-name-display">ou clique para selecionar múltiplos ficheiros de uma só vez</p>
+      </div>
+
+      <div class="tv-queue-wrap" id="tv-queue-wrap">
+        <div class="tv-queue-bar">
+          <span class="tv-queue-summary" id="tv-queue-summary">0 ficheiros prontos</span>
+          <div class="tv-queue-actions">
+            <button type="button" class="btn-tv-outline" id="btn-add-more-queue" onclick="abrirSeletorMidias()">+ Adicionar mais</button>
+            <button type="button" class="btn-tv-ghost" id="btn-clear-queue" onclick="limparFilaUpload()">Limpar fila</button>
+            <button type="button" class="btn-tv-primary btn-tv-compact" id="btn-upload" onclick="enviarFilaParaTv()" disabled>Enviar para a TV</button>
+          </div>
+        </div>
+
+        <div class="tv-progress-wrap" id="tv-progress-wrap">
+          <div class="tv-progress-meta">
+            <span id="tv-progress-text">A enviar...</span>
+            <span id="tv-progress-pct">0%</span>
+          </div>
+          <div class="tv-progress-track">
+            <div class="tv-progress-fill" id="tv-progress-fill"></div>
+          </div>
+        </div>
+
+        <div class="tv-queue-grid" id="tv-queue-grid"></div>
+      </div>
+    </section>
+
+    <!-- Galeria de Mídias Ativas na TV -->
+    <section class="tv-panel-card">
+      <div class="tv-panel-head">
+        <div class="tv-panel-title-wrap">
+          <h2 class="tv-panel-title">Mídias Ativas na TV</h2>
+          <span class="panel-count-pill" id="count-tv-visiveis">0</span>
+        </div>
+        <div class="tv-panel-right">
+          <span class="tv-panel-subnote">Sincronização automática em tempo real</span>
+          <button type="button" class="tv-ico-btn" id="btn-refresh-tv" onclick="fetchGallery()" title="Atualizar galeria" aria-label="Atualizar galeria">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="media-grid" class="media-grid">
+        <div class="tv-empty-state">
+          <svg class="spin-tv" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+          </svg>
+          <p style="margin:0;">A carregar mídias da TV...</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- MODAL: PRÉ-VISUALIZAÇÃO -->
+  <div class="modal-overlay" id="modal-preview-tv" onclick="if (event.target === this) fecharPreviewTv()">
+    <div class="modal-box modal-preview-box">
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <span class="modal-badge-ico">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true">
+              <rect x="2" y="4" width="20" height="14" rx="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="18" x2="12" y2="21"></line>
+            </svg>
+          </span>
+          <h3 id="preview-tv-titulo">Pré-visualização</h3>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="fecharPreviewTv()" title="Fechar" aria-label="Fechar">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-preview-stage" id="preview-tv-stage"></div>
+        <p id="preview-tv-meta" style="margin:12px 0 0; font-size:0.8rem; color:#6b7280;"></p>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-tv-ghost" onclick="fecharPreviewTv()">Fechar</button>
+        <button type="button" class="btn-tv-danger" id="btn-preview-remover">Remover da TV</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIRMAR REMOÇÃO -->
+  <div class="modal-overlay" id="modal-remover-tv" onclick="if (event.target === this) fecharModalRemoverTv()">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <span class="modal-badge-ico" style="background:#fef2f2; color:#dc2626;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+              <path d="M10 11v6"></path>
+              <path d="M14 11v6"></path>
+            </svg>
+          </span>
+          <h3>Remover mídia da TV?</h3>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="fecharModalRemoverTv()" title="Fechar" aria-label="Fechar">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style="margin:0; font-size:0.88rem; color:#4b5563; line-height:1.5;">
+          A mídia <strong id="remover-tv-nome" style="color:#141414;"></strong> será apagada permanentemente e deixará de aparecer na TV imediatamente.
+        </p>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-tv-ghost" onclick="fecharModalRemoverTv()">Cancelar</button>
+        <button type="button" class="btn-tv-danger" id="btn-confirmar-remover-tv" onclick="confirmarDeleteMedia()">Remover da TV</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Cliente Supabase dedicado exclusivamente à TV do Atelier
+    const TV_SUPABASE_URL = 'https://fcgqnupvnrcmioietklo.supabase.co';
+    const TV_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjZ3FudXB2bnJjbWlvaWV0a2xvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5Mzg1NDgsImV4cCI6MjA5NDUxNDU0OH0.itVwAPg77LOJlwtcvp02AzuwpV3tjRqfICszPihhc0g';
+    const tvSupabase = window.supabase.createClient(TV_SUPABASE_URL, TV_SUPABASE_KEY);
+
+    let allMedia = [];
+    let filtroTipo = 'todos';
+    let ordemAtual = 'recentes';
+    let uploadQueue = []; // { key, file, mediaType, previewUrl, status, errorMsg }
+    let isUploading = false;
+    let pendingDeleteItem = null;
+
+    const SVG_ICONS = {
+      eye: '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>',
+      trash: '<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>',
+      close: '<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
+      video: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2"></rect></svg>',
+      image: '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>',
+      play: '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>',
+      tv: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="18" x2="12" y2="21"></line></svg>'
+    };
+
+    function escHTML(val) {
+      return String(val ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function safeMediaUrl(url) {
+      const raw = String(url || '').trim();
+      if (/^https?:\/\//i.test(raw)) return raw;
+      return '';
+    }
+
+    function pluralizar(n, singular, plural) {
+      const num = Number(n) || 0;
+      return `${num} ${num === 1 ? singular : plural}`;
+    }
+
+    function formatBytes(bytes) {
+      const b = Number(bytes) || 0;
+      if (b < 1024) return `${b} B`;
+      if (b < 1024 * 1024) return `${Math.round(b / 1024)} KB`;
+      return `${(b / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
+    function formatDataHoraPT(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return '—';
+      const dia = String(d.getDate()).padStart(2, '0');
+      const mes = String(d.getMonth() + 1).padStart(2, '0');
+      const ano = d.getFullYear();
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      return `${dia}/${mes}/${ano} · ${hh}:${mm}`;
+    }
+
+    function nomeExibicaoMidia(item) {
+      const fp = String(item.file_path || '');
+      const base = fp.split('/').pop() || '';
+      if (base) return base;
+      return item.type === 'video' ? 'Vídeo na TV' : 'Imagem na TV';
+    }
+
+    function detectarTipoMidia(file) {
+      const mime = String(file?.type || '').toLowerCase();
+      if (mime.startsWith('video/')) return 'video';
+      if (mime.startsWith('image/')) return 'image';
+
+      const ext = String(file?.name || '').split('.').pop().toLowerCase();
+      if (['mp4', 'webm', 'mov', 'm4v', 'ogv', 'avi', 'mkv'].includes(ext)) return 'video';
+      if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg', 'bmp', 'heic', 'heif'].includes(ext)) return 'image';
+      return null;
+    }
+
+    function gerarCaminhoStorage(file, idx) {
+      const parts = String(file?.name || 'media').split('.');
+      const rawExt = parts.length > 1 ? parts.pop().toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+      const tipo = detectarTipoMidia(file) || 'image';
+      const ext = rawExt || (tipo === 'video' ? 'mp4' : 'jpg');
+      const rand = Math.random().toString(36).slice(2, 8);
+      return `uploads/${Date.now()}_${idx}_${rand}.${ext}`;
+    }
+
+    function mostrarToastTv(msg, isError = false) {
+      document.querySelectorAll('.tv-toast').forEach(t => t.remove());
+      const toast = document.createElement('div');
+      toast.className = 'tv-toast' + (isError ? ' is-error' : '');
+      toast.textContent = msg;
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        if (toast.parentNode) toast.remove();
+      }, 3400);
+    }
+
+    function abrirSeletorMidias() {
+      if (isUploading) return;
+      const input = document.getElementById('media-upload');
+      if (input) input.click();
+    }
+
+    function adicionarArquivosNaFila(fileList) {
+      if (isUploading || !fileList || fileList.length === 0) return;
+      const rejeitados = [];
+      let adicionados = 0;
+
+      Array.from(fileList).forEach(file => {
+        const tipo = detectarTipoMidia(file);
+        if (!tipo) {
+          rejeitados.push(file.name);
+          return;
+        }
+        const key = `${file.name}_${file.size}_${file.lastModified || 0}`;
+        if (uploadQueue.some(q => q.key === key)) return;
+
+        let previewUrl = '';
+        if (tipo === 'image' && typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function') {
+          try { previewUrl = URL.createObjectURL(file); } catch (e) {}
+        }
+
+        uploadQueue.push({
+          key,
+          file,
+          mediaType: tipo,
+          previewUrl,
+          status: 'pending',
+          errorMsg: ''
+        });
+        adicionados++;
+      });
+
+      if (rejeitados.length > 0) {
+        mostrarToastTv(`Formato não suportado ignorado: ${rejeitados.join(', ')}`, true);
+      } else if (adicionados > 0 && uploadQueue.length > 1) {
+        mostrarToastTv(`${pluralizar(adicionados, 'ficheiro adicionado', 'ficheiros adicionados')} à fila.`);
+      }
+
+      renderizarFilaUpload();
+    }
+
+    function removerItemFila(index) {
+      if (isUploading) return;
+      const item = uploadQueue[index];
+      if (!item) return;
+      if (item.previewUrl && typeof URL !== 'undefined' && typeof URL.revokeObjectURL === 'function') {
+        try { URL.revokeObjectURL(item.previewUrl); } catch (e) {}
+      }
+      uploadQueue.splice(index, 1);
+      renderizarFilaUpload();
+    }
+
+    function limparFilaUpload() {
+      if (isUploading) return;
+      uploadQueue.forEach(item => {
+        if (item.previewUrl && typeof URL !== 'undefined' && typeof URL.revokeObjectURL === 'function') {
+          try { URL.revokeObjectURL(item.previewUrl); } catch (e) {}
+        }
+      });
+      uploadQueue = [];
+      const input = document.getElementById('media-upload');
+      if (input) input.value = '';
+      renderizarFilaUpload();
+    }
+
+    function renderizarFilaUpload() {
+      const wrap = document.getElementById('tv-queue-wrap');
+      const grid = document.getElementById('tv-queue-grid');
+      const summary = document.getElementById('tv-queue-summary');
+      const btnUpload = document.getElementById('btn-upload');
+      const btnClear = document.getElementById('btn-clear-queue');
+      const btnAddMore = document.getElementById('btn-add-more-queue');
+      const dropHint = document.getElementById('file-name-display');
+      const kpiVal = document.getElementById('kpi-val-fila');
+      const kpiSub = document.getElementById('kpi-sub-fila');
+
+      const total = uploadQueue.length;
+      if (kpiVal) kpiVal.textContent = total;
+      if (kpiSub) {
+        kpiSub.textContent = total > 0
+          ? `${pluralizar(total, 'ficheiro pronto', 'ficheiros prontos')} para enviar`
+          : 'Selecione várias imagens de uma vez';
+      }
+
+      if (total === 0) {
+        if (wrap) wrap.classList.remove('visivel');
+        if (grid) grid.innerHTML = '';
+        if (btnUpload) {
+          btnUpload.disabled = true;
+          btnUpload.textContent = 'Enviar para a TV';
+        }
+        if (dropHint) dropHint.textContent = 'ou clique para selecionar múltiplos ficheiros de uma só vez';
+        return;
+      }
+
+      if (wrap) wrap.classList.add('visivel');
+      const imgs = uploadQueue.filter(x => x.mediaType === 'image').length;
+      const vids = uploadQueue.filter(x => x.mediaType === 'video').length;
+      const detalhes = [];
+      if (imgs > 0) detalhes.push(pluralizar(imgs, 'imagem', 'imagens'));
+      if (vids > 0) detalhes.push(pluralizar(vids, 'vídeo', 'vídeos'));
+
+      if (summary) summary.textContent = `Prontos para enviar (${detalhes.join(' · ')})`;
+      if (dropHint) dropHint.textContent = `${pluralizar(total, 'ficheiro na fila', 'ficheiros na fila')} — clique ou arraste para juntar mais`;
+
+      if (btnUpload) {
+        btnUpload.disabled = isUploading;
+        btnUpload.textContent = isUploading
+          ? 'A enviar para a TV...'
+          : `Enviar ${pluralizar(total, 'mídia', 'mídias')} para a TV`;
+      }
+      if (btnClear) btnClear.disabled = isUploading;
+      if (btnAddMore) btnAddMore.disabled = isUploading;
+
+      if (grid) {
+        grid.innerHTML = uploadQueue.map((item, idx) => {
+          const thumbHtml = item.previewUrl
+            ? `<img src="${escHTML(item.previewUrl)}" alt="${escHTML(item.file.name)}" style="width:100%; height:100%; object-fit:cover;">`
+            : SVG_ICONS.video;
+
+          const statusHtml = item.status === 'error'
+            ? `<span class="tv-queue-status-err">Falhou</span>`
+            : (item.status === 'uploading'
+              ? `<span>A enviar...</span>`
+              : `<span>${item.mediaType === 'video' ? 'Vídeo' : 'Imagem'} · ${formatBytes(item.file.size)}</span>`);
+
+          const stateCls = item.status === 'uploading'
+            ? ' is-uploading'
+            : (item.status === 'error' ? ' is-error' : '');
+
+          return `
+            <div class="tv-queue-item${stateCls}">
+              <div class="tv-queue-thumb">${thumbHtml}</div>
+              <div class="tv-queue-meta">
+                <div class="tv-queue-name" title="${escHTML(item.file.name)}">${escHTML(item.file.name)}</div>
+                <div class="tv-queue-sub">${statusHtml}</div>
+              </div>
+              <button type="button" class="tv-ico-btn" onclick="removerItemFila(${idx})" title="Remover da fila" aria-label="Remover da fila" ${isUploading ? 'disabled' : ''}>
+                ${SVG_ICONS.close}
+              </button>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    async function enviarFilaParaTv() {
+      if (isUploading || uploadQueue.length === 0) return;
+
+      isUploading = true;
+      const progressWrap = document.getElementById('tv-progress-wrap');
+      const progressText = document.getElementById('tv-progress-text');
+      const progressPct = document.getElementById('tv-progress-pct');
+      const progressFill = document.getElementById('tv-progress-fill');
+
+      if (progressWrap) progressWrap.classList.add('visivel');
+      renderizarFilaUpload();
+
+      const total = uploadQueue.length;
+      const falhos = [];
+      let enviados = 0;
+
+      for (let i = 0; i < total; i++) {
+        const item = uploadQueue[i];
+        item.status = 'uploading';
+        item.errorMsg = '';
+
+        const pctAtual = Math.round((i / total) * 100);
+        if (progressText) progressText.textContent = `A enviar ${i + 1} de ${total}: ${item.file.name}`;
+        if (progressPct) progressPct.textContent = `${pctAtual}%`;
+        if (progressFill) progressFill.style.width = `${pctAtual}%`;
+        renderizarFilaUpload();
+
+        const filePath = gerarCaminhoStorage(item.file, i);
+
+        try {
+          const uploadOpts = item.file.type ? { contentType: item.file.type } : undefined;
+          const { error: uploadError } = await tvSupabase.storage
+            .from('media_bucket')
+            .upload(filePath, item.file, uploadOpts);
+
+          if (uploadError) throw uploadError;
+
+          const { data: pubData } = tvSupabase.storage
+            .from('media_bucket')
+            .getPublicUrl(filePath);
+
+          const publicUrl = pubData?.publicUrl || '';
+          if (!publicUrl) throw new Error('URL pública não gerada.');
+
+          const { error: dbError } = await tvSupabase
+            .from('media')
+            .insert([{
+              url: publicUrl,
+              file_path: filePath,
+              type: item.mediaType
+            }]);
+
+          if (dbError) {
+            try { await tvSupabase.storage.from('media_bucket').remove([filePath]); } catch (e) {}
+            throw dbError;
+          }
+
+          enviados++;
+          if (item.previewUrl && typeof URL !== 'undefined' && typeof URL.revokeObjectURL === 'function') {
+            try { URL.revokeObjectURL(item.previewUrl); } catch (e) {}
+          }
+        } catch (err) {
+          console.error('Erro no envio de mídia:', item.file.name, err);
+          item.status = 'error';
+          item.errorMsg = err?.message || 'Erro no envio';
+          falhos.push(item);
+        }
+      }
+
+      if (progressText) progressText.textContent = enviados === total ? 'Envio concluído!' : `${enviados} de ${total} enviadas`;
+      if (progressPct) progressPct.textContent = '100%';
+      if (progressFill) progressFill.style.width = '100%';
+
+      uploadQueue = falhos;
+      isUploading = false;
+
+      const input = document.getElementById('media-upload');
+      if (input) input.value = '';
+
+      renderizarFilaUpload();
+      await fetchGallery();
+
+      setTimeout(() => {
+        if (!isUploading && progressWrap) progressWrap.classList.remove('visivel');
+      }, 900);
+
+      if (falhos.length === 0) {
+        mostrarToastTv(`${pluralizar(enviados, 'mídia enviada', 'mídias enviadas')} para a TV com sucesso!`);
+      } else {
+        mostrarToastTv(`${pluralizar(enviados, 'enviada', 'enviadas')}; ${pluralizar(falhos.length, 'falhou', 'falharam')} (mantida na fila).`, true);
+      }
+    }
+
+    async function fetchGallery() {
+      const { data, error } = await tvSupabase
+        .from('media')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Erro ao buscar mídias da TV:', error);
+        const grid = document.getElementById('media-grid');
+        if (grid) {
+          grid.innerHTML = `<div class="tv-empty-state" style="color:#dc2626;">Erro ao carregar mídias: ${escHTML(error.message || error)}</div>`;
+        }
+        return;
+      }
+
+      allMedia = data || [];
+      atualizarKpisTv();
+      aplicarFiltrosTv();
+    }
+
+    function atualizarKpisTv() {
+      const total = allMedia.length;
+      const imgs = allMedia.filter(m => m.type !== 'video').length;
+      const vids = allMedia.filter(m => m.type === 'video').length;
+
+      const elTotal = document.getElementById('kpi-val-total');
+      const elImgs = document.getElementById('kpi-val-imagens');
+      const elVids = document.getElementById('kpi-val-videos');
+      if (elTotal) elTotal.textContent = total;
+      if (elImgs) elImgs.textContent = imgs;
+      if (elVids) elVids.textContent = vids;
+    }
+
+    function toggleFiltroTvPopover(event) {
+      if (event) event.stopPropagation();
+      const pop = document.getElementById('popover-filtro-tv');
+      const btn = document.getElementById('btn-filter-tv');
+      if (!pop) return;
+      const aberto = pop.classList.toggle('aberto');
+      if (btn) {
+        btn.classList.toggle('ativo', aberto);
+        btn.setAttribute('aria-expanded', aberto ? 'true' : 'false');
+      }
+    }
+
+    function mudarFiltroTv(novoFiltro) {
+      filtroTipo = novoFiltro || 'todos';
+      aplicarFiltrosTv();
+    }
+
+    function alternarKpiFiltroTv(tipo) {
+      filtroTipo = (filtroTipo === tipo) ? 'todos' : tipo;
+      aplicarFiltrosTv();
+    }
+
+    function mudarOrdemTv(novaOrdem) {
+      ordemAtual = novaOrdem || 'recentes';
+      aplicarFiltrosTv();
+    }
+
+    function limparFiltrosTv() {
+      filtroTipo = 'todos';
+      ordemAtual = 'recentes';
+      const pesq = document.getElementById('pesquisa-tv');
+      if (pesq) pesq.value = '';
+      aplicarFiltrosTv();
+    }
+
+    function sincronizarVisualFiltrosTv() {
+      document.querySelectorAll('#pills-filtro-tv button').forEach(b => {
+        b.classList.toggle('ativo', b.dataset.filtro === filtroTipo);
+      });
+      document.querySelectorAll('#pills-ordem-tv button').forEach(b => {
+        b.classList.toggle('ativo', b.dataset.ordem === ordemAtual);
+      });
+      ['todos', 'image', 'video'].forEach(k => {
+        const card = document.getElementById(`kpi-tv-${k}`);
+        if (card) card.classList.toggle('ativo', filtroTipo === k);
+      });
+      const btnIcon = document.getElementById('btn-filter-tv');
+      if (btnIcon) {
+        btnIcon.classList.toggle('tem-filtro', filtroTipo !== 'todos' || ordemAtual !== 'recentes');
+      }
+    }
+
+    function aplicarFiltrosTv() {
+      sincronizarVisualFiltrosTv();
+
+      const inputPesq = document.getElementById('pesquisa-tv');
+      const termoRaw = inputPesq ? inputPesq.value : '';
+      const termo = termoRaw.trim().toLowerCase();
+
+      // Mapa da ordem de reproducao real na TV (tv-app.js ordena por created_at ASC)
+      const ordemTvMap = new Map();
+      const cronologico = [...allMedia].sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')));
+      cronologico.forEach((m, idx) => ordemTvMap.set(String(m.id), idx + 1));
+
+      let filtrados = allMedia.filter(item => {
+        const tipoItem = item.type === 'video' ? 'video' : 'image';
+        if (filtroTipo !== 'todos' && tipoItem !== filtroTipo) return false;
+        if (termo) {
+          const nome = nomeExibicaoMidia(item).toLowerCase();
+          const tipoLabel = tipoItem === 'video' ? 'video vídeo' : 'imagem foto image';
+          if (!nome.includes(termo) && !tipoLabel.includes(termo)) return false;
+        }
+        return true;
+      });
+
+      filtrados.sort((a, b) => {
+        if (ordemAtual === 'tv') {
+          return String(a.created_at || '').localeCompare(String(b.created_at || ''));
+        }
+        return String(b.created_at || '').localeCompare(String(a.created_at || ''));
+      });
+
+      const countEl = document.getElementById('count-tv-visiveis');
+      if (countEl) countEl.textContent = filtrados.length;
+
+      const chipBar = document.getElementById('tv-filter-chip-bar');
+      const chipResumo = document.getElementById('tv-filter-resumo');
+      const temFiltro = filtroTipo !== 'todos' || ordemAtual !== 'recentes' || termo.length > 0;
+      if (chipBar && chipResumo) {
+        if (temFiltro) {
+          const partes = [`A mostrar ${pluralizar(filtrados.length, 'mídia', 'mídias')}`];
+          if (filtroTipo === 'image') partes.push('Tipo: Imagens');
+          if (filtroTipo === 'video') partes.push('Tipo: Vídeos');
+          if (ordemAtual === 'tv') partes.push('Ordem: Sequência na TV');
+          if (termoRaw.trim()) partes.push(`Pesquisa: "${termoRaw.trim()}"`);
+          chipResumo.textContent = partes.join(' · ');
+          chipBar.classList.add('visivel');
+        } else {
+          chipBar.classList.remove('visivel');
+        }
+      }
+
+      renderGallery(filtrados, ordemTvMap);
+    }
+
+    function renderGallery(items, ordemTvMap) {
+      const mediaGrid = document.getElementById('media-grid');
+      if (!mediaGrid) return;
+
+      if (items.length === 0) {
+        mediaGrid.innerHTML = `
+          <div class="tv-empty-state">
+            <div class="empty-ico-circle">${SVG_ICONS.tv}</div>
+            <p style="margin:0;">${allMedia.length === 0 ? 'Nenhuma mídia cadastrada ainda na TV.' : 'Nenhuma mídia corresponde aos filtros atuais.'}</p>
+          </div>`;
+        return;
+      }
+
+      mediaGrid.innerHTML = items.map(item => {
+        const isVideo = item.type === 'video';
+        const urlSegura = safeMediaUrl(item.url);
+        const nome = nomeExibicaoMidia(item);
+        const ordemNo = ordemTvMap ? (ordemTvMap.get(String(item.id)) || '') : '';
+        const idStr = String(item.id);
+
+        const mediaHtml = urlSegura
+          ? (isVideo
+              ? `<video src="${escHTML(urlSegura)}" class="media-preview" muted preload="metadata"></video>`
+              : `<img src="${escHTML(urlSegura)}" class="media-preview" alt="${escHTML(nome)}" loading="lazy">`)
+          : `<div class="media-preview" style="display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:0.78rem;">Prévia indisponível</div>`;
+
+        return `
+          <div class="media-card">
+            <div class="media-preview-wrap" data-id="${escHTML(idStr)}" onclick="abrirPreviewTv(this.dataset.id)">
+              ${mediaHtml}
+              <span class="media-badge-type">
+                ${isVideo ? '<span class="tv-dot dot-blue"></span> Vídeo' : '<span class="tv-dot dot-green"></span> Imagem'}
+              </span>
+              ${ordemNo ? `<span class="media-order-pill" title="Posição na rotação da TV">#${ordemNo}</span>` : ''}
+              ${isVideo ? `<span class="media-play-indicator" aria-hidden="true">${SVG_ICONS.play}</span>` : ''}
+            </div>
+            <div class="media-card-foot">
+              <div class="media-meta">
+                <div class="media-title" title="${escHTML(nome)}">${escHTML(nome)}</div>
+                <div class="media-date">${escHTML(formatDataHoraPT(item.created_at))}</div>
+              </div>
+              <div class="media-actions">
+                <button type="button" class="tv-ico-btn" data-id="${escHTML(idStr)}" onclick="abrirPreviewTv(this.dataset.id)" title="Visualizar em tamanho grande" aria-label="Visualizar">
+                  ${SVG_ICONS.eye}
+                </button>
+                <button type="button" class="tv-ico-btn danger" data-id="${escHTML(idStr)}" onclick="solicitarRemocaoTv(this.dataset.id)" title="Remover da TV" aria-label="Remover da TV">
+                  ${SVG_ICONS.trash}
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function abrirPreviewTv(id) {
+      const item = allMedia.find(m => String(m.id) === String(id));
+      if (!item) return;
+      const modal = document.getElementById('modal-preview-tv');
+      const titulo = document.getElementById('preview-tv-titulo');
+      const stage = document.getElementById('preview-tv-stage');
+      const meta = document.getElementById('preview-tv-meta');
+      const btnRem = document.getElementById('btn-preview-remover');
+
+      const nome = nomeExibicaoMidia(item);
+      const urlSegura = safeMediaUrl(item.url);
+
+      if (titulo) titulo.textContent = nome;
+      if (stage) {
+        if (!urlSegura) {
+          stage.innerHTML = '<div style="padding:40px;color:#9ca3af;">Pré-visualização indisponível</div>';
+        } else if (item.type === 'video') {
+          stage.innerHTML = `<video src="${escHTML(urlSegura)}" controls autoplay muted playsinline></video>`;
+        } else {
+          stage.innerHTML = `<img src="${escHTML(urlSegura)}" alt="${escHTML(nome)}">`;
+        }
+      }
+      if (meta) {
+        meta.textContent = `${item.type === 'video' ? 'Vídeo (reprodução completa)' : 'Imagem (10 segundos por slide)'} · Adicionada em ${formatDataHoraPT(item.created_at)}`;
+      }
+      if (btnRem) {
+        btnRem.onclick = () => {
+          fecharPreviewTv();
+          solicitarRemocaoTv(item.id);
+        };
+      }
+      if (modal) modal.classList.add('active');
+    }
+
+    function fecharPreviewTv() {
+      const modal = document.getElementById('modal-preview-tv');
+      const stage = document.getElementById('preview-tv-stage');
+      if (stage) stage.innerHTML = '';
+      if (modal) modal.classList.remove('active');
+    }
+
+    function solicitarRemocaoTv(id) {
+      const item = allMedia.find(m => String(m.id) === String(id));
+      if (!item) return;
+      pendingDeleteItem = item;
+      const nomeEl = document.getElementById('remover-tv-nome');
+      if (nomeEl) nomeEl.textContent = nomeExibicaoMidia(item);
+      const modal = document.getElementById('modal-remover-tv');
+      if (modal) modal.classList.add('active');
+    }
+
+    function fecharModalRemoverTv() {
+      pendingDeleteItem = null;
+      const modal = document.getElementById('modal-remover-tv');
+      if (modal) modal.classList.remove('active');
+    }
+
+    async function confirmarDeleteMedia() {
+      if (!pendingDeleteItem) return;
+      const { id, file_path: filePath } = pendingDeleteItem;
+      const btn = document.getElementById('btn-confirmar-remover-tv');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'A remover...';
+      }
+      try {
+        await deleteMedia(id, filePath, true);
+        fecharModalRemoverTv();
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Remover da TV';
+        }
+      }
+    }
+
+    async function deleteMedia(id, filePath, skipConfirm = false) {
+      if (!skipConfirm && typeof confirm === 'function') {
+        if (!confirm('Tem certeza que deseja remover esta mídia da TV?')) return;
+      }
+
+      try {
+        const { error: dbError } = await tvSupabase
+          .from('media')
+          .delete()
+          .eq('id', id);
+
+        if (dbError) throw dbError;
+
+        if (filePath) {
+          const { error: storageError } = await tvSupabase.storage
+            .from('media_bucket')
+            .remove([filePath]);
+          if (storageError) console.error('Aviso: Erro ao remover do storage:', storageError);
+        }
+
+        mostrarToastTv('Mídia removida da TV.');
+        await fetchGallery();
+      } catch (error) {
+        console.error('Erro ao excluir mídia:', error);
+        mostrarToastTv('Erro ao remover: ' + (error?.message || error), true);
+      }
+    }
+
+    function inicializarEventosTv() {
+      const fileInput = document.getElementById('media-upload');
+      if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
+          adicionarArquivosNaFila(e.target.files);
+          e.target.value = '';
+        });
+      }
+
+      const dropzone = document.getElementById('tv-dropzone');
+      if (dropzone) {
+        dropzone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          dropzone.classList.add('dragover');
+        });
+        dropzone.addEventListener('dragleave', () => {
+          dropzone.classList.remove('dragover');
+        });
+        dropzone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          dropzone.classList.remove('dragover');
+          if (e.dataTransfer && e.dataTransfer.files) {
+            adicionarArquivosNaFila(e.dataTransfer.files);
+          }
+        });
+      }
+
+      document.addEventListener('click', (e) => {
+        const pop = document.getElementById('popover-filtro-tv');
+        const btn = document.getElementById('btn-filter-tv');
+        if (pop && pop.classList.contains('aberto')) {
+          if (!pop.contains(e.target) && (!btn || !btn.contains(e.target))) {
+            pop.classList.remove('aberto');
+            if (btn) {
+              btn.classList.remove('ativo');
+              btn.setAttribute('aria-expanded', 'false');
+            }
+          }
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        const previewModal = document.getElementById('modal-preview-tv');
+        const removerModal = document.getElementById('modal-remover-tv');
+        const pop = document.getElementById('popover-filtro-tv');
+        const btn = document.getElementById('btn-filter-tv');
+        if (previewModal && previewModal.classList.contains('active')) {
+          fecharPreviewTv();
+          return;
+        }
+        if (removerModal && removerModal.classList.contains('active')) {
+          fecharModalRemoverTv();
+          return;
+        }
+        if (pop && pop.classList.contains('aberto')) {
+          pop.classList.remove('aberto');
+          if (btn) {
+            btn.classList.remove('ativo');
+            btn.setAttribute('aria-expanded', 'false');
+          }
+        }
+      });
+
+      try {
+        tvSupabase
+          .channel('tv-admin-media')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'media' }, () => {
+            if (!isUploading) fetchGallery();
+          })
+          .subscribe();
+      } catch (e) {}
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      inicializarEventosTv();
+      fetchGallery();
+    });
+  </script>
+</body>
+</html>
+
