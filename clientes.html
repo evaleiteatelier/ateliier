@@ -1895,7 +1895,7 @@
 
                     const dataRef = p.data_real || p.data_pedido || null;
                     const qtdPecas = listaItens.reduce((acc, it) => acc + (parseInt(it.quantidade) || 1), 0);
-                    const isArquivado = p.status === 'arquivado' || p.oculto_historico === true || idsOcultosLocal.includes(String(p.id));
+                    const isArquivado = p.status === 'arquivado' || p.oculto_historico === true || String(p.fatura_status_envio || '').includes('__oculto_historico__') || idsOcultosLocal.includes(String(p.id));
 
                     registo.pedidos.push({
                         ...p,

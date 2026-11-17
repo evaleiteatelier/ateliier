@@ -1517,6 +1517,64 @@ function construirAcoesPedido({ p, filtro, botaoAcao, novoStatus, estaPago, fina
 
 // Substitua a função carregarPedidos no seu script.js por esta:
 
+const HISTORICO_OCULTO_MARKER = '__oculto_historico__';
+
+function estaOcultoNoHistorico(pedido, idsOcultosLocal = []) {
+  if (!pedido) return false;
+  if (pedido.status === 'arquivado' || pedido.oculto_historico === true) return true;
+  if (String(pedido.fatura_status_envio || '').includes(HISTORICO_OCULTO_MARKER)) return true;
+  return Array.isArray(idsOcultosLocal) && idsOcultosLocal.includes(String(pedido.id));
+}
+
+function registarOcultoHistoricoLocal(id) {
+  try {
+    const arr = JSON.parse(localStorage.getItem('pedidos_ocultos_historico') || '[]').map(String);
+    if (!arr.includes(String(id))) {
+      arr.push(String(id));
+      localStorage.setItem('pedidos_ocultos_historico', JSON.stringify(arr));
+    }
+  } catch (e) {}
+}
+
+async function arquivarPedidoSemErroStatus(client, id, pedidoAtual = null) {
+  // 1. Tenta coluna booleana dedicada (não altera status nem viola pedidos_status_check)
+  const { error: errCol } = await client
+    .from('pedidos')
+    .update({ oculto_historico: true })
+    .eq('id', id);
+  if (!errCol) {
+    registarOcultoHistoricoLocal(id);
+    return { ok: true, via: 'oculto_historico' };
+  }
+
+  // 2. Fallback: status = 'arquivado' caso o banco permita na constraint
+  const { error: errStatus } = await client
+    .from('pedidos')
+    .update({ status: 'arquivado' })
+    .eq('id', id);
+  if (!errStatus) {
+    registarOcultoHistoricoLocal(id);
+    return { ok: true, via: 'status' };
+  }
+
+  // 3. Fallback universal compatível com bancos sem oculto_historico e com pedidos_status_check restrito
+  const statusEnvioAtual = String(pedidoAtual?.fatura_status_envio || '').trim();
+  const novoStatusEnvio = statusEnvioAtual.includes(HISTORICO_OCULTO_MARKER)
+    ? statusEnvioAtual
+    : (statusEnvioAtual ? `${statusEnvioAtual}|${HISTORICO_OCULTO_MARKER}` : HISTORICO_OCULTO_MARKER);
+
+  const { error: errMarker } = await client
+    .from('pedidos')
+    .update({ fatura_status_envio: novoStatusEnvio })
+    .eq('id', id);
+  if (!errMarker) {
+    registarOcultoHistoricoLocal(id);
+    return { ok: true, via: 'fatura_status_envio' };
+  }
+
+  throw errMarker;
+}
+
 async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
   const { data, error } = await supabase
     .from('pedidos')
@@ -1548,8 +1606,18 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
     }
   }
 
+  let idsOcultosLocal = [];
+  try {
+    idsOcultosLocal = JSON.parse(localStorage.getItem('pedidos_ocultos_historico') || '[]').map(String);
+  } catch (e) {}
+
+  let pedidosVisiveis = Array.isArray(data) ? data : [];
+  if (filtro === 'entregue') {
+    pedidosVisiveis = pedidosVisiveis.filter(p => !estaOcultoNoHistorico(p, idsOcultosLocal));
+  }
+
   // --- SE A LISTA ESTIVER VAZIA (O SEU CASO) ---
-  if (!data || data.length === 0) {
+  if (pedidosVisiveis.length === 0) {
     container.innerHTML = `
         <div style="text-align: center; color: #777; margin-top: 30px;">
             <p style="font-size: 2rem;">📭</p>
@@ -1560,10 +1628,10 @@ async function carregarPedidos(filtro, destino, botaoAcao, novoStatus) {
   }
 
   // --- ANEXAR AS FATURAS AOS PEDIDOS ---
-  const pedidoIds = data.map(p => p.id);
+  const pedidoIds = pedidosVisiveis.map(p => p.id);
   const { data: faturas } = await supabase.from('faturas').select('pedido_id, simples_link, final_link').in('pedido_id', pedidoIds);
 
-  data.forEach(p => {
+  pedidosVisiveis.forEach(p => {
     // Liga a fatura ao pedido para o botão de faturar saber o estado
     if (faturas) {
         const fatura = faturas.find(f => f.pedido_id === p.id);
@@ -2062,7 +2130,7 @@ async function removerDoHistorico(id, nomeCliente, btnEl) {
     ? await window.mostrarConfirmacao(
         `Tem a certeza que deseja remover o pedido${nomeExibir} do mural de Histórico?<br><br><small style="color:#666;">Os dados de faturação, NIF e o registo na Central de Clientes continuarão guardados no sistema.</small>`,
         "Remover do Histórico",
-        "",
+        "alert",
         "Sim, Remover",
         "Cancelar"
       )
@@ -2150,14 +2218,9 @@ async function removerDoHistorico(id, nomeCliente, btnEl) {
       }
     }
 
-    // 4. Arquiva o pedido para que não apareça mais na página de Histórico (entregues.html),
+    // 4. Arquiva/oculta o pedido para que não apareça mais na página de Histórico (entregues.html),
     // mantendo-o na base de dados para Finanças, Dashboard e Central de Clientes
-    const { error: errUpdate } = await client
-      .from('pedidos')
-      .update({ status: 'arquivado' })
-      .eq('id', id);
-
-    if (errUpdate) throw errUpdate;
+    await arquivarPedidoSemErroStatus(client, id, p);
 
     // Remove o cartão imediatamente da interface sem precisar esperar recarregar tudo
     const cardEl = btnEl ? btnEl.closest('.pedido') : null;
@@ -2176,7 +2239,7 @@ async function removerDoHistorico(id, nomeCliente, btnEl) {
       btnEl.style.opacity = '1';
     }
     if (window.mostrarAviso) {
-      await window.mostrarAviso("Ocorreu um erro ao remover: " + err.message, "Erro", "");
+      await window.mostrarAviso("Ocorreu um erro ao remover: " + err.message, "Erro", "error");
     } else {
       alert("Erro ao remover: " + err.message);
     }
@@ -2742,22 +2805,22 @@ async function limparPedidosAntigos() {
   try {
     const { data: antigos, error: errBusca } = await window.supabaseClient
       .from('pedidos')
-      .select('id, preco_final, valor_adiantado, status')
+      .select('id, preco_final, valor_adiantado, status, oculto_historico, fatura_status_envio')
       .in('status', ['entregue', 'arquivado'])
       .lt('data_entrega', dataString);
 
     if (errBusca || !antigos) throw errBusca;
 
     const idsParaApagar = [];
-    const idsParaArquivar = [];
+    const pedidosParaArquivar = [];
 
     antigos.forEach(p => {
       const precoFinal = Number(p.preco_final || 0);
       const valorAdiantado = Number(p.valor_adiantado || 0);
       if (precoFinal > 0 && valorAdiantado >= precoFinal) {
         idsParaApagar.push(p.id);
-      } else if (p.status !== 'arquivado') {
-        idsParaArquivar.push(p.id);
+      } else if (!estaOcultoNoHistorico(p)) {
+        pedidosParaArquivar.push(p);
       }
     });
 
@@ -2770,17 +2833,17 @@ async function limparPedidosAntigos() {
         fezAlgo = true;
       }
     }
-    if (idsParaArquivar.length > 0) {
-      const { error: errUpdate } = await window.supabaseClient.from('pedidos').update({ status: 'arquivado' }).in('id', idsParaArquivar);
-      if (errUpdate) {
-        console.error("Erro ao arquivar pedidos:", errUpdate);
-      } else {
+    for (const pAnt of pedidosParaArquivar) {
+      try {
+        await arquivarPedidoSemErroStatus(window.supabaseClient, pAnt.id, pAnt);
         fezAlgo = true;
+      } catch (errUpdate) {
+        console.error("Erro ao arquivar pedido:", errUpdate);
       }
     }
 
     if (fezAlgo) {
-      console.log(`✅ Limpeza: ${idsParaApagar.length} apagados, ${idsParaArquivar.length} arquivados.`);
+      console.log(`✅ Limpeza: ${idsParaApagar.length} apagados, ${pedidosParaArquivar.length} arquivados.`);
       setTimeout(() => location.reload(), 1000);
     } else {
       console.log("👍 Nada para limpar hoje.");
