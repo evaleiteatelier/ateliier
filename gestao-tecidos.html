@@ -540,6 +540,75 @@
       color: var(--tec-dark);
     }
 
+    /* Drag & Drop de bolinhas no Movel */
+    .pano-slot-btn[data-slot-pos] {
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+    }
+    .movel-grid.is-dragging,
+    .movel-grid.is-dragging * {
+      user-select: none;
+    }
+    .pano-slot-btn.is-drag-source {
+      opacity: 0.3;
+      transform: scale(0.92);
+      cursor: grabbing;
+    }
+    .pano-slot-btn.drag-target-swap .pano-circle {
+      transform: scale(1.12);
+      border-color: var(--tec-dark);
+      box-shadow: 0 0 0 3px rgba(20, 20, 20, 0.2), 0 6px 14px rgba(0, 0, 0, 0.16);
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    .pano-slot-btn.drag-target-move .pano-empty-ring {
+      transform: scale(1.1);
+      border-color: var(--tec-dark);
+      border-style: solid;
+      background: #f2ede3;
+      color: var(--tec-dark);
+      box-shadow: 0 0 0 3px rgba(20, 20, 20, 0.14);
+    }
+    .pano-drag-ghost {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 42px;
+      height: 42px;
+      pointer-events: none;
+      z-index: 9999;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.25));
+      will-change: transform;
+    }
+    .movel-hint {
+      margin: 10px 2px 0;
+      font-size: 0.74rem;
+      color: var(--tec-muted);
+      text-align: center;
+    }
+    .tec-toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      background: rgba(20, 20, 20, 0.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: #ffffff;
+      font-size: 0.83rem;
+      font-weight: 500;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+      z-index: 9998;
+      animation: fadeInTec 0.16s ease-out;
+    }
+    .tec-toast.is-error {
+      background: rgba(185, 28, 28, 0.94);
+    }
+
     /* TABELA DIREITA */
     .tabela-container {
       overflow-x: auto;
@@ -1227,6 +1296,7 @@
         <div class="movel-grid" id="movel-grid">
           <!-- Construido dinamicamente -->
         </div>
+        <p class="movel-hint">Arraste uma bolinha para trocar ou mover de posição</p>
       </div>
 
       <!-- TABELA DE GESTAO -->
@@ -1371,6 +1441,20 @@
   let tabAtual = 'tab-movel';
   let posicaoDestacada = null;
   let tecidoEditandoId = null;
+  let movendoPosicao = false;
+  let ignorarClickMovelAte = 0;
+
+  function mostrarToastTec(msg, isError = false) {
+    if (!document.body || typeof document.createElement !== 'function') return;
+    document.querySelectorAll('.tec-toast').forEach(t => t.remove());
+    const toast = document.createElement('div');
+    toast.className = 'tec-toast' + (isError ? ' is-error' : '');
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      if (toast.parentNode) toast.remove();
+    }, 3000);
+  }
 
   function esc(str) {
     return String(str ?? '')
@@ -2184,6 +2268,180 @@
     }
   }
 
+  async function trocarOuMoverPosicao(posOrigem, posDestino) {
+    const orig = String(posOrigem || '').trim().toUpperCase();
+    const dest = String(posDestino || '').trim().toUpperCase();
+    if (!orig || !dest || orig === dest || movendoPosicao) return;
+
+    const canonDest = todasPosicoes.find(p => p.toUpperCase() === dest);
+    if (!canonDest) return;
+
+    const itemOrigem = tecidosAtuais.find(t => String(t.posicao || '').trim().toUpperCase() === orig);
+    if (!itemOrigem) return;
+
+    const itemDestino = tecidosAtuais.find(t => String(t.posicao || '').trim().toUpperCase() === dest);
+    const posOrigOriginal = String(itemOrigem.posicao || '').trim();
+
+    movendoPosicao = true;
+    try {
+      if (itemDestino) {
+        const posDestOriginal = String(itemDestino.posicao || '').trim();
+        const posTemp = `__TMP_${Date.now()}_${String(itemOrigem.id).slice(0, 8)}`;
+
+        const r1 = await db.from('tecidos_aluguer').update({ posicao: posTemp }).eq('id', itemOrigem.id);
+        if (r1?.error) throw r1.error;
+
+        const r2 = await db.from('tecidos_aluguer').update({ posicao: posOrigOriginal }).eq('id', itemDestino.id);
+        if (r2?.error) {
+          await db.from('tecidos_aluguer').update({ posicao: posOrigOriginal }).eq('id', itemOrigem.id);
+          throw r2.error;
+        }
+
+        const r3 = await db.from('tecidos_aluguer').update({ posicao: posDestOriginal }).eq('id', itemOrigem.id);
+        if (r3?.error) {
+          await db.from('tecidos_aluguer').update({ posicao: posDestOriginal }).eq('id', itemDestino.id);
+          await db.from('tecidos_aluguer').update({ posicao: posOrigOriginal }).eq('id', itemOrigem.id);
+          throw r3.error;
+        }
+
+        posicaoDestacada = posDestOriginal;
+        await carregarTecidos();
+        mostrarToastTec(`Posições #${posOrigOriginal} e #${posDestOriginal} trocadas.`);
+      } else {
+        const rMove = await db.from('tecidos_aluguer').update({ posicao: canonDest }).eq('id', itemOrigem.id);
+        if (rMove?.error) throw rMove.error;
+
+        posicaoDestacada = canonDest;
+        await carregarTecidos();
+        mostrarToastTec(`Tecido movido de #${posOrigOriginal} para #${canonDest}.`);
+      }
+    } catch (err) {
+      console.error('Erro ao trocar posições:', err);
+      await carregarTecidos();
+      mostrarToastTec('Erro ao mover posição: ' + (err?.message || err), true);
+    } finally {
+      movendoPosicao = false;
+    }
+  }
+
+  function inicializarDragMovel() {
+    const movelEl = document.getElementById('movel-grid');
+    if (!movelEl) return;
+
+    let dragState = null; // { posOrigem, startX, startY, sourceBtn, ativo, ghostEl, hoverBtn }
+
+    const limparAlvoHover = () => {
+      if (dragState?.hoverBtn) {
+        dragState.hoverBtn.classList.remove('drag-target-swap', 'drag-target-move');
+        dragState.hoverBtn = null;
+      }
+    };
+
+    const limparEstadoDrag = () => {
+      if (!dragState) return;
+      limparAlvoHover();
+      if (dragState.sourceBtn) dragState.sourceBtn.classList.remove('is-drag-source');
+      if (dragState.ghostEl && dragState.ghostEl.parentNode) {
+        dragState.ghostEl.remove();
+      }
+      movelEl.classList.remove('is-dragging');
+      dragState = null;
+    };
+
+    const atualizarPosicaoGhost = (x, y) => {
+      if (!dragState?.ghostEl) return;
+      dragState.ghostEl.style.transform = `translate3d(${x - 21}px, ${y - 21}px, 0) scale(1.12)`;
+    };
+
+    const encontrarSlotSobPonteiro = (x, y) => {
+      if (typeof document.elementFromPoint !== 'function') return null;
+      const el = document.elementFromPoint(x, y);
+      if (!el || typeof el.closest !== 'function') return null;
+      const btn = el.closest('button[data-slot-pos], button[data-slot-empty]');
+      if (!btn || !movelEl.contains(btn)) return null;
+      return btn;
+    };
+
+    movelEl.addEventListener('pointerdown', (e) => {
+      if (movendoPosicao) return;
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      const occSlot = e.target?.closest?.('button[data-slot-pos]');
+      if (!occSlot) return;
+
+      limparEstadoDrag();
+      dragState = {
+        posOrigem: occSlot.dataset.slotPos,
+        startX: e.clientX,
+        startY: e.clientY,
+        sourceBtn: occSlot,
+        ativo: false,
+        ghostEl: null,
+        hoverBtn: null
+      };
+    });
+
+    document.addEventListener('pointermove', (e) => {
+      if (!dragState) return;
+      const dx = e.clientX - dragState.startX;
+      const dy = e.clientY - dragState.startY;
+
+      if (!dragState.ativo) {
+        if (Math.hypot(dx, dy) < 6) return;
+        dragState.ativo = true;
+        movelEl.classList.add('is-dragging');
+        if (dragState.sourceBtn) dragState.sourceBtn.classList.add('is-drag-source');
+
+        if (document.body && typeof document.createElement === 'function') {
+          const ghost = document.createElement('div');
+          ghost.className = 'pano-drag-ghost';
+          ghost.innerHTML = dragState.sourceBtn.innerHTML;
+          document.body.appendChild(ghost);
+          dragState.ghostEl = ghost;
+        }
+      }
+
+      if (e.cancelable) e.preventDefault();
+      atualizarPosicaoGhost(e.clientX, e.clientY);
+
+      const alvoBtn = encontrarSlotSobPonteiro(e.clientX, e.clientY);
+      const posAlvo = alvoBtn ? (alvoBtn.dataset.slotPos || alvoBtn.dataset.slotEmpty || '') : '';
+      const ehProprio = posAlvo.toUpperCase() === String(dragState.posOrigem || '').toUpperCase();
+
+      if (alvoBtn !== dragState.hoverBtn || ehProprio) {
+        limparAlvoHover();
+        if (alvoBtn && !ehProprio) {
+          dragState.hoverBtn = alvoBtn;
+          alvoBtn.classList.add(alvoBtn.dataset.slotPos ? 'drag-target-swap' : 'drag-target-move');
+        }
+      }
+    });
+
+    document.addEventListener('pointerup', (e) => {
+      if (!dragState) return;
+      if (!dragState.ativo) {
+        dragState = null;
+        return;
+      }
+
+      ignorarClickMovelAte = Date.now() + 250;
+      const alvoBtn = encontrarSlotSobPonteiro(e.clientX, e.clientY) || dragState.hoverBtn;
+      const posOrig = dragState.posOrigem;
+      const posDest = alvoBtn ? (alvoBtn.dataset.slotPos || alvoBtn.dataset.slotEmpty || '') : '';
+
+      limparEstadoDrag();
+
+      if (posOrig && posDest && posOrig.toUpperCase() !== posDest.toUpperCase()) {
+        trocarOuMoverPosicao(posOrig, posDest);
+      }
+    });
+
+    document.addEventListener('pointercancel', limparEstadoDrag);
+    if (window.addEventListener) window.addEventListener('blur', limparEstadoDrag);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && dragState?.ativo) limparEstadoDrag();
+    });
+  }
+
   // =========================================
   // INICIALIZACAO E EVENTOS DELEGADOS
   // =========================================
@@ -2191,10 +2449,16 @@
     desenharMovelVazio();
     sincronizarControlesFiltroTecidos();
     carregarTecidos();
+    inicializarDragMovel();
 
     const movelEl = document.getElementById('movel-grid');
     if (movelEl) {
       movelEl.addEventListener('click', (e) => {
+        if (Date.now() < ignorarClickMovelAte) {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
         const emptySlot = e.target.closest('button[data-slot-empty]');
         if (emptySlot) {
           abrirModal(emptySlot.dataset.slotEmpty);

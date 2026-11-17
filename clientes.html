@@ -684,7 +684,7 @@
         .modal-ficha {
             background: #ffffff;
             width: 100%;
-            max-width: 1040px;
+            max-width: 1080px;
             max-height: 92vh;
             border-radius: 18px;
             box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
@@ -816,7 +816,7 @@
 
         .ficha-grid {
             display: grid;
-            grid-template-columns: 1.06fr 1.18fr;
+            grid-template-columns: 1.12fr 1.12fr;
             gap: 18px;
         }
         .ficha-section {
@@ -884,6 +884,45 @@
             display: grid;
             grid-template-columns: 1.38fr 0.92fr;
             gap: 12px;
+        }
+
+        /* Bloco estruturado de medidas */
+        .medidas-bloco {
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid #f2eee6;
+        }
+        .medidas-subtitulo {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--cli-muted);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .medidas-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 9px 10px;
+            margin-bottom: 12px;
+        }
+        .medidas-grid .form-field {
+            margin-bottom: 0;
+        }
+        .medidas-grid .form-field label {
+            font-size: 0.74rem;
+            margin-bottom: 4px !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .medidas-grid .form-field input {
+            padding: 7px 10px !important;
+            font-size: 0.84rem;
+            border-radius: 9px;
         }
 
         .ficha-form-footer {
@@ -1074,6 +1113,10 @@
             }
             .form-row-2 {
                 grid-template-columns: 1fr;
+            }
+            .medidas-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
             }
             .ficha-header {
                 padding: 16px 18px;
@@ -1336,9 +1379,56 @@
                                 <label for="ficha-input-morada">Morada / Endereço</label>
                                 <input type="text" id="ficha-input-morada" placeholder="Rua, Código Postal, Cidade">
                             </div>
-                            <div class="form-field">
-                                <label for="ficha-input-medidas">Medidas de Costura &amp; Preferências</label>
-                                <textarea id="ficha-input-medidas" placeholder="Ex: Busto: 92cm | Cintura: 74cm | Anca: 98cm | Altura: 1.65m&#10;Preferências: Gosta de bainha ligeiramente subida..."></textarea>
+                            <div class="medidas-bloco">
+                                <div class="medidas-subtitulo">
+                                    <span>Medidas de Costura (cm)</span>
+                                </div>
+                                <div class="medidas-grid">
+                                    <div class="form-field">
+                                        <label for="ficha-med-busto">Busto</label>
+                                        <input type="text" id="ficha-med-busto" placeholder="Ex: 92 cm">
+                                    </div>
+                                    <div class="form-field">
+                                        <label for="ficha-med-cintura">Cintura</label>
+                                        <input type="text" id="ficha-med-cintura" placeholder="Ex: 74 cm">
+                                    </div>
+                                    <div class="form-field">
+                                        <label for="ficha-med-quadril">Quadril</label>
+                                        <input type="text" id="ficha-med-quadril" placeholder="Ex: 98 cm">
+                                    </div>
+                                    <div class="form-field">
+                                        <label for="ficha-med-altura">Altura</label>
+                                        <input type="text" id="ficha-med-altura" placeholder="Ex: 1,65 m">
+                                    </div>
+                                    <div class="form-field">
+                                        <label for="ficha-med-gancho">Gancho</label>
+                                        <input type="text" id="ficha-med-gancho" placeholder="Ex: 27 cm">
+                                    </div>
+                                    <div class="form-field">
+                                        <label for="ficha-med-altura-busto">Altura do Busto</label>
+                                        <input type="text" id="ficha-med-altura-busto" placeholder="Ex: 26 cm">
+                                    </div>
+                                    <div class="form-field">
+                                        <label for="ficha-med-altura-quadril">Altura Quadril</label>
+                                        <input type="text" id="ficha-med-altura-quadril" placeholder="Ex: 20 cm">
+                                    </div>
+                                    <div class="form-field">
+                                        <label for="ficha-med-comp-manga">Comprimento da Manga</label>
+                                        <input type="text" id="ficha-med-comp-manga" placeholder="Ex: 60 cm">
+                                    </div>
+                                    <div class="form-field">
+                                        <label for="ficha-med-larg-manga">Largura da Manga</label>
+                                        <input type="text" id="ficha-med-larg-manga" placeholder="Ex: 32 cm">
+                                    </div>
+                                    <div class="form-field">
+                                        <label for="ficha-med-decote">Decote</label>
+                                        <input type="text" id="ficha-med-decote" placeholder="Ex: 22 cm">
+                                    </div>
+                                </div>
+                                <div class="form-field">
+                                    <label for="ficha-input-observacoes">Observações</label>
+                                    <textarea id="ficha-input-observacoes" placeholder="Preferências da cliente, caimento, bainha, notas especiais..."></textarea>
+                                </div>
                             </div>
                             <div class="ficha-form-footer">
                                 <button type="button" id="btn-eliminar-registo-cliente" class="btn-cli-danger-soft" onclick="eliminarRegistoClienteAtual()">
@@ -1450,6 +1540,21 @@
 
         const MEDIDAS_SEPARATOR = "\n---MEDIDAS---\n";
 
+        const CAMPOS_MEDIDAS = [
+            { key: 'busto', label: 'Busto', inputId: 'ficha-med-busto' },
+            { key: 'cintura', label: 'Cintura', inputId: 'ficha-med-cintura' },
+            { key: 'quadril', label: 'Quadril', inputId: 'ficha-med-quadril', aliases: ['anca'] },
+            { key: 'altura', label: 'Altura', inputId: 'ficha-med-altura' },
+            { key: 'gancho', label: 'Gancho', inputId: 'ficha-med-gancho' },
+            { key: 'altura_busto', label: 'Altura do Busto', inputId: 'ficha-med-altura-busto' },
+            { key: 'altura_quadril', label: 'Altura Quadril', inputId: 'ficha-med-altura-quadril' },
+            { key: 'comp_manga', label: 'Comprimento da Manga', inputId: 'ficha-med-comp-manga' },
+            { key: 'larg_manga', label: 'Largura da Manga', inputId: 'ficha-med-larg-manga' },
+            { key: 'decote', label: 'Decote', inputId: 'ficha-med-decote' }
+        ];
+
+        const CAMPOS_MEDIDAS_POR_TAM = [...CAMPOS_MEDIDAS].sort((a, b) => b.label.length - a.label.length);
+
         const LABELS_FILTRO = {
             todos: 'Todos os clientes',
             bot_zap: 'Ausentes (> 90 dias)',
@@ -1541,6 +1646,95 @@
             const med = String(medidas || '').trim();
             if (!med) return m || null;
             return `${m}${MEDIDAS_SEPARATOR}${med}`;
+        }
+
+        function casarCampoMedida(segmento) {
+            const idx = segmento.indexOf(':');
+            if (idx <= 0) return null;
+            const chaveNorm = normalizarChaveNome(segmento.slice(0, idx));
+            const campo = CAMPOS_MEDIDAS_POR_TAM.find(c =>
+                normalizarChaveNome(c.label) === chaveNorm ||
+                (c.aliases || []).some(a => normalizarChaveNome(a) === chaveNorm)
+            );
+            if (!campo) return null;
+            return { key: campo.key, value: segmento.slice(idx + 1).trim() };
+        }
+
+        function parsearMedidasCliente(textoBruto) {
+            const valores = {};
+            CAMPOS_MEDIDAS.forEach(c => { valores[c.key] = ''; });
+            const raw = String(textoBruto || '').replace(/\r\n?/g, '\n').trim();
+            if (!raw) return { valores, observacoes: '' };
+
+            const linhas = raw.split('\n');
+            const extras = [];
+            let obsCauda = '';
+
+            for (let i = 0; i < linhas.length; i++) {
+                const linha = linhas[i];
+                const linhaTrim = linha.trim();
+                const obsMatch = linhaTrim.match(/^(?:observa[cç][oõ]es?|obs\.?)\s*:\s*(.*)$/i);
+                if (obsMatch) {
+                    const resto = [obsMatch[1], ...linhas.slice(i + 1)].join('\n').trim();
+                    obsCauda = resto;
+                    break;
+                }
+                if (!linhaTrim) continue;
+
+                if (linhaTrim.includes('|')) {
+                    const partes = linhaTrim.split('|').map(p => p.trim()).filter(Boolean);
+                    let casouAlgum = false;
+                    const extrasLinha = [];
+                    partes.forEach(part => {
+                        const matchPart = casarCampoMedida(part);
+                        if (matchPart) {
+                            valores[matchPart.key] = matchPart.value;
+                            casouAlgum = true;
+                        } else {
+                            extrasLinha.push(part);
+                        }
+                    });
+                    if (casouAlgum) {
+                        extrasLinha.forEach(p => extras.push(p));
+                        continue;
+                    }
+                }
+
+                const direto = casarCampoMedida(linhaTrim);
+                if (direto) {
+                    valores[direto.key] = direto.value;
+                    continue;
+                }
+
+                extras.push(linha);
+            }
+
+            const observacoes = [extras.join('\n').trim(), obsCauda].filter(Boolean).join('\n').trim();
+            return { valores, observacoes };
+        }
+
+        function preencherCamposMedidas(textoBruto) {
+            const { valores, observacoes } = parsearMedidasCliente(textoBruto);
+            CAMPOS_MEDIDAS.forEach(c => {
+                const inp = document.getElementById(c.inputId);
+                if (inp) inp.value = valores[c.key] || '';
+            });
+            const obsInp = document.getElementById('ficha-input-observacoes');
+            if (obsInp) obsInp.value = observacoes || '';
+        }
+
+        function serializarMedidasFormulario() {
+            const linhas = [];
+            CAMPOS_MEDIDAS.forEach(c => {
+                const inp = document.getElementById(c.inputId);
+                const val = String(inp?.value || '').replace(/\r?\n/g, ' ').trim();
+                if (val) linhas.push(`${c.label}: ${val}`);
+            });
+            const obs = String(document.getElementById('ficha-input-observacoes')?.value || '').trim();
+            if (obs) {
+                linhas.push(obs.includes('\n') ? `Observações:\n${obs}` : `Observações: ${obs}`);
+            }
+            return linhas.join('\n').trim();
         }
 
         function formatarNumeroWhatsApp(telefone) {
@@ -2071,7 +2265,7 @@
             document.getElementById('ficha-input-nif').value = cliente.nif || '';
             document.getElementById('ficha-input-email').value = cliente.email || '';
             document.getElementById('ficha-input-morada').value = cliente.morada || '';
-            document.getElementById('ficha-input-medidas').value = cliente.medidas || '';
+            preencherCamposMedidas(cliente.medidas || '');
 
             document.getElementById('ficha-db-badge').textContent = cliente.db_id ? 'Ficha Guardada' : 'Gerada pelo Histórico';
             document.getElementById('btn-eliminar-registo-cliente').style.display = cliente.db_id ? 'inline-flex' : 'none';
@@ -2177,7 +2371,7 @@
             document.getElementById('ficha-input-nif').value = '';
             document.getElementById('ficha-input-email').value = '';
             document.getElementById('ficha-input-morada').value = '';
-            document.getElementById('ficha-input-medidas').value = '';
+            preencherCamposMedidas('');
             document.getElementById('ficha-db-badge').textContent = 'Novo Registo';
             document.getElementById('btn-eliminar-registo-cliente').style.display = 'none';
 
@@ -2202,7 +2396,7 @@
             const nifRaw = document.getElementById('ficha-input-nif').value.trim();
             const email = document.getElementById('ficha-input-email').value.trim();
             const moradaPura = document.getElementById('ficha-input-morada').value.trim();
-            const medidasPuras = document.getElementById('ficha-input-medidas').value.trim();
+            const medidasPuras = serializarMedidasFormulario();
 
             if (!nome) {
                 mostrarToastCli('Por favor, indique o nome da cliente.', true);
