@@ -2222,13 +2222,29 @@ async function removerDoHistorico(id, nomeCliente, btnEl) {
     // mantendo-o na base de dados para Finanças, Dashboard e Central de Clientes
     await arquivarPedidoSemErroStatus(client, id, p);
 
-    // Remove o cartão imediatamente da interface sem precisar esperar recarregar tudo
+    // Remove o cartão imediatamente da interface e reorganiza o Masonry sem deixar buraco
     const cardEl = btnEl ? btnEl.closest('.pedido') : null;
     if (cardEl) {
+      cardEl.style.pointerEvents = 'none';
       cardEl.style.transition = 'opacity 0.2s, transform 0.2s';
       cardEl.style.opacity = '0';
       cardEl.style.transform = 'scale(0.96)';
-      setTimeout(() => cardEl.remove(), 200);
+      setTimeout(() => {
+        const container = cardEl.closest('#lista-entregues') || document.getElementById('lista-entregues');
+        cardEl.remove();
+        if (typeof aplicarMasonryUI === 'function') {
+          aplicarMasonryUI('entregue');
+        }
+        if (container && container.querySelectorAll('.pedido').length === 0) {
+          container.style.height = 'auto';
+          container.innerHTML = `
+            <div style="text-align: center; color: #777; margin-top: 30px;">
+                <p style="font-size: 2rem;">📭</p>
+                <p>Não há pedidos nesta lista no momento.</p>
+            </div>
+          `;
+        }
+      }, 200);
     } else {
       location.reload();
     }
