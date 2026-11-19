@@ -429,7 +429,7 @@
       color: #be123c;
     }
     #peca-promo-switch.ativo {
-      background: #be123c;
+      background: #be123c !important;
     }
     .modal-toggles-row {
       display: grid;
@@ -657,8 +657,14 @@
     /* Aba Definições / Canais */
     .settings-grid {
       display: grid;
-      grid-template-columns: 1.2fr 1fr;
+      grid-template-columns: 1fr 1.15fr;
       gap: 18px;
+      align-items: start;
+    }
+    @media (max-width: 960px) {
+      .settings-grid {
+        grid-template-columns: 1fr;
+      }
     }
     .settings-card {
       background: #ffffff;
@@ -672,6 +678,32 @@
       font-size: 1.06rem;
       font-weight: 700;
       color: #111827;
+      text-align: left !important;
+    }
+    .whatsapp-highlight-box {
+      padding: 13px 14px;
+      border-radius: 12px;
+      border: 1px solid #bbf7d0;
+      background: #f0fdf4;
+      margin-bottom: 14px;
+    }
+    .whatsapp-highlight-box.pendente {
+      border-color: #bae6fd;
+      background: #f0f9ff;
+    }
+    .whatsapp-highlight-box.off {
+      border-color: #fde68a;
+      background: #fffbeb;
+    }
+    .settings-two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 600px) {
+      .settings-two-col {
+        grid-template-columns: 1fr;
+      }
     }
     .settings-card p.desc {
       margin: 0 0 18px;
@@ -1184,8 +1216,8 @@
           <span class="site-tab-badge" id="tab-badge-categorias">0</span>
         </button>
         <button type="button" class="site-tab-btn" id="tab-btn-definicoes" onclick="mudarAba('definicoes')">
-          <span>Canais &amp; WhatsApp</span>
-          <span class="site-tab-badge" id="tab-badge-zap">Indisponível</span>
+          <span>Canais, Contactos &amp; Localização</span>
+          <span class="site-tab-badge" id="tab-badge-zap">Ativo</span>
         </button>
       </div>
 
@@ -1208,64 +1240,122 @@
       <div class="cats-grid" id="lista-categorias-site"></div>
     </div>
 
-    <!-- VISTA 3: DEFINIÇÕES / WHATSAPP -->
+    <!-- VISTA 3: CANAIS, CONTACTOS & LOCALIZAÇÃO -->
     <div id="vista-definicoes" style="display:none;">
       <div class="settings-grid">
         <div class="settings-card">
-          <h3>Configuração do Atendimento por WhatsApp</h3>
+          <h3>WhatsApp Oficial do Atelier</h3>
           <p class="desc">
-            O sistema de compra direta por WhatsApp já está preparado na página pública de cada peça. Enquanto não tiver o número oficial, mantenha desativado para surgir como <strong>Indisponível de momento</strong>.
+            O atendimento por WhatsApp já está preparado e ativo na estrutura da loja. Cole o número próprio do atelier assim que o tiver disponível e guarde para ativar de imediato todos os botões de encomenda.
           </p>
 
           <div class="toggle-row">
             <div>
               <strong style="display:block;font-size:0.9rem;color:#111827;">Estado do WhatsApp na Loja Pública</strong>
-              <span id="def-zap-status-txt" style="font-size:0.78rem;color:#b45309;font-weight:600;">Indisponível de momento</span>
+              <span id="def-zap-status-txt" style="font-size:0.78rem;color:#15803d;font-weight:600;">Ativo</span>
             </div>
-            <button type="button" id="def-zap-switch" class="switch-btn" onclick="alternarSwitchWhatsApp()" aria-label="Ativar ou desativar WhatsApp"></button>
+            <button type="button" id="def-zap-switch" class="switch-btn ativo" onclick="alternarSwitchWhatsApp()" aria-label="Ativar ou desativar WhatsApp"></button>
           </div>
 
-          <div class="field-group">
-            <label for="def-zap-numero">Número de WhatsApp (com indicativo de Portugal +351 ou DDI)</label>
-            <input type="tel" id="def-zap-numero" class="field-input" placeholder="Ex: +351 912 345 678">
+          <div id="def-zap-box-destaque" class="whatsapp-highlight-box pendente">
+            <div class="field-group" style="margin-bottom:8px;">
+              <label for="def-zap-numero">Número Oficial de WhatsApp do Atelier (Portugal +351 ou DDI)</label>
+              <input type="tel" id="def-zap-numero" class="field-input" placeholder="Cole aqui o número: ex. 912 345 678 ou +351 912 345 678" oninput="atualizarPreviewNumeroZap()" style="background:#ffffff !important;">
+            </div>
+            <div id="def-zap-preview-box" style="font-size:0.77rem;color:#0369a1;line-height:1.45;">
+              Aguarda inserção do número oficial — basta colar acima e guardar.
+            </div>
           </div>
 
           <div class="field-group">
             <label for="def-zap-msg">Mensagem pré-definida enviada pelo cliente</label>
-            <textarea id="def-zap-msg" rows="3" class="field-textarea" placeholder="Olá! Vi esta peça na loja do Eva Leite Atelier e gostaria de finalizar a compra por WhatsApp:"></textarea>
+            <textarea id="def-zap-msg" rows="2" class="field-textarea" placeholder="Olá! Vi esta peça na loja do Eva Leite Atelier e gostaria de finalizar a compra por WhatsApp:"></textarea>
           </div>
 
-          <button type="button" class="btn-site-primary" onclick="guardarDefinicoesWhatsApp()" style="width:100% !important;">
-            Guardar Definições do Site
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
+            <div style="padding:10px 12px;border-radius:10px;border:1px solid #e5e0d7;background:#faf9f6;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-size:0.81rem;font-weight:600;color:#111827;">Compra pela Vinted</span>
+              <span class="status-pill status-visivel">Ativo</span>
+            </div>
+            <div style="padding:10px 12px;border-radius:10px;border:1px solid #e5e0d7;background:#faf9f6;">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:3px;">
+                <span style="font-size:0.81rem;font-weight:600;color:#111827;">Botões de WhatsApp no Site</span>
+                <span id="def-resumo-zap-pill" class="status-pill status-visivel">Aguarda número</span>
+              </div>
+              <span id="def-resumo-zap-desc" style="font-size:0.74rem;color:#6b7280;">Assim que preencher um número válido e guardar, todos os botões ficam clicáveis no site público.</span>
+            </div>
+            <div style="padding:10px 12px;border-radius:10px;border:1px solid #e5e0d7;background:#faf9f6;font-size:0.74rem;color:#6b7280;">
+              <strong style="color:#111827;">Páginas Públicas Integradas:</strong> Contactos, Localização, Política de Envio, Política de Entrega, RGPD e Política de Cookies.
+            </div>
+          </div>
+
+          <button type="button" class="btn-site-primary" onclick="guardarDefinicoesSite()" style="width:100% !important;">
+            Guardar Canais &amp; Contactos no Site
           </button>
         </div>
 
         <div class="settings-card">
-          <h3>Resumo dos Canais da Loja</h3>
-          <p class="desc">Estado em tempo real apresentado aos clientes que visitam o site em Portugal.</p>
+          <h3>Contactos, Localização &amp; RGPD do Site</h3>
+          <p class="desc">
+            Estes dados preenchem automaticamente as páginas <strong>Contactos</strong>, <strong>Localização</strong> e <strong>RGPD</strong> da loja pública em Portugal.
+          </p>
 
-          <div style="display:flex;flex-direction:column;gap:12px;">
-            <div style="padding:14px;border-radius:12px;border:1px solid #e5e0d7;background:#faf9f6;">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-                <strong style="font-size:0.88rem;">Compra via Vinted</strong>
-                <span class="status-pill status-visivel">Ativo</span>
-              </div>
-              <span style="font-size:0.78rem;color:#6b7280;">As peças com link Vinted permitem finalizar a compra diretamente com proteção ao comprador.</span>
+          <div class="settings-two-col">
+            <div class="field-group">
+              <label for="def-atelier-email">Correio Eletrónico (E-mail)</label>
+              <input type="email" id="def-atelier-email" class="field-input" placeholder="evaleiteatelier@gmail.com">
             </div>
-
-            <div style="padding:14px;border-radius:12px;border:1px solid #e5e0d7;background:#faf9f6;">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-                <strong style="font-size:0.88rem;">Atendimento por WhatsApp</strong>
-                <span id="def-resumo-zap-pill" class="status-pill status-bloqueada">Indisponível de momento</span>
-              </div>
-              <span id="def-resumo-zap-desc" style="font-size:0.78rem;color:#6b7280;">O cliente vê o canal como temporariamente indisponível até ser configurado e ativado acima.</span>
-            </div>
-
-            <div style="padding:14px;border-radius:12px;border:1px solid #e5e0d7;background:#faf9f6;">
-              <strong style="font-size:0.88rem;display:block;margin-bottom:4px;">Sincronização Automática</strong>
-              <span style="font-size:0.78rem;color:#6b7280;">Todas as alterações feitas nesta página (peças visíveis, bloqueadas, categorias e WhatsApp) aplicam-se de imediato ao site público.</span>
+            <div class="field-group">
+              <label for="def-atelier-telefone">Telefone Alternativo <span style="font-weight:400;color:#6b7280;">(opcional)</span></label>
+              <input type="tel" id="def-atelier-telefone" class="field-input" placeholder="Opcional (usa WhatsApp se preenchido)">
             </div>
           </div>
+
+          <div class="field-group">
+            <label for="def-atelier-horario">Horário de Atendimento</label>
+            <input type="text" id="def-atelier-horario" class="field-input" placeholder="Segunda a Sexta, 09h00 – 18h00">
+          </div>
+
+          <div class="field-group">
+            <label for="def-atelier-morada">Morada / Rua do Atelier <span style="font-weight:400;color:#6b7280;">(opcional)</span></label>
+            <input type="text" id="def-atelier-morada" class="field-input" placeholder="Praça de Mouzinho de Albuquerque 113, Loja 126">
+          </div>
+
+          <div class="settings-two-col">
+            <div class="field-group">
+              <label for="def-atelier-cp">Código Postal</label>
+              <input type="text" id="def-atelier-cp" class="field-input" placeholder="4100-359">
+            </div>
+            <div class="field-group">
+              <label for="def-atelier-localidade">Cidade / Região</label>
+              <input type="text" id="def-atelier-localidade" class="field-input" placeholder="Porto">
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label for="def-atelier-maps">Ligação do Google Maps <span style="font-weight:400;color:#6b7280;">(opcional)</span></label>
+            <input type="url" id="def-atelier-maps" class="field-input" placeholder="https://maps.google.com/...">
+          </div>
+
+          <div class="field-group">
+            <label for="def-atelier-nota-visita">Nota de Atendimento &amp; Levantamento Presencial</label>
+            <textarea id="def-atelier-nota-visita" rows="2" class="field-textarea" placeholder="Atendimento presencial e levantamento de encomendas diretamente no atelier, sem necessidade de marcação prévia."></textarea>
+          </div>
+
+          <div class="settings-two-col">
+            <div class="field-group">
+              <label for="def-atelier-entidade">Nome / Entidade Legal (RGPD)</label>
+              <input type="text" id="def-atelier-entidade" class="field-input" placeholder="Eva Leite Atelier">
+            </div>
+            <div class="field-group">
+              <label for="def-atelier-nif">NIF <span style="font-weight:400;color:#6b7280;">(opcional)</span></label>
+              <input type="text" id="def-atelier-nif" class="field-input" placeholder="Ex: 123456789">
+            </div>
+          </div>
+
+          <button type="button" class="btn-site-primary" onclick="guardarDefinicoesSite()" style="width:100% !important;">
+            Guardar Contactos &amp; Localização
+          </button>
         </div>
       </div>
     </div>
@@ -1488,9 +1578,22 @@
         produtoAcessorios: {},
         produtoPromos: {},
         whatsapp: {
-          ativo: false,
+          ativo: true,
+          desativadoManual: false,
           numero: '',
           mensagemPadrao: 'Olá! Vi esta peça na loja do Eva Leite Atelier e gostaria de finalizar a compra por WhatsApp:'
+        },
+        atelierInfo: {
+          email: 'evaleiteatelier@gmail.com',
+          telefone: '',
+          morada: 'Praça de Mouzinho de Albuquerque 113, Loja 126',
+          codigoPostal: '4100-359',
+          localidade: 'Porto',
+          mapsUrl: '',
+          horario: 'Segunda a Sexta, 09h00 – 18h00',
+          notaAtendimento: 'Atendimento presencial e levantamento de encomendas diretamente no atelier, sem necessidade de marcação prévia.',
+          entidadeLegal: 'Eva Leite Atelier',
+          nif: ''
         }
       };
 
@@ -1505,7 +1608,7 @@
       let modalExtrasUrls = [];
       let modalAcessoriosLista = [];
       let editandoCatId = null;
-      let zapSwitchAtivo = false;
+      let zapSwitchAtivo = true;
 
       function getStoreDb() {
         if (storeDb) return storeDb;
@@ -1620,6 +1723,14 @@
           if (cfgRows[0] && cfgRows[0].descricao) {
             try {
               const parsed = JSON.parse(cfgRows[0].descricao);
+              const zapParsed = parsed.whatsapp && typeof parsed.whatsapp === 'object' ? parsed.whatsapp : {};
+              const numParsed = String(zapParsed.numero || '');
+              const desativadoManual = Boolean(zapParsed.desativadoManual);
+              const zapAtivoResolvido = numParsed
+                ? Boolean(zapParsed.ativo)
+                : (desativadoManual ? false : true);
+              const infoParsed = parsed.atelierInfo && typeof parsed.atelierInfo === 'object' ? parsed.atelierInfo : {};
+
               siteConfig = {
                 categorias: Array.isArray(parsed.categorias) && parsed.categorias.length > 0
                   ? parsed.categorias.filter(c => c && c.id && c.label)
@@ -1630,9 +1741,22 @@
                 produtoAcessorios: parsed.produtoAcessorios && typeof parsed.produtoAcessorios === 'object' ? parsed.produtoAcessorios : {},
                 produtoPromos: parsed.produtoPromos && typeof parsed.produtoPromos === 'object' ? parsed.produtoPromos : {},
                 whatsapp: {
-                  ativo: Boolean(parsed.whatsapp && parsed.whatsapp.ativo),
-                  numero: String((parsed.whatsapp && parsed.whatsapp.numero) || ''),
-                  mensagemPadrao: String((parsed.whatsapp && parsed.whatsapp.mensagemPadrao) || siteConfig.whatsapp.mensagemPadrao)
+                  ativo: zapAtivoResolvido,
+                  desativadoManual,
+                  numero: numParsed,
+                  mensagemPadrao: String(zapParsed.mensagemPadrao || siteConfig.whatsapp.mensagemPadrao)
+                },
+                atelierInfo: {
+                  email: String(infoParsed.email !== undefined ? infoParsed.email : siteConfig.atelierInfo.email),
+                  telefone: String(infoParsed.telefone || ''),
+                  morada: String(infoParsed.morada || ''),
+                  codigoPostal: String(infoParsed.codigoPostal || ''),
+                  localidade: String(infoParsed.localidade !== undefined ? infoParsed.localidade : siteConfig.atelierInfo.localidade),
+                  mapsUrl: String(infoParsed.mapsUrl || ''),
+                  horario: String(infoParsed.horario !== undefined ? infoParsed.horario : siteConfig.atelierInfo.horario),
+                  notaAtendimento: String(infoParsed.notaAtendimento !== undefined ? infoParsed.notaAtendimento : siteConfig.atelierInfo.notaAtendimento),
+                  entidadeLegal: String(infoParsed.entidadeLegal !== undefined ? infoParsed.entidadeLegal : siteConfig.atelierInfo.entidadeLegal),
+                  nif: String(infoParsed.nif || '')
                 }
               };
             } catch (_) {
@@ -1641,7 +1765,7 @@
           }
 
           pecasReais = rows.filter(r => !ehConfigRow(r));
-          sincronizarFormularioWhatsApp();
+          sincronizarFormularioSite();
           atualizarKPIsEBadges();
           renderizarVistaAtual();
         } catch (err) {
@@ -1694,8 +1818,17 @@
         document.getElementById('tab-badge-pecas').textContent = String(total);
         document.getElementById('tab-badge-categorias').textContent = String(catsCount);
 
-        const zapAtivo = Boolean(siteConfig.whatsapp.ativo && String(siteConfig.whatsapp.numero).replace(/\D+/g, '').length >= 9);
-        document.getElementById('tab-badge-zap').textContent = zapAtivo ? 'Ativo' : 'Indisponível';
+        const zapDigitsCount = normalizarNumeroWhatsAppPT(siteConfig.whatsapp.numero).length;
+        const zapBadgeEl = document.getElementById('tab-badge-zap');
+        if (zapBadgeEl) {
+          if (siteConfig.whatsapp.ativo && zapDigitsCount >= 9) {
+            zapBadgeEl.textContent = 'Ativo';
+          } else if (siteConfig.whatsapp.ativo) {
+            zapBadgeEl.textContent = 'Aguarda nº';
+          } else {
+            zapBadgeEl.textContent = 'Indisponível';
+          }
+        }
 
         document.getElementById('kpi-site-todos').classList.toggle('ativo', abaAtiva === 'pecas' && filtroEstado === 'todos');
         document.getElementById('kpi-site-visiveis').classList.toggle('ativo', abaAtiva === 'pecas' && filtroEstado === 'visiveis');
@@ -2672,32 +2805,102 @@
         }
       };
 
-      // ================= ABA 3: DEFINIÇÕES WHATSAPP =================
-      function sincronizarFormularioWhatsApp() {
+      // ================= ABA 3: CANAIS, WHATSAPP, CONTACTOS & LOCALIZAÇÃO =================
+      function normalizarNumeroWhatsAppPT(raw) {
+        let digits = String(raw ?? '').replace(/\D+/g, '');
+        if (digits.startsWith('00')) digits = digits.slice(2);
+        if (digits.length === 9 && /^[29]/.test(digits)) {
+          digits = '351' + digits;
+        }
+        return digits;
+      }
+
+      function sincronizarFormularioSite() {
         zapSwitchAtivo = Boolean(siteConfig.whatsapp.ativo);
         document.getElementById('def-zap-numero').value = siteConfig.whatsapp.numero || '';
         document.getElementById('def-zap-msg').value = siteConfig.whatsapp.mensagemPadrao || '';
+
+        const info = siteConfig.atelierInfo || {};
+        document.getElementById('def-atelier-email').value = info.email || '';
+        document.getElementById('def-atelier-telefone').value = info.telefone || '';
+        document.getElementById('def-atelier-horario').value = info.horario || '';
+        document.getElementById('def-atelier-morada').value = info.morada || '';
+        document.getElementById('def-atelier-cp').value = info.codigoPostal || '';
+        document.getElementById('def-atelier-localidade').value = info.localidade || '';
+        document.getElementById('def-atelier-maps').value = info.mapsUrl || '';
+        document.getElementById('def-atelier-nota-visita').value = info.notaAtendimento || '';
+        document.getElementById('def-atelier-entidade').value = info.entidadeLegal || '';
+        document.getElementById('def-atelier-nif').value = info.nif || '';
+
         atualizarUIEstadoWhatsApp();
       }
+
+      window.atualizarPreviewNumeroZap = function () {
+        atualizarUIEstadoWhatsApp();
+      };
 
       function atualizarUIEstadoWhatsApp() {
         const btn = document.getElementById('def-zap-switch');
         const txt = document.getElementById('def-zap-status-txt');
         const pill = document.getElementById('def-resumo-zap-pill');
         const desc = document.getElementById('def-resumo-zap-desc');
+        const box = document.getElementById('def-zap-box-destaque');
+        const previewBox = document.getElementById('def-zap-preview-box');
+        const rawNumero = document.getElementById('def-zap-numero') ? document.getElementById('def-zap-numero').value : '';
+        const digits = normalizarNumeroWhatsAppPT(rawNumero);
+        const temNumero = digits.length >= 9;
+
         if (btn) btn.classList.toggle('ativo', zapSwitchAtivo);
+        if (box) {
+          box.classList.toggle('pendente', zapSwitchAtivo && !temNumero);
+          box.classList.toggle('off', !zapSwitchAtivo);
+        }
         if (txt) {
-          txt.textContent = zapSwitchAtivo ? 'Ativo para os clientes no site' : 'Indisponível de momento';
-          txt.style.color = zapSwitchAtivo ? '#15803d' : '#b45309';
+          if (zapSwitchAtivo && temNumero) {
+            txt.textContent = 'Ativo e operacional para os clientes';
+            txt.style.color = '#15803d';
+          } else if (zapSwitchAtivo) {
+            txt.textContent = 'Ativo — aguarda inserção do número abaixo';
+            txt.style.color = '#0369a1';
+          } else {
+            txt.textContent = 'Desativado manualmente';
+            txt.style.color = '#b45309';
+          }
+        }
+        if (previewBox) {
+          if (temNumero) {
+            const urlTeste = `https://wa.me/${digits}?text=${encodeURIComponent('Olá! Teste de ligação WhatsApp do Eva Leite Atelier.')}`;
+            previewBox.innerHTML = `<span style="color:#15803d;font-weight:600;">Número pronto (${esc(digits)}):</span> <a href="${esc(urlTeste)}" target="_blank" rel="noopener noreferrer" style="color:#14532d;font-weight:700;text-decoration:underline;">Testar abertura no WhatsApp ↗</a>`;
+          } else if (rawNumero.trim()) {
+            previewBox.innerHTML = `<span style="color:#b45309;">Introduza pelo menos 9 dígitos válidos (ex: 912 345 678 ou +351 912 345 678).</span>`;
+          } else {
+            previewBox.innerHTML = `<span style="color:#0369a1;">Aguarda o número do colega — cole acima e guarde para ativar os links WhatsApp no site.</span>`;
+          }
         }
         if (pill) {
-          pill.className = 'status-pill ' + (zapSwitchAtivo ? 'status-visivel' : 'status-bloqueada');
-          pill.textContent = zapSwitchAtivo ? 'Ativo' : 'Indisponível de momento';
+          if (zapSwitchAtivo && temNumero) {
+            pill.className = 'status-pill status-visivel';
+            pill.textContent = 'Ativo';
+          } else if (zapSwitchAtivo) {
+            pill.className = 'status-pill status-bloqueada';
+            pill.style.background = '#e0f2fe';
+            pill.style.color = '#0369a1';
+            pill.textContent = 'Aguarda número';
+          } else {
+            pill.className = 'status-pill status-bloqueada';
+            pill.style.background = '';
+            pill.style.color = '';
+            pill.textContent = 'Indisponível de momento';
+          }
         }
         if (desc) {
-          desc.textContent = zapSwitchAtivo
-            ? 'Os visitantes já podem finalizar pedidos pelo WhatsApp diretamente na página de cada peça.'
-            : 'O cliente vê o canal como temporariamente indisponível até ser configurado e ativado acima.';
+          if (zapSwitchAtivo && temNumero) {
+            desc.textContent = 'Os visitantes já podem finalizar peças, enviar favoritos e iniciar contacto direto pelo WhatsApp.';
+          } else if (zapSwitchAtivo) {
+            desc.textContent = 'A estrutura está ativa. Basta inserir e guardar o número oficial acima para os botões ficarem clicáveis.';
+          } else {
+            desc.textContent = 'O cliente vê o canal como temporariamente indisponível até ser ativado.';
+          }
         }
       }
 
@@ -2706,32 +2909,60 @@
         atualizarUIEstadoWhatsApp();
       };
 
-      window.guardarDefinicoesWhatsApp = async function () {
+      window.guardarDefinicoesSite = async function () {
         const numero = document.getElementById('def-zap-numero').value.trim();
-        const digits = numero.replace(/\D+/g, '');
+        const digits = normalizarNumeroWhatsAppPT(numero);
         const msg = document.getElementById('def-zap-msg').value.trim();
 
-        if (zapSwitchAtivo && digits.length < 9) {
-          await window.mostrarAviso('Para ativar o WhatsApp na loja pública, introduza primeiro um número válido (ex: +351 912 345 678).', 'Número em falta', 'alert');
+        if (numero && digits.length < 9) {
+          await window.mostrarAviso('O número introduzido parece incompleto. Indique pelo menos 9 dígitos (ex: 912 345 678 ou +351 912 345 678) ou deixe vazio enquanto aguarda o contacto.', 'Número inválido', 'alert');
           return;
         }
 
-        const antes = { ...siteConfig.whatsapp };
+        const mapsRaw = document.getElementById('def-atelier-maps').value.trim();
+        const mapsUrl = mapsRaw ? validarUrlHttp(mapsRaw) : '';
+        if (mapsRaw && !mapsUrl) {
+          await window.mostrarAviso('A ligação do Google Maps deve começar por https:// ou http://.', 'Ligação inválida', 'alert');
+          return;
+        }
+
+        const antesZap = { ...siteConfig.whatsapp };
+        const antesInfo = { ...siteConfig.atelierInfo };
+
         siteConfig.whatsapp = {
           ativo: zapSwitchAtivo,
+          desativadoManual: !zapSwitchAtivo,
           numero,
           mensagemPadrao: msg || 'Olá! Vi esta peça na loja do Eva Leite Atelier e gostaria de finalizar a compra por WhatsApp:'
+        };
+        siteConfig.atelierInfo = {
+          email: document.getElementById('def-atelier-email').value.trim() || 'evaleiteatelier@gmail.com',
+          telefone: document.getElementById('def-atelier-telefone').value.trim(),
+          horario: document.getElementById('def-atelier-horario').value.trim() || 'Segunda a Sexta, 09h00 – 18h00',
+          morada: document.getElementById('def-atelier-morada').value.trim(),
+          codigoPostal: document.getElementById('def-atelier-cp').value.trim(),
+          localidade: document.getElementById('def-atelier-localidade').value.trim() || 'Porto',
+          mapsUrl,
+          notaAtendimento: document.getElementById('def-atelier-nota-visita').value.trim() || 'Atendimento presencial e levantamento de encomendas diretamente no atelier, sem necessidade de marcação prévia.',
+          entidadeLegal: document.getElementById('def-atelier-entidade').value.trim() || 'Eva Leite Atelier',
+          nif: document.getElementById('def-atelier-nif').value.trim()
         };
 
         try {
           await guardarConfigRemota();
           atualizarKPIsEBadges();
-          await window.mostrarAviso('Definições de canais guardadas e sincronizadas com o site público.', 'Guardado', 'check');
+          atualizarUIEstadoWhatsApp();
+          const feedback = zapSwitchAtivo && digits.length >= 9
+            ? 'WhatsApp ativo, contactos e localização guardados com sucesso no site público!'
+            : 'Contactos e localização guardados! O WhatsApp está pronto — assim que tiver o número, cole-o no campo e guarde novamente.';
+          await window.mostrarAviso(feedback, 'Guardado', 'check');
         } catch (err) {
-          siteConfig.whatsapp = antes;
+          siteConfig.whatsapp = antesZap;
+          siteConfig.atelierInfo = antesInfo;
           await window.mostrarAviso('Erro ao guardar definições: ' + err.message, 'Erro', 'error');
         }
       };
+      window.guardarDefinicoesWhatsApp = window.guardarDefinicoesSite;
 
       document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('click', e => {
