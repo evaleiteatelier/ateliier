@@ -267,9 +267,10 @@ const LIQUID_NAVBAR_CSS = `
   .ctx-submenu {
     display: none;
     position: absolute;
-    top: -6px;
+    top: auto;
+    bottom: -6px;
     left: calc(100% + 8px);
-    width: 220px;
+    width: 224px;
     padding: 7px;
     border-radius: 16px;
     background: linear-gradient(145deg, rgba(255, 255, 255, 0.84) 0%, rgba(248, 245, 238, 0.74) 100%);
@@ -282,8 +283,17 @@ const LIQUID_NAVBAR_CSS = `
       inset 0 1px 0 rgba(255, 255, 255, 0.98);
     z-index: 3600;
     animation: winContextOpen 0.14s cubic-bezier(0.16, 1, 0.3, 1);
-    transform-origin: top left;
+    transform-origin: bottom left;
     box-sizing: border-box;
+  }
+  .ctx-submenu .ctx-item {
+    padding: 6.5px 10px;
+  }
+  @media (max-height: 540px) {
+    .ctx-submenu {
+      max-height: calc(100vh - 104px);
+      overflow-y: auto;
+    }
   }
   /* Ponte invisível para o cursor não perder o hover no espaço entre os menus */
   .ctx-submenu::before {
@@ -512,6 +522,10 @@ const LIQUID_NAVBAR_CSS = `
     .ctx-submenu {
       left: 16px;
       top: calc(100% + 4px);
+      bottom: auto;
+      transform-origin: top left;
+      max-height: clamp(190px, 38vh, 360px);
+      overflow-y: auto;
     }
     .ctx-submenu::before {
       top: -8px;
@@ -639,6 +653,12 @@ const LIQUID_NAVBAR_HTML = `
                   Gerir Produtos
                 </span>
               </a>
+              <a href="gestao-site.html" data-page="gestao-site.html" class="ctx-item">
+                <span class="ctx-item-left">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                  Gestão do Site
+                </span>
+              </a>
               <a href="gestao-tecidos.html" data-page="gestao-tecidos.html" class="ctx-item">
                 <span class="ctx-item-left">
                   <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
@@ -739,6 +759,7 @@ const MAPA_TITULOS_PAGINA = {
     "financas.html": "Finanças",
     "contas.html": "Contas",
     "gerir-produtos.html": "Gerir Produtos",
+    "gestao-site.html": "Gestão do Site",
     "gestao-tecidos.html": "Gestão de Tecidos",
     "lista-compras.html": "Lista de Compras",
     "precificador.html": "Precificador",

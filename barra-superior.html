@@ -267,9 +267,10 @@
   .ctx-submenu {
     display: none;
     position: absolute;
-    top: -6px;
+    top: auto;
+    bottom: -6px;
     left: calc(100% + 8px);
-    width: 220px;
+    width: 224px;
     padding: 7px;
     border-radius: 16px;
     background: linear-gradient(145deg, rgba(255, 255, 255, 0.84) 0%, rgba(248, 245, 238, 0.74) 100%);
@@ -282,8 +283,17 @@
       inset 0 1px 0 rgba(255, 255, 255, 0.98);
     z-index: 3600;
     animation: winContextOpen 0.14s cubic-bezier(0.16, 1, 0.3, 1);
-    transform-origin: top left;
+    transform-origin: bottom left;
     box-sizing: border-box;
+  }
+  .ctx-submenu .ctx-item {
+    padding: 6.5px 10px;
+  }
+  @media (max-height: 540px) {
+    .ctx-submenu {
+      max-height: calc(100vh - 104px);
+      overflow-y: auto;
+    }
   }
   /* Ponte invisível para o cursor não perder o hover no espaço entre os menus */
   .ctx-submenu::before {
@@ -512,6 +522,10 @@
     .ctx-submenu {
       left: 16px;
       top: calc(100% + 4px);
+      bottom: auto;
+      transform-origin: top left;
+      max-height: clamp(190px, 38vh, 360px);
+      overflow-y: auto;
     }
     .ctx-submenu::before {
       top: -8px;
@@ -636,6 +650,12 @@
                 <span class="ctx-item-left">
                   <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
                   Gerir Produtos
+                </span>
+              </a>
+              <a href="gestao-site.html" data-page="gestao-site.html" class="ctx-item">
+                <span class="ctx-item-left">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                  Gestão do Site
                 </span>
               </a>
               <a href="gestao-tecidos.html" data-page="gestao-tecidos.html" class="ctx-item">
