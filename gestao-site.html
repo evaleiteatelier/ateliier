@@ -467,9 +467,20 @@
     }
     @media (max-width: 640px) {
       .modal-toggles-row,
-      .peca-promo-box-grid {
-        grid-template-columns: 1fr;
+      .peca-promo-box-grid,
+      .peca-sku-vinted-row {
+        grid-template-columns: 1fr !important;
       }
+    }
+    .peca-sku-vinted-row {
+      display: grid;
+      grid-template-columns: 0.95fr 1.15fr;
+      gap: 10px;
+    }
+    .sku-input-wrap {
+      display: flex;
+      gap: 6px;
+      align-items: center;
     }
     .peca-desc {
       margin: 0;
@@ -1430,9 +1441,20 @@
                 </div>
               </div>
 
-              <div class="field-group">
-                <label for="peca-vinted">Ligação da Vinted <span style="font-weight:400;color:#6b7280;">(opcional)</span></label>
-                <input type="url" id="peca-vinted" class="field-input" placeholder="https://www.vinted.pt/items/...">
+              <div class="peca-sku-vinted-row">
+                <div class="field-group">
+                  <label for="peca-sku">SKU <span style="font-weight:400;color:#6b7280;">(código único)</span></label>
+                  <div class="sku-input-wrap">
+                    <input type="text" id="peca-sku" class="field-input" maxlength="32" style="text-transform:uppercase;flex:1;min-width:0;" placeholder="EVA-...">
+                    <button type="button" onclick="gerarSkuPecaModal()" class="btn-site-secondary" title="Gerar código SKU único aleatório" style="height:36px !important;padding:0 10px !important;font-size:0.74rem !important;white-space:nowrap;">
+                      Gerar
+                    </button>
+                  </div>
+                </div>
+                <div class="field-group">
+                  <label for="peca-vinted">Ligação da Vinted <span style="font-weight:400;color:#6b7280;">(opcional)</span></label>
+                  <input type="url" id="peca-vinted" class="field-input" placeholder="https://www.vinted.pt/items/...">
+                </div>
               </div>
 
               <div class="field-group" style="margin-bottom:10px;">
@@ -1577,6 +1599,7 @@
         produtoImagensExtras: {},
         produtoAcessorios: {},
         produtoPromos: {},
+        produtoSkus: {},
         whatsapp: {
           ativo: true,
           desativadoManual: false,
@@ -1740,6 +1763,7 @@
                 produtoImagensExtras: parsed.produtoImagensExtras && typeof parsed.produtoImagensExtras === 'object' ? parsed.produtoImagensExtras : {},
                 produtoAcessorios: parsed.produtoAcessorios && typeof parsed.produtoAcessorios === 'object' ? parsed.produtoAcessorios : {},
                 produtoPromos: parsed.produtoPromos && typeof parsed.produtoPromos === 'object' ? parsed.produtoPromos : {},
+                produtoSkus: parsed.produtoSkus && typeof parsed.produtoSkus === 'object' ? parsed.produtoSkus : {},
                 whatsapp: {
                   ativo: zapAtivoResolvido,
                   desativadoManual,
@@ -1984,7 +2008,7 @@
           if (filtroCategoria !== 'todas' && resolverCategoriaIdPeca(p) !== filtroCategoria) return false;
 
           if (q) {
-            const texto = `${p.nome || ''} ${p.descricao || ''}`.toLowerCase();
+            const texto = `${p.nome || ''} ${p.descricao || ''} ${obterSkuPeca(p)}`.toLowerCase();
             if (!texto.includes(q)) return false;
           }
           return true;
@@ -2049,7 +2073,7 @@
                 <select class="peca-cat-select" aria-label="Alterar categoria da peça" onchange="alterarCategoriaPeca('${esc(idStr)}', this.value)">
                   ${optionsCats}
                 </select>
-                <span class="peca-ref">Ref. #${esc(idStr)}</span>
+                <span class="peca-ref">SKU: ${esc(obterSkuPeca(p))}</span>
               </div>
 
               <div class="peca-actions">
@@ -2596,6 +2620,48 @@
         renderizarAcessoriosModal();
       };
 
+      function normalizarSkuTexto(raw) {
+        return String(raw ?? '').trim().toUpperCase().replace(/[^A-Z0-9._-]+/g, '').slice(0, 32);
+      }
+
+      function obterSkuPeca(p) {
+        if (!p || p.id === undefined || p.id === null) return '';
+        const salvo = siteConfig.produtoSkus && siteConfig.produtoSkus[String(p.id)];
+        if (salvo && String(salvo).trim()) return normalizarSkuTexto(salvo);
+        return `EVA-${String(p.id).padStart(4, '0')}`;
+      }
+
+      window.gerarSkuPecaModal = function () {
+        const usados = new Set();
+        pecasReais.forEach(item => {
+          if (editandoPecaId !== null && String(item.id) === String(editandoPecaId)) return;
+          const skuItem = obterSkuPeca(item);
+          if (skuItem) usados.add(skuItem.toUpperCase());
+        });
+        Object.entries(siteConfig.produtoSkus || {}).forEach(([k, v]) => {
+          if (editandoPecaId !== null && String(k) === String(editandoPecaId)) return;
+          const norm = normalizarSkuTexto(v);
+          if (norm) usados.add(norm);
+        });
+
+        const alfabeto = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        let codigo = '';
+        for (let t = 0; t < 60; t++) {
+          let sufixo = '';
+          for (let i = 0; i < 5; i++) {
+            sufixo += alfabeto[Math.floor(Math.random() * alfabeto.length)];
+          }
+          const candidato = `EVA-${sufixo}`;
+          if (!usados.has(candidato)) {
+            codigo = candidato;
+            break;
+          }
+        }
+        if (!codigo) codigo = `EVA-${Date.now().toString(36).toUpperCase().slice(-6)}`;
+        const input = document.getElementById('peca-sku');
+        if (input) input.value = codigo;
+      };
+
       window.abrirModalPeca = function (pecaId = null) {
         editandoPecaId = pecaId;
         const form = document.getElementById('form-peca-site');
@@ -2607,6 +2673,8 @@
           `<option value="${esc(c.id)}">${esc(c.label)}</option>`
         ).join('');
 
+        const skuInput = document.getElementById('peca-sku');
+
         if (pecaId) {
           const p = pecasReais.find(item => String(item.id) === String(pecaId));
           if (!p) return;
@@ -2614,6 +2682,11 @@
           document.getElementById('btn-guardar-peca-site').textContent = 'Guardar Alterações';
           document.getElementById('peca-nome').value = p.nome || '';
           document.getElementById('peca-preco').value = p.preco ?? '';
+          if (skuInput) {
+            const skuSalvo = siteConfig.produtoSkus && siteConfig.produtoSkus[String(p.id)];
+            skuInput.value = skuSalvo ? normalizarSkuTexto(skuSalvo) : '';
+            skuInput.placeholder = `Auto: EVA-${String(p.id).padStart(4, '0')}`;
+          }
           document.getElementById('peca-vinted').value = p.vinted_url || '';
           document.getElementById('peca-descricao').value = p.descricao || '';
           document.getElementById('peca-imagem-url').value = p.imagem_url || '';
@@ -2635,6 +2708,10 @@
         } else {
           document.getElementById('modal-peca-titulo').textContent = 'Nova Peça para o Site';
           document.getElementById('btn-guardar-peca-site').textContent = 'Publicar Peça';
+          if (skuInput) {
+            skuInput.value = '';
+            skuInput.placeholder = 'Ex: EVA-7K4M2 (ou Gerar)';
+          }
           modalPecaVisivel = true;
           modalPecaEmPromo = false;
           document.getElementById('peca-preco-promo').value = '';
@@ -2669,6 +2746,8 @@
           const preco = parseFloat(precoRaw);
           const promoRaw = (document.getElementById('peca-preco-promo')?.value || '').trim();
           const precoPromo = promoRaw ? parseFloat(promoRaw) : NaN;
+          const skuInputRaw = document.getElementById('peca-sku')?.value || '';
+          const skuLimpo = normalizarSkuTexto(skuInputRaw);
           const descricao = document.getElementById('peca-descricao').value.trim();
           const vintedRaw = document.getElementById('peca-vinted').value.trim();
           const vintedUrl = vintedRaw ? validarUrlHttp(vintedRaw) : '';
@@ -2700,6 +2779,17 @@
           if (vintedRaw && !vintedUrl) {
             mudarAbaModalPeca('dados');
             throw new Error('A ligação da Vinted deve começar por https:// ou http://.');
+          }
+          if (skuLimpo) {
+            const skuDuplicado = pecasReais.some(item => {
+              if (editandoPecaId !== null && String(item.id) === String(editandoPecaId)) return false;
+              return obterSkuPeca(item).toUpperCase() === skuLimpo;
+            });
+            if (skuDuplicado) {
+              mudarAbaModalPeca('dados');
+              document.getElementById('peca-sku')?.focus();
+              throw new Error(`O código SKU "${skuLimpo}" já está atribuído a outra peça.`);
+            }
           }
           if (!imgNormalizada) {
             mudarAbaModalPeca('dados');
@@ -2747,6 +2837,14 @@
             } else {
               delete siteConfig.produtoPromos[String(idFinal)];
             }
+            if (!siteConfig.produtoSkus || typeof siteConfig.produtoSkus !== 'object') {
+              siteConfig.produtoSkus = {};
+            }
+            if (skuLimpo) {
+              siteConfig.produtoSkus[String(idFinal)] = skuLimpo;
+            } else {
+              delete siteConfig.produtoSkus[String(idFinal)];
+            }
             if (modalPecaVisivel) {
               siteConfig.bloqueados = siteConfig.bloqueados.filter(x => x !== String(idFinal));
             } else if (!siteConfig.bloqueados.includes(String(idFinal))) {
@@ -2790,6 +2888,7 @@
           delete siteConfig.produtoImagensExtras[String(pecaId)];
           delete siteConfig.produtoAcessorios[String(pecaId)];
           delete siteConfig.produtoPromos[String(pecaId)];
+          if (siteConfig.produtoSkus) delete siteConfig.produtoSkus[String(pecaId)];
           Object.keys(siteConfig.produtoAcessorios).forEach(ownerId => {
             siteConfig.produtoAcessorios[ownerId] = siteConfig.produtoAcessorios[ownerId].filter(
               acc => !(acc && acc.tipo === 'interno' && String(acc.produtoId) === String(pecaId))
