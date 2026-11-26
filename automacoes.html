@@ -1,0 +1,1935 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automações WhatsApp &amp; SMS - Eva Leite Atelier</title>
+    <link rel="stylesheet" href="style.css?v=2">
+    <script src="auth-guard.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="email-notification.js"></script>
+    <script src="navbar.js?v=8"></script>
+    <style>
+        :root {
+            --cli-bg: #f5f1ea;
+            --cli-card: #ffffff;
+            --cli-border: #e7e0d4;
+            --cli-border-strong: #d8cfc0;
+            --cli-dark: #141414;
+            --cli-text: #1f2421;
+            --cli-muted: #6b7280;
+            --cli-gold: #b8860b;
+            --cli-gold-soft: #faf5e8;
+            --cli-green: #15803d;
+            --cli-green-soft: #eef8f1;
+            --cli-blue: #1d4ed8;
+            --cli-blue-soft: #eff6ff;
+            --cli-red: #b91c1c;
+            --cli-red-soft: #fef2f2;
+            --cli-amber: #b45309;
+            --cli-amber-soft: #fffbeb;
+            --cli-radius: 14px;
+        }
+
+        body {
+            background-color: var(--cli-bg);
+            color: var(--cli-text);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .auto-wrapper {
+            max-width: 1380px;
+            margin: 0 auto;
+            padding: 0 22px 64px;
+            box-sizing: border-box;
+        }
+
+        .ico {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            stroke-width: 1.85;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+            flex-shrink: 0;
+        }
+        .ico-sm { width: 14px; height: 14px; }
+        .ico-lg { width: 18px; height: 18px; }
+
+        /* Botões da Barra Superior */
+        .btn-cli-primary,
+        .btn-cli-secondary,
+        .btn-cli-outline,
+        .btn-cli-green {
+            height: 38px;
+            padding: 0 15px;
+            border-radius: 11px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            transition: all 0.16s ease;
+            box-sizing: border-box;
+            white-space: nowrap;
+            width: auto;
+            margin: 0;
+            text-decoration: none;
+        }
+        .btn-cli-primary {
+            background: var(--cli-dark);
+            color: #ffffff;
+            border: 1px solid var(--cli-dark);
+            box-shadow: 0 2px 6px rgba(20, 20, 20, 0.12);
+        }
+        .btn-cli-primary:hover {
+            background: #2b2b2b;
+            transform: translateY(-1px);
+        }
+        .btn-cli-green {
+            background: var(--cli-green);
+            color: #ffffff;
+            border: 1px solid var(--cli-green);
+            box-shadow: 0 2px 6px rgba(21, 128, 61, 0.18);
+        }
+        .btn-cli-green:hover {
+            background: #166534;
+            transform: translateY(-1px);
+        }
+        .btn-cli-secondary {
+            background: rgba(255, 255, 255, 0.78);
+            color: var(--cli-dark);
+            border: 1px solid var(--cli-border-strong);
+        }
+        .btn-cli-secondary:hover {
+            background: #ffffff;
+            border-color: var(--cli-dark);
+        }
+        .btn-cli-outline {
+            background: #ffffff;
+            color: #374151;
+            border: 1px solid var(--cli-border-strong);
+        }
+        .btn-cli-outline:hover {
+            border-color: var(--cli-dark);
+            color: var(--cli-dark);
+            background: #faf8f4;
+        }
+
+        /* KPIs */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+        .kpi-card {
+            background: var(--cli-card);
+            border: 1px solid var(--cli-border);
+            border-radius: var(--cli-radius);
+            padding: 16px 18px;
+            box-shadow: 0 2px 8px rgba(20, 18, 14, 0.03);
+            cursor: pointer;
+            transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+            position: relative;
+        }
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            border-color: #cbbba2;
+            box-shadow: 0 8px 20px rgba(20, 18, 14, 0.06);
+        }
+        .kpi-card.ativo {
+            border-color: var(--cli-dark);
+            box-shadow: 0 0 0 1px var(--cli-dark), 0 8px 20px rgba(20, 18, 14, 0.06);
+        }
+        .kpi-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--cli-muted);
+            margin-bottom: 8px;
+        }
+        .kpi-value {
+            font-size: 1.55rem;
+            font-weight: 700;
+            color: var(--cli-dark);
+            letter-spacing: -0.02em;
+            line-height: 1.15;
+        }
+        .kpi-sub {
+            font-size: 0.76rem;
+            color: var(--cli-muted);
+            margin-top: 5px;
+        }
+        .cli-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .dot-dark { background: #141414; }
+        .dot-green { background: #16a34a; }
+        .dot-blue { background: #2563eb; }
+        .dot-amber { background: #d97706; }
+        .dot-red { background: #dc2626; }
+
+        /* Tabs Navigation */
+        .auto-tabs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(12px);
+            padding: 6px;
+            border-radius: 14px;
+            border: 1px solid var(--cli-border);
+        }
+        .auto-tab-btn {
+            height: 38px;
+            padding: 0 16px;
+            border-radius: 10px;
+            border: none;
+            background: transparent;
+            color: #4b5563;
+            font-size: 0.83rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.16s ease;
+            width: auto;
+            margin: 0;
+        }
+        .auto-tab-btn:hover {
+            background: rgba(20, 20, 20, 0.05);
+            color: var(--cli-dark);
+        }
+        .auto-tab-btn.active {
+            background: var(--cli-dark);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        }
+        .tab-count-badge {
+            padding: 1px 7px;
+            border-radius: 999px;
+            font-size: 0.71rem;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.2);
+            color: inherit;
+        }
+        .auto-tab-btn:not(.active) .tab-count-badge {
+            background: #ebe5da;
+            color: #374151;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* Painel / Card Principal */
+        .panel-card {
+            background: var(--cli-card);
+            border: 1px solid var(--cli-border);
+            border-radius: var(--cli-radius);
+            box-shadow: 0 4px 16px rgba(20, 18, 14, 0.04);
+            overflow: hidden;
+            margin-bottom: 18px;
+        }
+        .panel-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--cli-border);
+            background: #fdfcfa;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .panel-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .panel-title {
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--cli-dark);
+        }
+        .panel-body {
+            padding: 20px;
+        }
+
+        /* Filtros rápidos da fila */
+        .queue-filters {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .q-pill {
+            height: 30px;
+            padding: 0 12px;
+            border-radius: 999px;
+            border: 1px solid var(--cli-border-strong);
+            background: #ffffff;
+            color: #4b5563;
+            font-size: 0.76rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            width: auto;
+            margin: 0;
+        }
+        .q-pill.active {
+            background: var(--cli-dark);
+            color: #ffffff;
+            border-color: var(--cli-dark);
+        }
+
+        /* Lista de Mensagens na Fila */
+        .msg-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .msg-card {
+            border: 1px solid var(--cli-border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            background: #ffffff;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .msg-card:hover {
+            border-color: #cbbba2;
+            box-shadow: 0 4px 12px rgba(20, 18, 14, 0.04);
+        }
+        .msg-main {
+            flex: 1;
+            min-width: 0;
+        }
+        .msg-badges {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 9px;
+            border-radius: 999px;
+            font-size: 0.71rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+        }
+        .b-zap { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .b-sms { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+        .b-pending { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+        .b-sent { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+        .b-failed { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+        .b-tipo { background: #f4f1ea; color: #4b5563; border: 1px solid #e4decb; }
+
+        .msg-client-line {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--cli-dark);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .msg-phone-tag {
+            font-size: 0.77rem;
+            font-weight: 600;
+            color: #4b5563;
+            font-family: monospace;
+            background: #f5f2eb;
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+        .msg-bubble {
+            background: #faf8f4;
+            border: 1px solid #ece6da;
+            border-radius: 10px;
+            padding: 10px 13px;
+            font-size: 0.82rem;
+            color: #27272a;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+        .msg-bubble.is-zap {
+            background: #f2fbf5;
+            border-color: #d2f0dc;
+        }
+        .msg-bubble.is-sms {
+            background: #f3f8ff;
+            border-color: #d6e6ff;
+        }
+        .msg-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .msg-time {
+            font-size: 0.75rem;
+            color: var(--cli-muted);
+            text-align: right;
+            line-height: 1.35;
+        }
+        .msg-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .ico-action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--cli-border-strong);
+            background: #ffffff;
+            color: #374151;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.14s ease;
+            padding: 0;
+            margin: 0;
+        }
+        .ico-action-btn:hover {
+            border-color: var(--cli-dark);
+            color: var(--cli-dark);
+            background: #faf8f4;
+        }
+        .ico-action-btn.send-now {
+            background: #eef8f1;
+            border-color: #bbf7d0;
+            color: #15803d;
+        }
+        .ico-action-btn.send-now:hover {
+            background: #15803d;
+            border-color: #15803d;
+            color: #ffffff;
+        }
+        .ico-action-btn.del-btn:hover {
+            background: #fef2f2;
+            border-color: #fca5a5;
+            color: #b91c1c;
+        }
+
+        /* Templates Transacionais Grid */
+        .trans-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+        .trans-card {
+            background: #ffffff;
+            border: 1px solid var(--cli-border);
+            border-radius: var(--cli-radius);
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(20, 18, 14, 0.03);
+        }
+        .trans-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #f0ebe1;
+            margin-bottom: 16px;
+        }
+        .trans-title {
+            margin: 0 0 4px;
+            font-size: 0.96rem;
+            font-weight: 700;
+            color: var(--cli-dark);
+        }
+        .trans-sub {
+            margin: 0;
+            font-size: 0.78rem;
+            color: var(--cli-muted);
+        }
+
+        /* Toggle Switch */
+        .switch-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+        .switch-wrap input {
+            width: 40px !important;
+            height: 22px !important;
+            margin: 0 !important;
+            cursor: pointer;
+            accent-color: var(--cli-green);
+        }
+
+        .form-field {
+            margin-bottom: 14px;
+        }
+        .form-field label {
+            display: block;
+            font-size: 0.76rem;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .form-field input,
+        .form-field select,
+        .form-field textarea {
+            width: 100% !important;
+            padding: 10px 12px !important;
+            border-radius: 10px !important;
+            border: 1px solid var(--cli-border-strong) !important;
+            background: #ffffff !important;
+            color: var(--cli-dark) !important;
+            font-size: 0.85rem !important;
+            font-family: inherit !important;
+            box-sizing: border-box !important;
+            margin: 0 !important;
+            outline: none;
+        }
+        .form-field textarea {
+            min-height: 115px;
+            resize: vertical;
+            line-height: 1.45;
+        }
+        .form-field input:focus,
+        .form-field select:focus,
+        .form-field textarea:focus {
+            border-color: var(--cli-dark) !important;
+        }
+
+        .var-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 6px;
+        }
+        .var-pill {
+            font-size: 0.71rem;
+            font-family: monospace;
+            background: #f4f0e6;
+            border: 1px solid #e2dac9;
+            color: #374151;
+            padding: 2px 7px;
+            border-radius: 6px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .var-pill:hover {
+            background: var(--cli-dark);
+            color: #ffffff;
+            border-color: var(--cli-dark);
+        }
+
+        /* Tabela de Campanha Reativação */
+        .campanha-layout {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 18px;
+            align-items: start;
+        }
+        .clientes-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        .clientes-table th {
+            padding: 11px 14px;
+            font-size: 0.71rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--cli-muted);
+            background: #faf8f4;
+            border-bottom: 1px solid var(--cli-border);
+        }
+        .clientes-table td {
+            padding: 11px 14px;
+            border-bottom: 1px solid #f1ece2;
+            font-size: 0.83rem;
+            vertical-align: middle;
+        }
+        .clientes-table tbody tr:hover {
+            background: #fbf9f4;
+        }
+
+        /* Modal */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 14, 12, 0.52);
+            backdrop-filter: blur(5px);
+            z-index: 9500;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            box-sizing: border-box;
+        }
+        .modal-box {
+            background: #ffffff;
+            width: 100%;
+            max-width: 600px;
+            border-radius: 18px;
+            border: 1px solid var(--cli-border);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22);
+            overflow: hidden;
+            max-height: 92vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-head {
+            padding: 18px 22px;
+            border-bottom: 1px solid var(--cli-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #fdfcfa;
+        }
+        .modal-head h2 {
+            margin: 0;
+            font-size: 1.02rem;
+            font-weight: 700;
+            color: var(--cli-dark);
+        }
+        .modal-body {
+            padding: 20px 22px;
+            overflow-y: auto;
+        }
+
+        .gemini-box {
+            background: linear-gradient(135deg, #faf5e8 0%, #f3efe4 100%);
+            border: 1px solid #e5d8b8;
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 14px;
+        }
+
+        .guide-step {
+            display: flex;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: #faf8f4;
+            border: 1px solid #ebe5d8;
+            margin-bottom: 10px;
+            font-size: 0.83rem;
+            line-height: 1.5;
+        }
+        .guide-num {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--cli-dark);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.75rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .cli-toast {
+            position: fixed;
+            bottom: 22px;
+            right: 22px;
+            padding: 12px 18px;
+            border-radius: 12px;
+            background: rgba(20, 20, 20, 0.94);
+            color: #ffffff;
+            font-size: 0.84rem;
+            font-weight: 500;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+            z-index: 10050;
+        }
+        .cli-toast.is-error {
+            background: rgba(185, 28, 28, 0.95);
+        }
+
+        @media (max-width: 980px) {
+            .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .trans-grid { grid-template-columns: 1fr; }
+            .campanha-layout { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div id="navbar-placeholder"></div>
+
+    <div class="auto-wrapper">
+        <!-- Controlos absorvidos pela Barra Flutuante Liquid Glass -->
+        <div class="page-toolbar">
+            <div class="page-toolbar-controls">
+                <div class="toolbar-search-wrap">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" id="input-pesquisa-auto" placeholder="Pesquisar cliente, telefone ou mensagem..." oninput="renderizarFilaMensagens()">
+                </div>
+
+                <button type="button" class="btn-cli-secondary" onclick="mudarTab('config')">
+                    <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    <span>MacroDroid &amp; Mini-PC</span>
+                </button>
+
+                <button type="button" class="btn-cli-primary" onclick="abrirModalNovaMensagem()">
+                    <svg class="ico" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <span>Agendar / Enviar Mensagem</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 4 KPIs -->
+        <div class="kpi-grid">
+            <div class="kpi-card ativo" onclick="mudarTab('fila'); filtrarFilaPor('todos')">
+                <div class="kpi-head">
+                    <span>Total na Central</span>
+                    <span class="cli-dot dot-dark"></span>
+                </div>
+                <div class="kpi-value" id="kpi-auto-total">0</div>
+                <div class="kpi-sub" id="kpi-auto-sub-canais">0 WhatsApp · 0 SMS</div>
+            </div>
+
+            <div class="kpi-card" onclick="mudarTab('fila'); filtrarFilaPor('pending')">
+                <div class="kpi-head">
+                    <span>Na Fila / Agendadas</span>
+                    <span class="cli-dot dot-amber"></span>
+                </div>
+                <div class="kpi-value" id="kpi-auto-pendentes">0</div>
+                <div class="kpi-sub">Aguardando disparo pelo Mini-PC / MacroDroid</div>
+            </div>
+
+            <div class="kpi-card" onclick="mudarTab('fila'); filtrarFilaPor('sent')">
+                <div class="kpi-head">
+                    <span>Enviadas com Sucesso</span>
+                    <span class="cli-dot dot-green"></span>
+                </div>
+                <div class="kpi-value" id="kpi-auto-enviadas">0</div>
+                <div class="kpi-sub" id="kpi-auto-sub-status">Notificações e campanhas</div>
+            </div>
+
+            <div class="kpi-card" onclick="mudarTab('campanhas')">
+                <div class="kpi-head">
+                    <span>Clientes Ausentes (&gt;90d)</span>
+                    <span class="cli-dot dot-blue"></span>
+                </div>
+                <div class="kpi-value" id="kpi-auto-ausentes">0</div>
+                <div class="kpi-sub">Com telemóvel pronto para reativação</div>
+            </div>
+        </div>
+
+        <!-- Navegação por Separadores -->
+        <div class="auto-tabs">
+            <button type="button" class="auto-tab-btn active" id="tab-btn-fila" onclick="mudarTab('fila')">
+                <svg class="ico" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                Fila &amp; Histórico (WhatsApp &amp; SMS)
+                <span class="tab-count-badge" id="badge-count-fila">0</span>
+            </button>
+
+            <button type="button" class="auto-tab-btn" id="tab-btn-pedidos" onclick="mudarTab('pedidos')">
+                <svg class="ico" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                Gatilhos Automáticos de Pedidos
+            </button>
+
+            <button type="button" class="auto-tab-btn" id="tab-btn-campanhas" onclick="mudarTab('campanhas')">
+                <svg class="ico" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                Reativação de Clientes Ausentes (IA)
+                <span class="tab-count-badge" id="badge-count-ausentes">0</span>
+            </button>
+
+            <button type="button" class="auto-tab-btn" id="tab-btn-config" onclick="mudarTab('config')">
+                <svg class="ico" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+                Configuração MacroDroid SMS &amp; Mini-PC
+            </button>
+        </div>
+
+        <!-- =========================================================
+             TAB 1: FILA & HISTÓRICO DE MENSAGENS
+             ========================================================= -->
+        <div class="tab-pane active" id="tab-pane-fila">
+            <div class="panel-card">
+                <div class="panel-head">
+                    <div class="panel-title-wrap">
+                        <h2 class="panel-title">Mensagens Agendadas &amp; Histórico de Disparos</h2>
+                    </div>
+                    <div class="queue-filters">
+                        <button type="button" class="q-pill active" data-q="todos" onclick="filtrarFilaPor('todos')">Todas</button>
+                        <button type="button" class="q-pill" data-q="whatsapp" onclick="filtrarFilaPor('whatsapp')">🟢 WhatsApp</button>
+                        <button type="button" class="q-pill" data-q="sms" onclick="filtrarFilaPor('sms')">🔵 SMS (MacroDroid)</button>
+                        <button type="button" class="q-pill" data-q="pending" onclick="filtrarFilaPor('pending')">⏳ Pendentes</button>
+                        <button type="button" class="q-pill" data-q="sent" onclick="filtrarFilaPor('sent')">✅ Enviadas</button>
+                        <button type="button" class="q-pill" data-q="failed" onclick="filtrarFilaPor('failed')">❌ Falhadas</button>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div style="background:#eef8f1; border:1px solid #bbf7d0; border-radius:11px; padding:11px 15px; font-size:0.81rem; color:#166534; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+                        <span>
+                            🤖 <strong>Motor Híbrido Ativo:</strong> O <strong>Mini-PC</strong> processa a fila de WhatsApp (Evolution API / n8n) e aciona o <strong>MacroDroid SMS</strong> no telemóvel do Atelier em segundo plano (com ecrã desligado).
+                        </span>
+                        <button type="button" class="btn-cli-outline" style="height:30px; font-size:0.75rem;" onclick="carregarTudoAutomacoes()">↻ Atualizar Fila</button>
+                    </div>
+
+                    <div class="msg-list" id="lista-mensagens-container">
+                        <div style="text-align:center; padding:36px; color:#6b7280;">A carregar fila de mensagens...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================================================
+             TAB 2: GATILHOS AUTOMÁTICOS DE PEDIDOS
+             ========================================================= -->
+        <div class="tab-pane" id="tab-pane-pedidos">
+            <div class="trans-grid">
+                <!-- Card 1: Novo Pedido -->
+                <div class="trans-card">
+                    <div class="trans-header">
+                        <div>
+                            <h3 class="trans-title">1. Confirmação de Novo Pedido</h3>
+                            <p class="trans-sub">Disparado automaticamente ao guardar um pedido em <code>Novo Pedido</code></p>
+                        </div>
+                        <label class="switch-wrap">
+                            <input type="checkbox" id="cfg-auto-novo" checked>
+                            <span>Ativo</span>
+                        </label>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="cfg-canal-novo">Canal de Envio Automático</label>
+                        <select id="cfg-canal-novo">
+                            <option value="ambos">🟢 WhatsApp (Mini-PC) + 🔵 SMS (MacroDroid)</option>
+                            <option value="whatsapp">🟢 Apenas WhatsApp (Mini-PC)</option>
+                            <option value="sms">🔵 Apenas SMS (MacroDroid em 2º Plano)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="cfg-tpl-zap-novo">Mensagem de WhatsApp (Novo Pedido)</label>
+                        <textarea id="cfg-tpl-zap-novo"></textarea>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="cfg-tpl-sms-novo">Mensagem de SMS Curta (MacroDroid)</label>
+                        <textarea id="cfg-tpl-sms-novo" style="min-height:74px;"></textarea>
+                        <div class="var-pills">
+                            <span class="var-pill" onclick="inserirVarTemplate('cfg-tpl-zap-novo', '{primeiro_nome}')">{primeiro_nome}</span>
+                            <span class="var-pill" onclick="inserirVarTemplate('cfg-tpl-zap-novo', '{nome}')">{nome}</span>
+                            <span class="var-pill" onclick="inserirVarTemplate('cfg-tpl-zap-novo', '{itens}')">{itens}</span>
+                            <span class="var-pill" onclick="inserirVarTemplate('cfg-tpl-sms-novo', '{itens_resumo}')">{itens_resumo}</span>
+                            <span class="var-pill" onclick="inserirVarTemplate('cfg-tpl-zap-novo', '{data_entrega}')">{data_entrega}</span>
+                            <span class="var-pill" onclick="inserirVarTemplate('cfg-tpl-zap-novo', '{valor_total}')">{valor_total}</span>
+                            <span class="var-pill" onclick="inserirVarTemplate('cfg-tpl-zap-novo', '{valor_pago}')">{valor_pago}</span>
+                            <span class="var-pill" onclick="inserirVarTemplate('cfg-tpl-zap-novo', '{falta_pagar}')">{falta_pagar}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Pedido Concluído -->
+                <div class="trans-card">
+                    <div class="trans-header">
+                        <div>
+                            <h3 class="trans-title">2. Pedido Concluído (Pronto p/ Levantamento)</h3>
+                            <p class="trans-sub">Disparado ao marcar um pedido como <code>Concluído</code> na Lista de Espera</p>
+                        </div>
+                        <label class="switch-wrap">
+                            <input type="checkbox" id="cfg-auto-concluido" checked>
+                            <span>Ativo</span>
+                        </label>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="cfg-canal-concluido">Canal de Envio Automático</label>
+                        <select id="cfg-canal-concluido">
+                            <option value="ambos">🟢 WhatsApp (Mini-PC) + 🔵 SMS (MacroDroid)</option>
+                            <option value="whatsapp">🟢 Apenas WhatsApp (Mini-PC)</option>
+                            <option value="sms">🔵 Apenas SMS (MacroDroid em 2º Plano)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="cfg-tpl-zap-concluido">Mensagem de WhatsApp (Pedido Concluído)</label>
+                        <textarea id="cfg-tpl-zap-concluido"></textarea>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="cfg-tpl-sms-concluido">Mensagem de SMS Curta (MacroDroid)</label>
+                        <textarea id="cfg-tpl-sms-concluido" style="min-height:74px;"></textarea>
+                        <div class="var-pills">
+                            <span class="var-pill" onclick="inserirVarTemplate('cfg-tpl-zap-concluido', '{primeiro_nome}')">{primeiro_nome}</span>
+                            <span class="var-pill" onclick="inserirVarTemplate('cfg-tpl-zap-concluido', '{itens}')">{itens}</span>
+                            <span class="var-pill" onclick="inserirVarTemplate('cfg-tpl-sms-concluido', '{itens_resumo}')">{itens_resumo}</span>
+                            <span class="var-pill" onclick="inserirVarTemplate('cfg-tpl-zap-concluido', '{valor_total}')">{valor_total}</span>
+                            <span class="var-pill" onclick="inserirVarTemplate('cfg-tpl-zap-concluido', '{falta_pagar}')">{falta_pagar}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top:16px; display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" class="btn-cli-outline" onclick="restaurarTemplatesPadrao()">Restaurar Textos Padrão</button>
+                <button type="button" class="btn-cli-primary" onclick="salvarConfiguracoesAtelier()">
+                    <svg class="ico ico-sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Guardar Gatilhos &amp; Templates
+                </button>
+            </div>
+        </div>
+
+        <!-- =========================================================
+             TAB 3: REATIVAÇÃO DE CLIENTES AUSENTES (CAMPANHAS IA)
+             ========================================================= -->
+        <div class="tab-pane" id="tab-pane-campanhas">
+            <div class="campanha-layout">
+                <!-- Coluna Esquerda: Criador da Campanha -->
+                <div class="panel-card" style="margin-bottom:0;">
+                    <div class="panel-head">
+                        <h2 class="panel-title">Configurar Campanha de Reativação</h2>
+                    </div>
+                    <div class="panel-body">
+                        <div class="form-field">
+                            <label for="camp-filtro-dias">Segmento de Clientes</label>
+                            <select id="camp-filtro-dias" onchange="renderizarTabelaCampanha()">
+                                <option value="30">Ausentes há mais de 30 dias</option>
+                                <option value="60">Ausentes há mais de 60 dias (2 meses)</option>
+                                <option value="90" selected>Ausentes há mais de 90 dias (3 meses - Recomendado)</option>
+                                <option value="120">Ausentes há mais de 120 dias (4 meses)</option>
+                                <option value="180">Ausentes há mais de 180 dias (6 meses)</option>
+                                <option value="vip">Clientes VIP (+€150 gastos no Atelier)</option>
+                                <option value="todos">Todos os Clientes com Telemóvel</option>
+                            </select>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="camp-canal">Canal de Disparo</label>
+                            <select id="camp-canal">
+                                <option value="whatsapp">🟢 WhatsApp (Mini-PC Dedicado)</option>
+                                <option value="sms">🔵 SMS (MacroDroid em 2º Plano)</option>
+                                <option value="ambos">🟢 WhatsApp + 🔵 SMS</option>
+                            </select>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="camp-intervalo">Cadência Anti-Bloqueio (Intervalo entre clientes)</label>
+                            <select id="camp-intervalo">
+                                <option value="2">1 cliente a cada 2 minutos (Seguro)</option>
+                                <option value="5" selected>1 cliente a cada 5 minutos (Recomendado)</option>
+                                <option value="10">1 cliente a cada 10 minutos</option>
+                                <option value="0">Disparo imediato (todos para agora)</option>
+                            </select>
+                        </div>
+
+                        <div class="gemini-box">
+                            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px;">
+                                <strong style="font-size:0.79rem; color:#785502;">✨ Assistente Gemini IA (Eva Leite Atelier)</strong>
+                                <button type="button" class="btn-cli-primary" id="btn-gemini-campanha" style="height:28px; padding:0 10px; font-size:0.74rem;" onclick="gerarMensagemGemini('campanha')">
+                                    ✨ Gerar Texto IA
+                                </button>
+                            </div>
+                            <input type="text" id="camp-gemini-tema" placeholder="Tema opcional: ex. Nova coleção, ajustes de primavera, mimo 10%..." style="width:100%; padding:7px 10px; border-radius:8px; border:1px solid #d9c89e; font-size:0.79rem; background:#fff; box-sizing:border-box;">
+                        </div>
+
+                        <div class="form-field">
+                            <label for="camp-mensagem">Mensagem Personalizada (use <code>{primeiro_nome}</code>)</label>
+                            <textarea id="camp-mensagem">Olá {primeiro_nome}! ✨ Tudo bem consigo?
+
+Já tínhamos saudades da sua visita aqui no *Eva Leite Atelier*! 🧵
+Passámos para lembrar que estamos ao seu dispor para qualquer arranjo, transformação ou peça por medida que precise para esta estação.
+
+Esperamos vê-la em breve! Com carinho,
+*Eva Leite Atelier* 💛</textarea>
+                        </div>
+
+                        <button type="button" class="btn-cli-green" style="width:100%; height:42px;" onclick="agendarCampanhaSelecionados()">
+                            <svg class="ico" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                            <span id="btn-agendar-camp-label">Agendar Campanha para Selecionados</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Coluna Direita: Lista de Clientes Alvo -->
+                <div class="panel-card" style="margin-bottom:0;">
+                    <div class="panel-head">
+                        <div class="panel-title-wrap">
+                            <h2 class="panel-title">Clientes Elegíveis com Telemóvel</h2>
+                            <span class="badge-pill b-tipo" id="camp-count-elegiveis">0 clientes</span>
+                        </div>
+                        <label style="font-size:0.8rem; font-weight:600; display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+                            <input type="checkbox" id="chk-camp-todos" checked onchange="alternarSelecaoTodosCampanha(this.checked)" style="width:16px; height:16px; margin:0;">
+                            Selecionar Todos
+                        </label>
+                    </div>
+                    <div style="overflow-x:auto; max-height:540px; overflow-y:auto;">
+                        <table class="clientes-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:36px;"></th>
+                                    <th>Cliente</th>
+                                    <th>Telemóvel</th>
+                                    <th>Última Compra</th>
+                                    <th>Ausência</th>
+                                    <th>Total Gasto</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-campanha-clientes">
+                                <tr><td colspan="6" style="text-align:center; padding:32px; color:#6b7280;">A carregar clientes...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================================================
+             TAB 4: CONFIGURAÇÃO MACRODROID SMS & MINI-PC WHATSAPP
+             ========================================================= -->
+        <div class="tab-pane" id="tab-pane-config">
+            <div class="trans-grid">
+                <!-- MacroDroid SMS -->
+                <div class="trans-card">
+                    <div class="trans-header">
+                        <div>
+                            <h3 class="trans-title">📲 SMS em 2º Plano — MacroDroid (Telemóvel do Atelier)</h3>
+                            <p class="trans-sub">Envia SMS automaticamente pelo chip do telemóvel mesmo com o ecrã desligado e bloqueado</p>
+                        </div>
+                        <span class="badge-pill b-sms">2º Plano Nativo</span>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="cfg-macrodroid-url">URL do Webhook MacroDroid do Telemóvel</label>
+                        <input type="url" id="cfg-macrodroid-url" placeholder="https://trigger.macrodroid.com/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/atelier_sms">
+                        <small style="display:block; margin-top:5px; font-size:0.76rem; color:#6b7280;">
+                            O sistema acrescenta automaticamente <code>?numero=+3519...&amp;texto=...</code> ao chamar este URL.
+                        </small>
+                    </div>
+
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px;">
+                        <button type="button" class="btn-cli-primary" onclick="salvarConfiguracoesAtelier()">
+                            Guardar Webhook SMS
+                        </button>
+                        <button type="button" class="btn-cli-outline" onclick="testarEnvioMacroDroidSMS()">
+                            📲 Enviar SMS de Teste Agora
+                        </button>
+                    </div>
+
+                    <div style="border-top:1px solid #f0ebe1; padding-top:14px;">
+                        <strong style="display:block; font-size:0.82rem; margin-bottom:10px; color:#141414;">Como configurar no MacroDroid do telemóvel do Atelier (leva 1 minuto):</strong>
+                        <div class="guide-step">
+                            <span class="guide-num">1</span>
+                            <div>
+                                Abra o <strong>MacroDroid</strong> e crie uma nova Macro. Em <strong>Gatilhos (Triggers)</strong>, escolha <strong>Conectividade → Webhook (URL)</strong> e defina o identificador como <code>atelier_sms</code>. Copie o link gerado e cole no campo acima.
+                            </div>
+                        </div>
+                        <div class="guide-step">
+                            <span class="guide-num">2</span>
+                            <div>
+                                No próprio gatilho do Webhook, crie 2 variáveis locais de texto com os nomes exatos: <code>numero</code> e <code>texto</code> (o MacroDroid preenche-as automaticamente a partir do link <code>?numero=...&amp;texto=...</code>).
+                            </div>
+                        </div>
+                        <div class="guide-step" style="margin-bottom:0;">
+                            <span class="guide-num">3</span>
+                            <div>
+                                Em <strong>Ações (Actions)</strong>, escolha <strong>Mensagens → Enviar SMS</strong>. No campo Número coloque a variável <code>[lv=numero]</code> e na Mensagem coloque <code>[lv=texto]</code>. Guarde a macro — o envio ocorre 100% em segundo plano sem ligar o ecrã!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mini-PC WhatsApp + Base de Dados -->
+                <div class="trans-card">
+                    <div class="trans-header">
+                        <div>
+                            <h3 class="trans-title">🟢 WhatsApp Dedicado — Mini-PC (Evolution API &amp; n8n)</h3>
+                            <p class="trans-sub">Ligado diretamente à base de dados Supabase do Eva Leite Atelier</p>
+                        </div>
+                        <span class="badge-pill b-zap">Mini-PC Worker</span>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="cfg-evo-instance">Nome da Instância Evolution API (Dedicada ao Atelier)</label>
+                        <input type="text" id="cfg-evo-instance" placeholder="atelier" value="atelier">
+                    </div>
+
+                    <div class="form-field">
+                        <label for="cfg-evo-url">URL Interna Evolution API / Webhook n8n no Mini-PC</label>
+                        <input type="text" id="cfg-evo-url" placeholder="http://127.0.0.1:8080" value="http://127.0.0.1:8080">
+                    </div>
+
+                    <div class="form-field">
+                        <label for="cfg-evo-apikey">API Key da Evolution API no Mini-PC</label>
+                        <input type="text" id="cfg-evo-apikey" placeholder="429683C4C977415CAAFCCE10F7D57E11">
+                    </div>
+
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px;">
+                        <button type="button" class="btn-cli-primary" onclick="salvarConfiguracoesAtelier()">
+                            Guardar Configuração Mini-PC
+                        </button>
+                        <button type="button" class="btn-cli-outline" onclick="testarFilaWhatsAppMiniPC()">
+                            🟢 Enfileirar WhatsApp de Teste
+                        </button>
+                    </div>
+
+                    <div style="border-top:1px solid #f0ebe1; padding-top:14px;">
+                        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px;">
+                            <strong style="font-size:0.82rem; color:#141414;">Estado da Ligação Supabase (Base de Dados do Atelier)</strong>
+                            <span class="badge-pill b-sent" id="badge-db-mode">Conectado</span>
+                        </div>
+                        <p style="font-size:0.79rem; color:#4b5563; line-height:1.5; margin:0 0 12px;">
+                            O Mini-PC consulta automaticamente a fila do Atelier a cada 25 segundos, envia as mensagens pendentes de WhatsApp pela instância <code>atelier</code> e aciona o Webhook do MacroDroid para os SMS agendados.
+                        </p>
+                        <button type="button" class="btn-cli-outline" style="width:100%;" onclick="copiarSqlTabelasDedicadas()">
+                            📋 Copiar SQL das Tabelas Dedicadas (Opcional para Supabase SQL Editor)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         MODAL: NOVA MENSAGEM / AGENDAMENTO MANUAL (ZAP OU SMS)
+         ========================================================= -->
+    <div class="modal-backdrop" id="modal-nova-msg" onclick="if(event.target===this) fecharModalNovaMensagem()">
+        <div class="modal-box">
+            <div class="modal-head">
+                <h2>Agendar ou Enviar Mensagem (WhatsApp / SMS)</h2>
+                <button type="button" class="ico-action-btn" onclick="fecharModalNovaMensagem()">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-nova-msg" onsubmit="submeterNovaMensagemManual(event)">
+                    <div class="form-field">
+                        <label for="manual-cliente-select">Escolher Cliente do Atelier (opcional)</label>
+                        <select id="manual-cliente-select" onchange="preencherClienteModalManual(this.value)">
+                            <option value="">— Escolher da lista ou digitar abaixo —</option>
+                        </select>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                        <div class="form-field">
+                            <label for="manual-nome">Nome da Cliente *</label>
+                            <input type="text" id="manual-nome" required placeholder="Ex: Maria Silva">
+                        </div>
+                        <div class="form-field">
+                            <label for="manual-telefone">Telemóvel / WhatsApp *</label>
+                            <input type="text" id="manual-telefone" required placeholder="Ex: 912 345 678">
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                        <div class="form-field">
+                            <label for="manual-canal">Canal de Envio *</label>
+                            <select id="manual-canal">
+                                <option value="whatsapp">🟢 WhatsApp (Mini-PC)</option>
+                                <option value="sms">🔵 SMS (MacroDroid 2º Plano)</option>
+                                <option value="ambos">🟢 WhatsApp + 🔵 SMS</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label for="manual-agendamento">Quando Enviar</label>
+                            <input type="datetime-local" id="manual-agendamento">
+                        </div>
+                    </div>
+
+                    <div class="gemini-box">
+                        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px;">
+                            <strong style="font-size:0.78rem; color:#785502;">✨ Pedir ao Gemini IA para escrever</strong>
+                            <button type="button" class="btn-cli-primary" id="btn-gemini-manual" style="height:27px; padding:0 10px; font-size:0.73rem;" onclick="gerarMensagemGemini('manual')">
+                                ✨ Gerar com IA
+                            </button>
+                        </div>
+                        <input type="text" id="manual-gemini-prompt" placeholder="Ex: Avisar que o vestido de festa precisa de última prova amanhã às 15h..." style="width:100%; padding:7px 10px; border-radius:8px; border:1px solid #d9c89e; font-size:0.79rem; background:#fff; box-sizing:border-box;">
+                    </div>
+
+                    <div class="form-field">
+                        <label for="manual-texto">Mensagem *</label>
+                        <textarea id="manual-texto" required placeholder="Escreva aqui a mensagem para a cliente..."></textarea>
+                    </div>
+
+                    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+                        <button type="button" class="btn-cli-outline" onclick="fecharModalNovaMensagem()">Cancelar</button>
+                        <button type="submit" class="btn-cli-primary" id="btn-submit-manual">
+                            <svg class="ico ico-sm" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                            Colocar na Fila / Enviar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://cixjmwfkfmeedajpmzmp.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeGptd2ZrZm1lZWRhanBtem1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MzM5ODIsImV4cCI6MjA2OTEwOTk4Mn0.vFvgRMK_oabG19FNauNaBu_CoQTL8QRSXcptyfY6rbM";
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        window.supabaseClient = sb;
+
+        const GEMINI_API_KEY = localStorage.getItem("atelier_gemini_key") || "";
+
+        let listaMensagens = [];
+        let listaClientesComTel = [];
+        let configAtual = { ...window.AtelierAutomacoes.DEFAULT_CONFIG };
+        let filtroFilaAtivo = "todos";
+        let usandoTabelaDedicada = false;
+
+        function escHTML(val) {
+            return String(val ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        function mostrarToastAuto(msg, isError = false) {
+            document.querySelectorAll(".cli-toast").forEach(t => t.remove());
+            const toast = document.createElement("div");
+            toast.className = "cli-toast" + (isError ? " is-error" : "");
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3500);
+        }
+
+        function mudarTab(nomeTab) {
+            ["fila", "pedidos", "campanhas", "config"].forEach(t => {
+                const btn = document.getElementById("tab-btn-" + t);
+                const pane = document.getElementById("tab-pane-" + t);
+                if (btn) btn.classList.toggle("active", t === nomeTab);
+                if (pane) pane.classList.toggle("active", t === nomeTab);
+            });
+        }
+
+        function filtrarFilaPor(filtro) {
+            filtroFilaAtivo = filtro || "todos";
+            document.querySelectorAll(".q-pill").forEach(b => {
+                b.classList.toggle("active", b.dataset.q === filtroFilaAtivo);
+            });
+            renderizarFilaMensagens();
+        }
+
+        function calcularDiasDesde(isoDateStr) {
+            if (!isoDateStr || isoDateStr === "Sem compras") return null;
+            const parteData = String(isoDateStr).substring(0, 10);
+            const partes = parteData.split("-");
+            if (partes.length !== 3) return null;
+            const dt = new Date(Number(partes[0]), Number(partes[1]) - 1, Number(partes[2]));
+            if (isNaN(dt.getTime())) return null;
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+            dt.setHours(0, 0, 0, 0);
+            return Math.max(0, Math.floor((hoje - dt) / 86400000));
+        }
+
+        async function carregarMensagensAtelier() {
+            // 1. Tenta ler da tabela dedicada atelier_mensagens
+            try {
+                const { data, error } = await sb
+                    .from("atelier_mensagens")
+                    .select("*")
+                    .order("scheduled_at", { ascending: false })
+                    .limit(300);
+
+                if (!error && Array.isArray(data)) {
+                    usandoTabelaDedicada = true;
+                    listaMensagens = data;
+                    return;
+                }
+            } catch (e) {}
+
+            // 2. Fallback transparente na linha de sistema em clientes_financas
+            usandoTabelaDedicada = false;
+            const { store } = await window.AtelierAutomacoes.lerFallbackStore(sb);
+            listaMensagens = (store.mensagens || []).sort((a, b) =>
+                String(b.scheduled_at || "").localeCompare(String(a.scheduled_at || ""))
+            );
+        }
+
+        async function carregarClientesParaAutomacoes() {
+            const [resCli, resPed] = await Promise.all([
+                sb.from("clientes_financas").select("*"),
+                sb.from("pedidos").select("id, nome, data_pedido, data_real, preco_final, preco_total, fatura_contato_envio, email_cliente")
+            ]);
+
+            const clientesDB = resCli.data || [];
+            const pedidosDB = resPed.data || [];
+            const mapa = new Map();
+
+            const norm = s => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+
+            clientesDB.forEach(c => {
+                if (c.nome === "__ATELIER_AUTOMACOES_SYS__") return;
+                const k = norm(c.nome);
+                if (!k) return;
+                mapa.set(k, {
+                    chave: k,
+                    nome: c.nome.trim(),
+                    telefone: (c.telefone || "").trim(),
+                    email: c.email || "",
+                    totalGasto: 0,
+                    totalPedidos: 0,
+                    ultimaCompra: null,
+                    diasSemComprar: null
+                });
+            });
+
+            pedidosDB.forEach(p => {
+                const nomeBruto = (p.nome || "").trim();
+                if (!nomeBruto || nomeBruto === "__ATELIER_AUTOMACOES_SYS__") return;
+                const k = norm(nomeBruto);
+                let reg = mapa.get(k);
+                if (!reg) {
+                    reg = {
+                        chave: k,
+                        nome: nomeBruto,
+                        telefone: (p.fatura_contato_envio || "").trim(),
+                        email: p.email_cliente || "",
+                        totalGasto: 0,
+                        totalPedidos: 0,
+                        ultimaCompra: null,
+                        diasSemComprar: null
+                    };
+                    mapa.set(k, reg);
+                } else if (!reg.telefone && p.fatura_contato_envio) {
+                    reg.telefone = p.fatura_contato_envio.trim();
+                }
+
+                const val = parseFloat(p.preco_final ?? p.preco_total ?? 0) || 0;
+                reg.totalGasto += val;
+                reg.totalPedidos += 1;
+                const dRef = p.data_real || p.data_pedido || null;
+                if (dRef && (!reg.ultimaCompra || dRef > reg.ultimaCompra)) {
+                    reg.ultimaCompra = dRef;
+                }
+            });
+
+            listaClientesComTel = Array.from(mapa.values())
+                .map(c => {
+                    c.diasSemComprar = calcularDiasDesde(c.ultimaCompra);
+                    return c;
+                })
+                .filter(c => c.telefone && c.telefone.replace(/\D/g, "").length >= 6)
+                .sort((a, b) => a.nome.localeCompare(b.nome, "pt"));
+
+            // Preenche select do modal manual
+            const selManual = document.getElementById("manual-cliente-select");
+            if (selManual) {
+                selManual.innerHTML = `<option value="">— Escolher cliente (${listaClientesComTel.length} com telemóvel) —</option>` +
+                    listaClientesComTel.map(c => `<option value="${escHTML(c.chave)}">${escHTML(c.nome)} (${escHTML(c.telefone)})</option>`).join("");
+            }
+        }
+
+        function preencherFormularioConfig() {
+            document.getElementById("cfg-auto-novo").checked = configAtual.auto_novo_pedido !== false;
+            document.getElementById("cfg-canal-novo").value = configAtual.canal_novo_pedido || "ambos";
+            document.getElementById("cfg-tpl-zap-novo").value = configAtual.template_zap_novo_pedido || "";
+            document.getElementById("cfg-tpl-sms-novo").value = configAtual.template_sms_novo_pedido || "";
+
+            document.getElementById("cfg-auto-concluido").checked = configAtual.auto_pedido_concluido !== false;
+            document.getElementById("cfg-canal-concluido").value = configAtual.canal_pedido_concluido || "ambos";
+            document.getElementById("cfg-tpl-zap-concluido").value = configAtual.template_zap_concluido || "";
+            document.getElementById("cfg-tpl-sms-concluido").value = configAtual.template_sms_concluido || "";
+
+            document.getElementById("cfg-macrodroid-url").value = configAtual.macrodroid_webhook_url || "";
+            document.getElementById("cfg-evo-instance").value = configAtual.evolution_instance || "atelier";
+            document.getElementById("cfg-evo-url").value = configAtual.evolution_url || "http://127.0.0.1:8080";
+            document.getElementById("cfg-evo-apikey").value = configAtual.evolution_apikey || "429683C4C977415CAAFCCE10F7D57E11";
+
+            const badgeDb = document.getElementById("badge-db-mode");
+            if (badgeDb) {
+                badgeDb.textContent = usandoTabelaDedicada
+                    ? "✅ Tabelas Dedicadas Ativas"
+                    : "✅ Modo Cloud Integrado Ativo";
+            }
+        }
+
+        function atualizarKPIsAutomacoes() {
+            const total = listaMensagens.length;
+            const zapCount = listaMensagens.filter(m => m.canal === "whatsapp").length;
+            const smsCount = listaMensagens.filter(m => m.canal === "sms").length;
+            const pendentes = listaMensagens.filter(m => m.status === "pending").length;
+            const enviadas = listaMensagens.filter(m => m.status === "sent").length;
+            const falhadas = listaMensagens.filter(m => m.status === "failed").length;
+            const ausentes90 = listaClientesComTel.filter(c => c.diasSemComprar !== null && c.diasSemComprar >= 90).length;
+
+            document.getElementById("kpi-auto-total").textContent = total;
+            document.getElementById("kpi-auto-sub-canais").textContent = `${zapCount} WhatsApp · ${smsCount} SMS`;
+            document.getElementById("kpi-auto-pendentes").textContent = pendentes;
+            document.getElementById("kpi-auto-enviadas").textContent = enviadas;
+            document.getElementById("kpi-auto-sub-status").textContent = falhadas > 0 ? `${falhadas} com erro` : "100% operacional";
+            document.getElementById("kpi-auto-ausentes").textContent = ausentes90;
+
+            document.getElementById("badge-count-fila").textContent = pendentes > 0 ? `${pendentes} pend.` : total;
+            document.getElementById("badge-count-ausentes").textContent = ausentes90;
+        }
+
+        function formatarDataHoraPT(iso) {
+            if (!iso) return "—";
+            const d = new Date(iso);
+            if (isNaN(d.getTime())) return iso;
+            return d.toLocaleDateString("pt-PT", { day: "2-digit", month: "2-digit" }) +
+                " às " + d.toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit" });
+        }
+
+        function renderizarFilaMensagens() {
+            const container = document.getElementById("lista-mensagens-container");
+            const termo = (document.getElementById("input-pesquisa-auto")?.value || "").trim().toLowerCase();
+
+            const filtradas = listaMensagens.filter(m => {
+                if (termo) {
+                    const matchNome = (m.cliente_nome || "").toLowerCase().includes(termo);
+                    const matchTel = (m.telefone || "").toLowerCase().includes(termo);
+                    const matchMsg = (m.mensagem || "").toLowerCase().includes(termo);
+                    if (!matchNome && !matchTel && !matchMsg) return false;
+                }
+                if (filtroFilaAtivo === "whatsapp") return m.canal === "whatsapp";
+                if (filtroFilaAtivo === "sms") return m.canal === "sms";
+                if (filtroFilaAtivo === "pending") return m.status === "pending";
+                if (filtroFilaAtivo === "sent") return m.status === "sent";
+                if (filtroFilaAtivo === "failed") return m.status === "failed";
+                return true;
+            });
+
+            if (filtradas.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding:42px 16px; color:#6b7280;">
+                        Nenhuma mensagem encontrada para este filtro. Clique em <strong>Agendar / Enviar Mensagem</strong> no topo para criar um disparo.
+                    </div>`;
+                return;
+            }
+
+            const labelsTipo = {
+                confirmacao: "🧵 Novo Pedido",
+                concluido: "🎉 Pedido Concluído",
+                campanha: "🎯 Reativação Cliente",
+                manual: "✉️ Envio Direto"
+            };
+
+            container.innerHTML = filtradas.map(m => {
+                const isZap = m.canal === "whatsapp";
+                const canalBadge = isZap
+                    ? `<span class="badge-pill b-zap">🟢 WhatsApp (Mini-PC)</span>`
+                    : `<span class="badge-pill b-sms">🔵 SMS (MacroDroid)</span>`;
+
+                let statusBadge = `<span class="badge-pill b-pending">⏳ Na Fila / Agendada</span>`;
+                if (m.status === "sent") statusBadge = `<span class="badge-pill b-sent">✅ Enviada</span>`;
+                if (m.status === "failed") statusBadge = `<span class="badge-pill b-failed">❌ Falhou</span>`;
+
+                const tipoBadge = `<span class="badge-pill b-tipo">${labelsTipo[m.tipo] || m.tipo || "Mensagem"}</span>`;
+                const erroHtml = m.error_msg
+                    ? `<div style="margin-top:6px; font-size:0.76rem; color:#b91c1c;">Motivo: ${escHTML(m.error_msg)}</div>`
+                    : "";
+
+                const idAttr = escHTML(m.id);
+
+                return `
+                    <div class="msg-card">
+                        <div class="msg-main">
+                            <div class="msg-badges">
+                                ${canalBadge}
+                                ${statusBadge}
+                                ${tipoBadge}
+                            </div>
+                            <div class="msg-client-line">
+                                <span>${escHTML(m.cliente_nome || "Cliente")}</span>
+                                <span class="msg-phone-tag">${escHTML(m.telefone || "")}</span>
+                            </div>
+                            <div class="msg-bubble ${isZap ? "is-zap" : "is-sms"}">${escHTML(m.mensagem || "")}</div>
+                            ${erroHtml}
+                        </div>
+                        <div class="msg-right">
+                            <div class="msg-time">
+                                <div><strong>Agendada:</strong> ${escHTML(formatarDataHoraPT(m.scheduled_at))}</div>
+                                ${m.sent_at ? `<div style="color:#15803d;"><strong>Enviada:</strong> ${escHTML(formatarDataHoraPT(m.sent_at))}</div>` : ""}
+                            </div>
+                            <div class="msg-actions">
+                                <button type="button" class="ico-action-btn send-now" title="Disparar Agora" onclick="dispararMensagemAgora('${idAttr}')">⚡</button>
+                                <button type="button" class="ico-action-btn del-btn" title="Apagar da fila" onclick="apagarMensagemFila('${idAttr}')">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        async function atualizarRegistoMensagem(id, camposNovos) {
+            try {
+                if (usandoTabelaDedicada) {
+                    await sb.from("atelier_mensagens").update(camposNovos).eq("id", id);
+                }
+            } catch (e) {}
+
+            // Atualiza também no fallback store se existir lá
+            try {
+                const { rowId, store } = await window.AtelierAutomacoes.lerFallbackStore(sb);
+                const idx = (store.mensagens || []).findIndex(x => String(x.id) === String(id));
+                if (idx !== -1) {
+                    store.mensagens[idx] = { ...store.mensagens[idx], ...camposNovos };
+                    await window.AtelierAutomacoes.salvarFallbackStore(sb, store, rowId);
+                }
+            } catch (e) {}
+        }
+
+        async function dispararMensagemAgora(id) {
+            const msg = listaMensagens.find(x => String(x.id) === String(id));
+            if (!msg) return;
+
+            if (msg.canal === "sms") {
+                const webhookUrl = (document.getElementById("cfg-macrodroid-url")?.value || configAtual.macrodroid_webhook_url || "").trim();
+                if (!webhookUrl) {
+                    mostrarToastAuto("Configure primeiro a URL do Webhook do MacroDroid na aba Configuração!", true);
+                    mudarTab("config");
+                    return;
+                }
+                mostrarToastAuto("📲 A acionar MacroDroid SMS em 2º plano...");
+                const res = await window.AtelierAutomacoes.tentarDisparoDiretoMacroDroidSMS(webhookUrl, msg.telefone, msg.mensagem);
+                if (res.ok) {
+                    await atualizarRegistoMensagem(id, {
+                        status: "sent",
+                        sent_at: new Date().toISOString(),
+                        error_msg: null
+                    });
+                    await carregarTudoAutomacoes();
+                    mostrarToastAuto("✅ Comando enviado para o MacroDroid! O telemóvel do Atelier enviou o SMS em 2º plano.");
+                } else {
+                    mostrarToastAuto("Erro ao contactar Webhook MacroDroid: " + res.reason, true);
+                }
+                return;
+            }
+
+            // Para WhatsApp: coloca scheduled_at = agora e status = pending para o Mini-PC enviar imediatamente
+            await atualizarRegistoMensagem(id, {
+                status: "pending",
+                scheduled_at: new Date().toISOString(),
+                error_msg: null
+            });
+            await carregarTudoAutomacoes();
+            mostrarToastAuto("🟢 Mensagem marcada para disparo imediato pelo Mini-PC (Evolution API)!");
+        }
+
+        async function apagarMensagemFila(id) {
+            try {
+                if (usandoTabelaDedicada) {
+                    await sb.from("atelier_mensagens").delete().eq("id", id);
+                }
+            } catch (e) {}
+
+            try {
+                const { rowId, store } = await window.AtelierAutomacoes.lerFallbackStore(sb);
+                store.mensagens = (store.mensagens || []).filter(x => String(x.id) !== String(id));
+                await window.AtelierAutomacoes.salvarFallbackStore(sb, store, rowId);
+            } catch (e) {}
+
+            await carregarTudoAutomacoes();
+            mostrarToastAuto("Mensagem removida da fila.");
+        }
+
+        function inserirVarTemplate(textareaId, variavel) {
+            const el = document.getElementById(textareaId);
+            if (!el) return;
+            const start = el.selectionStart ?? el.value.length;
+            const end = el.selectionEnd ?? el.value.length;
+            el.value = el.value.slice(0, start) + variavel + el.value.slice(end);
+            el.focus();
+        }
+
+        function restaurarTemplatesPadrao() {
+            const def = window.AtelierAutomacoes.DEFAULT_CONFIG;
+            document.getElementById("cfg-tpl-zap-novo").value = def.template_zap_novo_pedido;
+            document.getElementById("cfg-tpl-sms-novo").value = def.template_sms_novo_pedido;
+            document.getElementById("cfg-tpl-zap-concluido").value = def.template_zap_concluido;
+            document.getElementById("cfg-tpl-sms-concluido").value = def.template_sms_concluido;
+            mostrarToastAuto("Templates padrão restaurados. Clique em Guardar para confirmar.");
+        }
+
+        async function salvarConfiguracoesAtelier() {
+            const novaCfg = {
+                macrodroid_webhook_url: document.getElementById("cfg-macrodroid-url").value.trim(),
+                evolution_instance: document.getElementById("cfg-evo-instance").value.trim() || "atelier",
+                evolution_url: document.getElementById("cfg-evo-url").value.trim() || "http://127.0.0.1:8080",
+                evolution_apikey: document.getElementById("cfg-evo-apikey").value.trim() || "429683C4C977415CAAFCCE10F7D57E11",
+                auto_novo_pedido: document.getElementById("cfg-auto-novo").checked,
+                canal_novo_pedido: document.getElementById("cfg-canal-novo").value,
+                template_zap_novo_pedido: document.getElementById("cfg-tpl-zap-novo").value,
+                template_sms_novo_pedido: document.getElementById("cfg-tpl-sms-novo").value,
+                auto_pedido_concluido: document.getElementById("cfg-auto-concluido").checked,
+                canal_pedido_concluido: document.getElementById("cfg-canal-concluido").value,
+                template_zap_concluido: document.getElementById("cfg-tpl-zap-concluido").value,
+                template_sms_concluido: document.getElementById("cfg-tpl-sms-concluido").value
+            };
+
+            try {
+                configAtual = await window.AtelierAutomacoes.guardarConfig(novaCfg, sb);
+                mostrarToastAuto("✅ Configurações e templates guardados com sucesso!");
+            } catch (err) {
+                mostrarToastAuto("Erro ao guardar configurações: " + (err.message || err), true);
+            }
+        }
+
+        // =========================================================
+        // CAMPANHAS DE REATIVAÇÃO DE CLIENTES AUSENTES
+        // =========================================================
+        function obterClientesElegiveisCampanha() {
+            const filtro = document.getElementById("camp-filtro-dias")?.value || "90";
+            return listaClientesComTel.filter(c => {
+                if (filtro === "todos") return true;
+                if (filtro === "vip") return c.totalGasto >= 150;
+                const diasMin = parseInt(filtro) || 90;
+                return c.diasSemComprar !== null && c.diasSemComprar >= diasMin;
+            });
+        }
+
+        function renderizarTabelaCampanha() {
+            const alvos = obterClientesElegiveisCampanha();
+            const badge = document.getElementById("camp-count-elegiveis");
+            if (badge) badge.textContent = `${alvos.length} cliente(s)`;
+
+            const tbody = document.getElementById("tbody-campanha-clientes");
+            if (!tbody) return;
+
+            if (alvos.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:32px; color:#6b7280;">Nenhum cliente com telemóvel encontrado para este critério.</td></tr>`;
+                atualizarContadorBotaoCampanha();
+                return;
+            }
+
+            tbody.innerHTML = alvos.map(c => {
+                const ultF = c.ultimaCompra
+                    ? new Date(c.ultimaCompra.substring(0, 10) + "T12:00:00").toLocaleDateString("pt-PT")
+                    : "Sem registo";
+                const diasTxt = c.diasSemComprar !== null ? `Há ${c.diasSemComprar} dias` : "—";
+
+                return `
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="chk-camp-cliente" data-chave="${escHTML(c.chave)}" checked onchange="atualizarContadorBotaoCampanha()" style="width:16px; height:16px; margin:0;">
+                        </td>
+                        <td><strong>${escHTML(c.nome)}</strong></td>
+                        <td style="font-family:monospace;">${escHTML(c.telefone)}</td>
+                        <td>${escHTML(ultF)}</td>
+                        <td><span class="badge-pill b-pending">${escHTML(diasTxt)}</span></td>
+                        <td><strong>€${c.totalGasto.toFixed(2)}</strong> <span style="color:#6b7280; font-size:0.75rem;">(${c.totalPedidos} ped.)</span></td>
+                    </tr>
+                `;
+            }).join("");
+
+            atualizarContadorBotaoCampanha();
+        }
+
+        function alternarSelecaoTodosCampanha(marcar) {
+            document.querySelectorAll(".chk-camp-cliente").forEach(chk => { chk.checked = marcar; });
+            atualizarContadorBotaoCampanha();
+        }
+
+        function atualizarContadorBotaoCampanha() {
+            const marcados = document.querySelectorAll(".chk-camp-cliente:checked").length;
+            const lbl = document.getElementById("btn-agendar-camp-label");
+            if (lbl) lbl.textContent = `Agendar Campanha para ${marcados} Cliente(s)`;
+        }
+
+        async function agendarCampanhaSelecionados() {
+            const chks = Array.from(document.querySelectorAll(".chk-camp-cliente:checked"));
+            if (chks.length === 0) {
+                mostrarToastAuto("Selecione pelo menos um cliente na tabela.", true);
+                return;
+            }
+
+            const tplMsg = document.getElementById("camp-mensagem").value.trim();
+            if (!tplMsg) {
+                mostrarToastAuto("Escreva a mensagem da campanha antes de agendar.", true);
+                return;
+            }
+
+            const canalSel = document.getElementById("camp-canal").value;
+            const intervaloMin = parseInt(document.getElementById("camp-intervalo").value) || 0;
+            const canais = canalSel === "ambos" ? ["whatsapp", "sms"] : [canalSel];
+
+            let totalCriadas = 0;
+            const baseTime = Date.now();
+
+            for (let i = 0; i < chks.length; i++) {
+                const chave = chks[i].dataset.chave;
+                const cli = listaClientesComTel.find(c => c.chave === chave);
+                if (!cli) continue;
+
+                const primeiroNome = cli.nome.split(/\s+/)[0] || "Cliente";
+                const textoFinal = tplMsg
+                    .replace(/\{primeiro_nome\}/gi, primeiroNome)
+                    .replace(/\{nome\}/gi, cli.nome);
+
+                const schedIso = new Date(baseTime + (i * intervaloMin * 60000)).toISOString();
+
+                for (const c of canais) {
+                    await window.AtelierAutomacoes.enfileirarMensagem({
+                        cliente_nome: cli.nome,
+                        telefone: cli.telefone,
+                        canal: c,
+                        tipo: "campanha",
+                        mensagem: textoFinal,
+                        scheduled_at: schedIso
+                    }, sb);
+                    totalCriadas++;
+                }
+            }
+
+            await carregarTudoAutomacoes();
+            mudarTab("fila");
+            mostrarToastAuto(`🎉 Campanha agendada com sucesso (${totalCriadas} envios na fila)!`);
+        }
+
+        // =========================================================
+        // ASSISTENTE GEMINI IA (PT-PT EVA LEITE ATELIER)
+        // =========================================================
+        async function gerarMensagemGemini(modo) {
+            const isCampanha = modo === "campanha";
+            const btn = document.getElementById(isCampanha ? "btn-gemini-campanha" : "btn-gemini-manual");
+            const inputTema = document.getElementById(isCampanha ? "camp-gemini-tema" : "manual-gemini-prompt");
+            const targetTextarea = document.getElementById(isCampanha ? "camp-mensagem" : "manual-texto");
+
+            const tema = (inputTema?.value || "").trim();
+            const txtOrig = btn ? btn.textContent : "";
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = "A criar...";
+            }
+
+            const promptSistema = isCampanha
+                ? `Escreve uma mensagem curta, calorosa e elegante em Português de Portugal (PT-PT) para enviar por WhatsApp/SMS às clientes do "Eva Leite Atelier" (atelier de alta costura, arranjos e confeção por medida). Usa obrigatoriamente a variável {primeiro_nome} na saudação. ${tema ? "Foco da mensagem: " + tema : "Objetivo: recordar com carinho que estamos disponíveis para novos arranjos, transformações ou peças por medida."} Retorna APENAS o texto final da mensagem, sem aspas extras.`
+                : `Escreve uma mensagem educada, simpática e elegante em Português de Portugal (PT-PT) do "Eva Leite Atelier" para a cliente ${document.getElementById("manual-nome")?.value || "{primeiro_nome}"}. Pedido/contexto: ${tema || "Informar sobre o estado do seu pedido de costura no atelier"}. Retorna APENAS o texto final da mensagem, sem aspas extras.`;
+
+            try {
+                const resp = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`,
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: promptSistema }] }]
+                        })
+                    }
+                );
+                const data = await resp.json();
+                const textoIA = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+                if (textoIA) {
+                    targetTextarea.value = textoIA;
+                    mostrarToastAuto("✨ Mensagem gerada com Gemini IA!");
+                } else {
+                    throw new Error("Resposta vazia da IA");
+                }
+            } catch (e) {
+                // Fallback inteligente imediato em PT-PT caso a chave ou rede falhe
+                const nomeManual = (document.getElementById("manual-nome")?.value || "").split(" ")[0] || "{primeiro_nome}";
+                targetTextarea.value = isCampanha
+                    ? `Olá {primeiro_nome}! ✨ Esperamos que esteja tudo ótimo consigo.\n\nPassámos por aqui para deixar um carinho do *Eva Leite Atelier*${tema ? " e partilhar uma novidade: " + tema : " e lembrar que estamos ao seu dispor para cuidar das suas peças favoritas ou criar algo especial à sua medida"}. 🧵\n\nQuando quiser fazer-nos uma visita, será um gosto recebê-la!\nCom carinho,\n*Eva Leite Atelier* 💛`
+                    : `Olá ${nomeManual}! ✨\n\nAqui é do *Eva Leite Atelier*. ${tema ? tema : "Entramos em contacto sobre o seu pedido no nosso atelier."}\n\nQualquer dúvida estamos inteiramente ao seu dispor!\nCom carinho,\n*Eva Leite Atelier* 🧵`;
+                mostrarToastAuto("✨ Sugestão de mensagem aplicada!");
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = txtOrig;
+                }
+            }
+        }
+
+        // =========================================================
+        // MODAL NOVA MENSAGEM MANUAL & TESTES
+        // =========================================================
+        function abrirModalNovaMensagem() {
+            const agora = new Date();
+            agora.setMinutes(agora.getMinutes() - agora.getTimezoneOffset());
+            document.getElementById("manual-agendamento").value = agora.toISOString().slice(0, 16);
+            document.getElementById("modal-nova-msg").style.display = "flex";
+        }
+
+        function fecharModalNovaMensagem() {
+            document.getElementById("modal-nova-msg").style.display = "none";
+        }
+
+        function preencherClienteModalManual(chave) {
+            const cli = listaClientesComTel.find(c => c.chave === chave);
+            if (!cli) return;
+            document.getElementById("manual-nome").value = cli.nome;
+            document.getElementById("manual-telefone").value = cli.telefone;
+            const txtEl = document.getElementById("manual-texto");
+            if (!txtEl.value.trim()) {
+                const pNome = cli.nome.split(/\s+/)[0] || "Cliente";
+                txtEl.value = `Olá ${pNome}! ✨ Aqui é do *Eva Leite Atelier*.\n\n`;
+            }
+        }
+
+        async function submeterNovaMensagemManual(event) {
+            event.preventDefault();
+            const nome = document.getElementById("manual-nome").value.trim();
+            const telefone = document.getElementById("manual-telefone").value.trim();
+            const canalSel = document.getElementById("manual-canal").value;
+            const dtVal = document.getElementById("manual-agendamento").value;
+            const texto = document.getElementById("manual-texto").value.trim();
+
+            const schedIso = dtVal ? new Date(dtVal).toISOString() : new Date().toISOString();
+            const canais = canalSel === "ambos" ? ["whatsapp", "sms"] : [canalSel];
+
+            for (const c of canais) {
+                await window.AtelierAutomacoes.enfileirarMensagem({
+                    cliente_nome: nome,
+                    telefone: telefone,
+                    canal: c,
+                    tipo: "manual",
+                    mensagem: texto,
+                    scheduled_at: schedIso
+                }, sb);
+            }
+
+            fecharModalNovaMensagem();
+            await carregarTudoAutomacoes();
+            mudarTab("fila");
+            mostrarToastAuto("✅ Mensagem adicionada à fila com sucesso!");
+        }
+
+        async function testarEnvioMacroDroidSMS() {
+            const webhookUrl = document.getElementById("cfg-macrodroid-url").value.trim();
+            if (!webhookUrl) {
+                mostrarToastAuto("Cole primeiro o URL do Webhook do MacroDroid no campo acima.", true);
+                return;
+            }
+            const telTeste = prompt("Digite o número de telemóvel para receber o SMS de teste:", "+3519");
+            if (!telTeste) return;
+
+            await salvarConfiguracoesAtelier();
+            const msgTeste = "Eva Leite Atelier: Teste de SMS automatico em 2o plano via MacroDroid concluido com sucesso!";
+            const res = await window.AtelierAutomacoes.tentarDisparoDiretoMacroDroidSMS(webhookUrl, telTeste, msgTeste);
+            if (res.ok) {
+                await window.AtelierAutomacoes.enfileirarMensagem({
+                    cliente_nome: "Teste MacroDroid SMS",
+                    telefone: telTeste,
+                    canal: "sms",
+                    tipo: "manual",
+                    mensagem: msgTeste,
+                    status: "sent",
+                    sent_at: new Date().toISOString()
+                }, sb);
+                await carregarTudoAutomacoes();
+                mostrarToastAuto("📲 Webhook MacroDroid acionado! Verifique o SMS enviado pelo telemóvel do Atelier.");
+            } else {
+                mostrarToastAuto("Erro ao chamar Webhook MacroDroid: " + res.reason, true);
+            }
+        }
+
+        async function testarFilaWhatsAppMiniPC() {
+            const telTeste = prompt("Digite o número de WhatsApp para receber a mensagem de teste do Mini-PC:", "+3519");
+            if (!telTeste) return;
+
+            await salvarConfiguracoesAtelier();
+            await window.AtelierAutomacoes.enfileirarMensagem({
+                cliente_nome: "Teste WhatsApp Mini-PC",
+                telefone: telTeste,
+                canal: "whatsapp",
+                tipo: "manual",
+                mensagem: "Olá! ✨ Teste de automação de WhatsApp do *Eva Leite Atelier* via Mini-PC concluído com sucesso! 🧵"
+            }, sb);
+            await carregarTudoAutomacoes();
+            mudarTab("fila");
+            mostrarToastAuto("🟢 Teste de WhatsApp colocado na fila do Mini-PC!");
+        }
+
+        function copiarSqlTabelasDedicadas() {
+            const sql = `CREATE TABLE IF NOT EXISTS public.atelier_automacoes_config (
+    id TEXT PRIMARY KEY DEFAULT 'default',
+    macrodroid_webhook_url TEXT DEFAULT '',
+    evolution_instance TEXT DEFAULT 'atelier',
+    evolution_url TEXT DEFAULT 'http://127.0.0.1:8080',
+    evolution_apikey TEXT DEFAULT '429683C4C977415CAAFCCE10F7D57E11',
+    auto_novo_pedido BOOLEAN DEFAULT true,
+    canal_novo_pedido TEXT DEFAULT 'ambos',
+    template_zap_novo_pedido TEXT,
+    template_sms_novo_pedido TEXT,
+    auto_pedido_concluido BOOLEAN DEFAULT true,
+    canal_pedido_concluido TEXT DEFAULT 'ambos',
+    template_zap_concluido TEXT,
+    template_sms_concluido TEXT,
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS public.atelier_mensagens (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    cliente_nome TEXT NOT NULL,
+    telefone TEXT NOT NULL,
+    canal TEXT NOT NULL DEFAULT 'whatsapp',
+    tipo TEXT NOT NULL DEFAULT 'manual',
+    pedido_id TEXT,
+    mensagem TEXT NOT NULL,
+    scheduled_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    status TEXT NOT NULL DEFAULT 'pending',
+    sent_at TIMESTAMPTZ,
+    error_msg TEXT,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE public.atelier_automacoes_config DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.atelier_mensagens DISABLE ROW LEVEL SECURITY;`;
+
+            navigator.clipboard.writeText(sql).then(() => {
+                mostrarToastAuto("📋 SQL copiado! Pode colar no SQL Editor do Supabase quando quiser.");
+            });
+        }
+
+        async function carregarTudoAutomacoes() {
+            try {
+                configAtual = await window.AtelierAutomacoes.carregarConfig(sb);
+                await Promise.all([
+                    carregarMensagensAtelier(),
+                    carregarClientesParaAutomacoes()
+                ]);
+                preencherFormularioConfig();
+                atualizarKPIsAutomacoes();
+                renderizarFilaMensagens();
+                renderizarTabelaCampanha();
+            } catch (err) {
+                console.error("Erro ao inicializar Automações:", err);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const params = new URLSearchParams(window.location.search);
+            const tabInicial = params.get("tab");
+            if (tabInicial && ["fila", "pedidos", "campanhas", "config"].includes(tabInicial)) {
+                mudarTab(tabInicial);
+            }
+            carregarTudoAutomacoes();
+        });
+    </script>
+</body>
+</html>

@@ -610,6 +610,12 @@ const LIQUID_NAVBAR_HTML = `
               Central de Clientes
             </span>
           </a>
+          <a href="automacoes.html" data-page="automacoes.html" class="ctx-item">
+            <span class="ctx-item-left">
+              <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+              Automações Zap &amp; SMS
+            </span>
+          </a>
           <a href="vouchers.html" data-page="vouchers.html" class="ctx-item">
             <span class="ctx-item-left">
               <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
@@ -752,6 +758,7 @@ const MAPA_TITULOS_PAGINA = {
     "concluidos.html": "Concluídos",
     "entregues.html": "Histórico",
     "clientes.html": "Central de Clientes",
+    "automacoes.html": "Automações WhatsApp & SMS",
     "vouchers.html": "Gestão de Vouchers",
     "adicionar-pedido.html": "Novo Pedido",
     "editar-pedido.html": "Editar Pedido",

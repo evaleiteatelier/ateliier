@@ -594,6 +594,66 @@ FROM public.pedidos p
 FULL OUTER JOIN public.clientes_financas c
     ON LOWER(TRIM(c.nome)) = LOWER(TRIM(p.nome))
 WHERE COALESCE(c.nome, TRIM(p.nome)) IS NOT NULL
+  AND COALESCE(c.nome, TRIM(p.nome)) <> '__ATELIER_AUTOMACOES_SYS__'
 GROUP BY COALESCE(c.nome, TRIM(p.nome)), c.telefone, c.nif, c.email;
+
+-- ==========================================
+-- 15. CENTRAL DE AUTOMAÇÕES (WHATSAPP MINI-PC & SMS MACRODROID)
+-- ==========================================
+
+CREATE TABLE IF NOT EXISTS public.atelier_automacoes_config (
+    id TEXT PRIMARY KEY DEFAULT 'default',
+    macrodroid_webhook_url TEXT DEFAULT '',
+    evolution_instance TEXT DEFAULT 'atelier',
+    evolution_url TEXT DEFAULT 'http://127.0.0.1:8080',
+    evolution_apikey TEXT DEFAULT '429683C4C977415CAAFCCE10F7D57E11',
+    auto_novo_pedido BOOLEAN DEFAULT true,
+    canal_novo_pedido TEXT DEFAULT 'ambos',
+    template_zap_novo_pedido TEXT DEFAULT 'Olá {primeiro_nome}! ✨
+
+O seu pedido no *Eva Leite Atelier* foi registado com sucesso:
+{itens}
+
+📅 *Previsão de entrega:* {data_entrega}
+💶 *Total:* €{valor_total} (Adiantado: €{valor_pago} | Falta: €{falta_pagar})
+
+Qualquer dúvida estamos ao dispor!
+Com carinho,
+*Eva Leite Atelier* 🧵',
+    template_sms_novo_pedido TEXT DEFAULT 'Eva Leite Atelier: Ola {primeiro_nome}, o seu pedido ({itens_resumo}) foi registado! Entrega prevista: {data_entrega}. Total: {valor_total}EUR.',
+    auto_pedido_concluido BOOLEAN DEFAULT true,
+    canal_pedido_concluido TEXT DEFAULT 'ambos',
+    template_zap_concluido TEXT DEFAULT 'Olá {primeiro_nome}! 🎉✨
+
+Temos boas notícias: o seu pedido no *Eva Leite Atelier* já está *concluído e pronto para levantamento*!
+
+🧵 *Peças:* {itens}
+💶 *Valor a liquidar no levantamento:* €{falta_pagar}
+
+Aguardamos a sua visita no nosso horário de funcionamento. Até já! 💛',
+    template_sms_concluido TEXT DEFAULT 'Eva Leite Atelier: Ola {primeiro_nome}! O seu pedido ({itens_resumo}) ja esta CONCLUIDO e pronto para levantamento. Valor a pagar: {falta_pagar}EUR. Ate ja!',
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.atelier_mensagens (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    cliente_nome TEXT NOT NULL,
+    telefone TEXT NOT NULL,
+    canal TEXT NOT NULL DEFAULT 'whatsapp', -- 'whatsapp' | 'sms'
+    tipo TEXT NOT NULL DEFAULT 'manual',    -- 'confirmacao' | 'concluido' | 'campanha' | 'manual'
+    pedido_id TEXT,
+    mensagem TEXT NOT NULL,
+    scheduled_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    status TEXT NOT NULL DEFAULT 'pending', -- 'pending' | 'sent' | 'failed' | 'cancelled'
+    sent_at TIMESTAMPTZ,
+    error_msg TEXT,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_atelier_mensagens_status_sched
+    ON public.atelier_mensagens (status, scheduled_at);
+
+ALTER TABLE public.atelier_automacoes_config DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.atelier_mensagens DISABLE ROW LEVEL SECURITY;
 
 -- (Fim do script)
